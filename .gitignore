@@ -1,0 +1,29 @@
+# Node
+tests/node_modules/
+tests/screenshots/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Temp / scratch
+OUTPUT/.tmp_work_*/
+IN-OUT-FOLDER/.tmp*/
+**/.tmp/
+
+# Credentials / env
+.env
+*.env
+
+# Topolograph docker volumes (MongoDB data lives in Docker volumes, not here)
+# Keep docker-compose and init scripts but exclude any generated secrets
+topolograph-docker/.env
+
+# Large binary archives
+ARCHIVE-MISC/
+topolograph-docker/

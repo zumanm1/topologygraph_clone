@@ -1,0 +1,17 @@
+{
+  "name": "topolograph-e2e-tests",
+  "version": "1.0.0",
+  "description": "Playwright E2E validation tests for Topolograph country filter feature",
+  "main": "validate-country-filter.cjs",
+  "scripts": {
+    "test": "node validate-country-filter.cjs",
+    "test:country-filter": "node validate-country-filter.cjs"
+  },
+  "keywords": ["topolograph", "playwright", "e2e", "country-filter"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}

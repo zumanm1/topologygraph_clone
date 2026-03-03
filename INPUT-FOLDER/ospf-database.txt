@@ -1,0 +1,1837 @@
+
+
+zaf-jnb-r2#show ip os database router 
+
+            OSPF Router with ID (18.18.18.6) (Process ID 100)
+
+		Router Link States (Area 0)
+
+  LS age: 56
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 9.9.9.1
+  Advertising Router: 9.9.9.1
+  LS Seq Number: 8000000C
+  Checksum: 0x8E73
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.2
+     (Link Data) Router Interface address: 10.9.92.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.92.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.3
+     (Link Data) Router Interface address: 10.9.91.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.91.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.9.90.1
+     (Link Data) Router Interface address: 10.9.90.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.90.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 9.9.9.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1657
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 9.9.9.2
+  Advertising Router: 9.9.9.2
+  LS Seq Number: 80000008
+  Checksum: 0xE340
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.10.10.1
+     (Link Data) Router Interface address: 10.9.95.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.95.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.3
+     (Link Data) Router Interface address: 10.9.93.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.93.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.1
+     (Link Data) Router Interface address: 10.9.92.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.92.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 9.9.9.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1997
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 9.9.9.3
+  Advertising Router: 9.9.9.3
+  LS Seq Number: 8000000B
+  Checksum: 0x4D2D
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.4
+     (Link Data) Router Interface address: 10.9.94.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.94.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.2
+     (Link Data) Router Interface address: 10.9.93.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.93.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.1
+     (Link Data) Router Interface address: 10.9.91.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.91.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 9.9.9.3
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 202
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 10.9.90.1
+  Advertising Router: 10.9.90.1
+  LS Seq Number: 8000000F
+  Checksum: 0x3B9C
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.2
+     (Link Data) Router Interface address: 10.13.135.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.135.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.3
+     (Link Data) Router Interface address: 10.13.133.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.133.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 13.13.13.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.1
+     (Link Data) Router Interface address: 10.9.90.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.90.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+
+  LS age: 356
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 10.10.10.1
+  Advertising Router: 10.10.10.1
+  LS Seq Number: 8000000B
+  Checksum: 0xF906
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.10.10.2
+     (Link Data) Router Interface address: 10.10.101.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.10.101.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.8
+     (Link Data) Router Interface address: 10.10.100.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.10.100.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.2
+     (Link Data) Router Interface address: 10.9.95.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.95.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.10.10.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1022
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 10.10.10.2
+  Advertising Router: 10.10.10.2
+  LS Seq Number: 8000000A
+  Checksum: 0x1689
+  Length: 84
+  Number of Links: 5
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.4
+     (Link Data) Router Interface address: 10.10.102.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.10.102.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.10.10.1
+     (Link Data) Router Interface address: 10.10.101.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.10.101.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.10.10.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 407
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 10.17.173.22
+  Advertising Router: 10.17.173.22
+  LS Seq Number: 80000005
+  Checksum: 0xAD59
+  Length: 48
+  Number of Links: 2
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 17.17.17.1
+     (Link Data) Router Interface address: 10.17.173.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.17.173.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+
+  LS age: 1874
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 11.11.11.1
+  Advertising Router: 11.11.11.1
+  LS Seq Number: 8000000F
+  Checksum: 0x2663
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.7
+     (Link Data) Router Interface address: 10.11.110.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.110.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.2
+     (Link Data) Router Interface address: 10.11.112.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.112.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.3
+     (Link Data) Router Interface address: 10.11.113.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.113.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 11.11.11.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 657
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 11.11.11.2
+  Advertising Router: 11.11.11.2
+  LS Seq Number: 80000011
+  Checksum: 0xFD60
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.1
+     (Link Data) Router Interface address: 10.11.112.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.112.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.4
+     (Link Data) Router Interface address: 10.11.114.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.114.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.8
+     (Link Data) Router Interface address: 10.11.111.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.111.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 11.11.11.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 815
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 11.11.11.3
+  Advertising Router: 11.11.11.3
+  LS Seq Number: 8000000A
+  Checksum: 0x72D
+  Length: 96
+  Number of Links: 6
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.116.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.1
+     (Link Data) Router Interface address: 10.11.113.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.113.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.4
+     (Link Data) Router Interface address: 10.11.115.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.115.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 11.11.11.3
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1770
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 11.11.11.4
+  Advertising Router: 11.11.11.4
+  LS Seq Number: 8000000A
+  Checksum: 0x2948
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.3
+     (Link Data) Router Interface address: 10.11.115.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.115.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.2
+     (Link Data) Router Interface address: 10.11.114.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.114.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.10.10.2
+     (Link Data) Router Interface address: 10.10.102.4
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.10.102.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 11.11.11.4
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 996
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 12.12.12.1
+  Advertising Router: 12.12.12.1
+  LS Seq Number: 8000000B
+  Checksum: 0x9C62
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.2
+     (Link Data) Router Interface address: 10.12.121.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.12.121.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 12.12.12.2
+     (Link Data) Router Interface address: 10.12.120.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.12.120.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.2
+     (Link Data) Router Interface address: 10.15.155.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.155.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 12.12.12.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 917
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 12.12.12.2
+  Advertising Router: 12.12.12.2
+  LS Seq Number: 80000008
+  Checksum: 0xB761
+  Length: 84
+  Number of Links: 5
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 12.12.12.1
+     (Link Data) Router Interface address: 10.12.120.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.12.120.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 14.14.14.2
+     (Link Data) Router Interface address: 10.14.140.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.14.140.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 12.12.12.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 344
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 13.13.13.2
+  Advertising Router: 13.13.13.2
+  LS Seq Number: 80000009
+  Checksum: 0x82EF
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.9.90.1
+     (Link Data) Router Interface address: 10.13.135.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.135.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.4
+     (Link Data) Router Interface address: 10.13.134.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.134.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.1
+     (Link Data) Router Interface address: 10.15.150.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.150.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 13.13.13.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 188
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 13.13.13.3
+  Advertising Router: 13.13.13.3
+  LS Seq Number: 80000007
+  Checksum: 0x69F9
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.9.90.1
+     (Link Data) Router Interface address: 10.13.133.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.133.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.4
+     (Link Data) Router Interface address: 10.13.132.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.132.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.2
+     (Link Data) Router Interface address: 10.13.131.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.131.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 13.13.13.3
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 289
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 13.13.13.4
+  Advertising Router: 13.13.13.4
+  LS Seq Number: 80000007
+  Checksum: 0x6125
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.2
+     (Link Data) Router Interface address: 10.13.134.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.134.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.3
+     (Link Data) Router Interface address: 10.13.132.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.132.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.1
+     (Link Data) Router Interface address: 10.13.130.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.130.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 13.13.13.4
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1942
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 14.14.14.1
+  Advertising Router: 14.14.14.1
+  LS Seq Number: 80000006
+  Checksum: 0xB3A8
+  Length: 84
+  Number of Links: 5
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.1
+     (Link Data) Router Interface address: 10.14.142.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.14.142.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 14.14.14.2
+     (Link Data) Router Interface address: 10.14.141.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.14.141.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 14.14.14.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1939
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 14.14.14.2
+  Advertising Router: 14.14.14.2
+  LS Seq Number: 80000005
+  Checksum: 0x3492
+  Length: 84
+  Number of Links: 5
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 14.14.14.1
+     (Link Data) Router Interface address: 10.14.141.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.14.141.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 12.12.12.2
+     (Link Data) Router Interface address: 10.14.140.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.14.140.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 14.14.14.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 640
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 15.15.15.1
+  Advertising Router: 15.15.15.1
+  LS Seq Number: 80000007
+  Checksum: 0x3456
+  Length: 132
+  Number of Links: 9
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.2
+     (Link Data) Router Interface address: 10.15.153.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.153.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.3
+     (Link Data) Router Interface address: 10.15.152.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.152.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.1
+     (Link Data) Router Interface address: 10.15.151.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.151.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.2
+     (Link Data) Router Interface address: 10.15.150.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.150.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 15.15.15.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1262
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 15.15.15.2
+  Advertising Router: 15.15.15.2
+  LS Seq Number: 8000000A
+  Checksum: 0x4BF5
+  Length: 132
+  Number of Links: 9
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 12.12.12.1
+     (Link Data) Router Interface address: 10.15.155.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.155.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.3
+     (Link Data) Router Interface address: 10.15.154.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.154.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.1
+     (Link Data) Router Interface address: 10.15.153.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.153.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.1
+     (Link Data) Router Interface address: 10.16.160.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.160.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 15.15.15.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 750
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 15.15.15.3
+  Advertising Router: 15.15.15.3
+  LS Seq Number: 80000008
+  Checksum: 0x8072
+  Length: 84
+  Number of Links: 5
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.2
+     (Link Data) Router Interface address: 10.15.154.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.154.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.1
+     (Link Data) Router Interface address: 10.15.152.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.152.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 15.15.15.3
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1691
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 16.16.16.1
+  Advertising Router: 16.16.16.1
+  LS Seq Number: 80000007
+  Checksum: 0x4C64
+  Length: 132
+  Number of Links: 9
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.2
+     (Link Data) Router Interface address: 10.16.163.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.163.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.3
+     (Link Data) Router Interface address: 10.16.162.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.162.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.1
+     (Link Data) Router Interface address: 10.16.161.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.161.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.2
+     (Link Data) Router Interface address: 10.16.160.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.160.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 16.16.16.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1745
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 16.16.16.2
+  Advertising Router: 16.16.16.2
+  LS Seq Number: 8000000C
+  Checksum: 0xFD0F
+  Length: 132
+  Number of Links: 9
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.7
+     (Link Data) Router Interface address: 10.16.165.2
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.165.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.1
+     (Link Data) Router Interface address: 10.16.163.2
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.163.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.3
+     (Link Data) Router Interface address: 10.16.164.2
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.164.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 17.17.17.1
+     (Link Data) Router Interface address: 10.17.170.2
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.17.170.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 16.16.16.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1852
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 16.16.16.3
+  Advertising Router: 16.16.16.3
+  LS Seq Number: 80000008
+  Checksum: 0x44AF
+  Length: 84
+  Number of Links: 5
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.2
+     (Link Data) Router Interface address: 10.16.164.3
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.164.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.1
+     (Link Data) Router Interface address: 10.16.162.3
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.162.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 16.16.16.3
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 570
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 17.17.17.1
+  Advertising Router: 17.17.17.1
+  LS Seq Number: 80000008
+  Checksum: 0x692C
+  Length: 132
+  Number of Links: 9
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.17.173.22
+     (Link Data) Router Interface address: 10.17.173.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.17.173.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 17.17.17.3
+     (Link Data) Router Interface address: 10.17.172.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.17.172.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.7
+     (Link Data) Router Interface address: 10.17.171.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.17.171.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.2
+     (Link Data) Router Interface address: 10.17.170.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.17.170.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 17.17.17.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 747
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 17.17.17.3
+  Advertising Router: 17.17.17.3
+  LS Seq Number: 80000007
+  Checksum: 0x46BF
+  Length: 60
+  Number of Links: 3
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 17.17.17.1
+     (Link Data) Router Interface address: 10.17.172.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.17.172.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 17.17.17.3
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 939
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 18.18.18.1
+  Advertising Router: 18.18.18.1
+  LS Seq Number: 80000010
+  Checksum: 0x3785
+  Length: 180
+  Number of Links: 13
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.4
+     (Link Data) Router Interface address: 10.18.181.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.181.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.2
+     (Link Data) Router Interface address: 10.18.180.11
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.180.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 14.14.14.1
+     (Link Data) Router Interface address: 10.14.142.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.14.142.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.4
+     (Link Data) Router Interface address: 10.13.130.2
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.130.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 15.15.15.1
+     (Link Data) Router Interface address: 10.15.151.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.15.151.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.1
+     (Link Data) Router Interface address: 10.16.161.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.161.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 18.18.18.1
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 943
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 18.18.18.2
+  Advertising Router: 18.18.18.2
+  LS Seq Number: 8000000D
+  Checksum: 0x2F13
+  Length: 156
+  Number of Links: 11
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.4
+     (Link Data) Router Interface address: 10.18.189.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.189.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.3
+     (Link Data) Router Interface address: 10.18.182.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.182.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.1
+     (Link Data) Router Interface address: 10.18.180.22
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.180.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 13.13.13.3
+     (Link Data) Router Interface address: 10.13.131.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.13.131.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 12.12.12.1
+     (Link Data) Router Interface address: 10.12.121.2
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.12.121.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 18.18.18.2
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 1338
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 18.18.18.3
+  Advertising Router: 18.18.18.3
+  LS Seq Number: 80000006
+  Checksum: 0x6AD4
+  Length: 84
+  Number of Links: 5
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.5
+     (Link Data) Router Interface address: 10.18.184.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.184.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.2
+     (Link Data) Router Interface address: 10.18.182.33
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.182.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 18.18.18.3
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 713
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 18.18.18.4
+  Advertising Router: 18.18.18.4
+  LS Seq Number: 80000CED
+  Checksum: 0x7BB1
+  Length: 156
+  Number of Links: 11
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.2
+     (Link Data) Router Interface address: 10.18.189.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.189.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.6
+     (Link Data) Router Interface address: 10.18.185.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.185.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.5
+     (Link Data) Router Interface address: 10.18.183.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.183.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.1
+     (Link Data) Router Interface address: 10.18.181.44
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.181.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 9.9.9.3
+     (Link Data) Router Interface address: 10.9.94.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.9.94.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 18.18.18.4
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 958
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 18.18.18.5
+  Advertising Router: 18.18.18.5
+  LS Seq Number: 80000006
+  Checksum: 0x2922
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.6
+     (Link Data) Router Interface address: 10.18.186.55
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.186.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.3
+     (Link Data) Router Interface address: 10.18.184.55
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.184.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.4
+     (Link Data) Router Interface address: 10.18.183.55
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.183.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 18.18.18.5
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 554
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 18.18.18.6
+  Advertising Router: 18.18.18.6
+  LS Seq Number: 80000009
+  Checksum: 0xBC89
+  Length: 132
+  Number of Links: 9
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.8
+     (Link Data) Router Interface address: 10.18.188.66
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.188.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.7
+     (Link Data) Router Interface address: 10.18.187.66
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.187.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.5
+     (Link Data) Router Interface address: 10.18.186.66
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.186.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.4
+     (Link Data) Router Interface address: 10.18.185.66
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.185.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 18.18.18.6
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 834
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 18.18.18.7
+  Advertising Router: 18.18.18.7
+  LS Seq Number: 80000010
+  Checksum: 0xEB05
+  Length: 132
+  Number of Links: 9
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.6
+     (Link Data) Router Interface address: 10.18.187.77
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.187.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 16.16.16.2
+     (Link Data) Router Interface address: 10.16.165.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.16.165.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.1
+     (Link Data) Router Interface address: 10.11.110.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.110.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 17.17.17.1
+     (Link Data) Router Interface address: 10.17.171.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.17.171.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 18.18.18.7
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+  LS age: 560
+  Options: (No TOS-capability, DC)
+  LS Type: Router Links
+  Link State ID: 18.18.18.8
+  Advertising Router: 18.18.18.8
+  LS Seq Number: 80000002
+  Checksum: 0x562C
+  Length: 108
+  Number of Links: 7
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 11.11.11.2
+     (Link Data) Router Interface address: 10.11.111.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.11.111.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 10
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 18.18.18.6
+     (Link Data) Router Interface address: 10.18.188.88
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.18.188.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: another Router (point-to-point)
+     (Link ID) Neighboring Router ID: 10.10.10.1
+     (Link Data) Router Interface address: 10.10.100.1
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 10.10.100.0
+     (Link Data) Network Mask: 255.255.255.0
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 64
+
+    Link connected to: a Stub Network
+     (Link ID) Network/subnet number: 18.18.18.8
+     (Link Data) Network Mask: 255.255.255.255
+      Number of TOS metrics: 0
+       TOS 0 Metrics: 1
+
+
+zaf-jnb-r2#
+zaf-jnb-r2#
+zaf-jnb-r2#
