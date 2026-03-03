@@ -145,17 +145,18 @@ def main():
 
     auth = (args.user, args.password)
 
-    # Locate country-mapping.csv
+    # Locate ENRICHED_country-mapping.csv
+    # Subfolder is now {graph_time}_ENRICHED; file prefix is ENRICHED_
     if args.enriched_dir:
-        csv_path = os.path.join(args.enriched_dir, "country-mapping.csv")
+        csv_path = os.path.join(args.enriched_dir, "ENRICHED_country-mapping.csv")
     else:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(script_dir)
         csv_path = os.path.join(project_root, "OUTPUT", "ENRICHED",
-                                args.graph_time, "country-mapping.csv")
+                                f"{args.graph_time}_ENRICHED", "ENRICHED_country-mapping.csv")
 
     if not os.path.exists(csv_path):
-        print(f"ERROR: country-mapping.csv not found at: {csv_path}")
+        print(f"ERROR: ENRICHED_country-mapping.csv not found at: {csv_path}")
         print("Run the terminal pipeline first (workflow.sh or topology-country-tool.sh)")
         sys.exit(1)
 
@@ -223,7 +224,7 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     palette_path = os.path.join(project_root, "OUTPUT", "ENRICHED",
-                                args.graph_time, "country-palette.json")
+                                f"{args.graph_time}_ENRICHED", "ENRICHED_country-palette.json")
     os.makedirs(os.path.dirname(palette_path), exist_ok=True)
     with open(palette_path, "w") as f:
         json.dump({"graph_time": args.graph_time, "palette": palette,

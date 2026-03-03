@@ -201,18 +201,19 @@ function newestFolder(dir) {
     console.log('\n── Phase 2 : Run terminal pipeline ────────────────────────────────────');
 
     // Use the enriched folder for this graph_time if it exists, else create it
+    // Folder now has suffix _ENRICHED; file now has prefix ENRICHED_
     let enrichedDir = newGraphTime
-      ? path.join(ENRICHED, newGraphTime)
+      ? path.join(ENRICHED, newGraphTime + '_ENRICHED')
       : newestFolder(ENRICHED);
 
-    const csvPath = enrichedDir ? path.join(enrichedDir, 'country-mapping.csv') : null;
+    const csvPath = enrichedDir ? path.join(enrichedDir, 'ENRICHED_country-mapping.csv') : null;
 
     if (csvPath && fs.existsSync(csvPath)) {
-      pass('country-mapping.csv already exists', path.relative(PROJECT, csvPath));
+      pass('ENRICHED_country-mapping.csv already exists', path.relative(PROJECT, csvPath));
       countryMap = loadCsvMapping(csvPath);
     } else {
       info('Running topology-country-tool.sh from-file...');
-      // Determine output dir — use ENRICHED/<graph_time> if known
+      // Determine output dir — use ENRICHED/<graph_time>_ENRICHED if known
       const outDir  = enrichedDir || path.join(ENRICHED, 'latest');
       const r = spawnSync('bash', [
         TCT_SH, 'from-file',
@@ -225,20 +226,20 @@ function newestFolder(dir) {
       const stderr = r.stderr || '';
       if (r.status === 0) {
         pass('topology-country-tool.sh succeeded');
-        const csvOut = path.join(outDir, 'country-mapping.csv');
+        const csvOut = path.join(outDir, 'ENRICHED_country-mapping.csv');
         if (fs.existsSync(csvOut)) {
           countryMap = loadCsvMapping(csvOut);
-          pass('country-mapping.csv loaded', `${Object.keys(countryMap).length} routers`);
+          pass('ENRICHED_country-mapping.csv loaded', `${Object.keys(countryMap).length} routers`);
         } else {
           // Try the newest ENRICHED folder after the run
           const newest  = newestFolder(ENRICHED);
-          const csvNew  = newest ? path.join(newest, 'country-mapping.csv') : null;
+          const csvNew  = newest ? path.join(newest, 'ENRICHED_country-mapping.csv') : null;
           if (csvNew && fs.existsSync(csvNew)) {
             countryMap = loadCsvMapping(csvNew);
-            pass('country-mapping.csv loaded from newest ENRICHED folder',
+            pass('ENRICHED_country-mapping.csv loaded from newest ENRICHED folder',
                  `${Object.keys(countryMap).length} routers`);
           } else {
-            fail('country-mapping.csv not found after pipeline run');
+            fail('ENRICHED_country-mapping.csv not found after pipeline run');
           }
         }
       } else {
@@ -246,7 +247,7 @@ function newestFolder(dir) {
         info('stdout: ' + stdout.substring(0, 200));
         // Fall back to pre-existing newest enriched data
         const newest = newestFolder(ENRICHED);
-        const csvFb  = newest ? path.join(newest, 'country-mapping.csv') : null;
+        const csvFb  = newest ? path.join(newest, 'ENRICHED_country-mapping.csv') : null;
         if (csvFb && fs.existsSync(csvFb)) {
           countryMap = loadCsvMapping(csvFb);
           info(`Fallback: loaded ${Object.keys(countryMap).length} routers from ${newest}`);

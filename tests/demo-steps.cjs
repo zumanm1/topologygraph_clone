@@ -29,8 +29,8 @@ function loadCsvMapping(csvPath) {
 }
 
 function runPipeline(newGraph) {
-  const outDir  = path.join(ENRICHED, newGraph);
-  const csvPath = path.join(outDir, 'country-mapping.csv');
+  const outDir  = path.join(ENRICHED, newGraph + '_ENRICHED');
+  const csvPath = path.join(outDir, 'ENRICHED_country-mapping.csv');
   if (!fs.existsSync(csvPath)) {
     console.log('  Running topology-country-tool.sh...');
     const r = spawnSync('bash', [
@@ -49,13 +49,13 @@ function runPipeline(newGraph) {
 }
 
 function listOutputFiles(newGraph) {
-  const dir = path.join(ENRICHED, newGraph);
+  const dir = path.join(ENRICHED, newGraph + '_ENRICHED');
   if (!fs.existsSync(dir)) return;
   const files = fs.readdirSync(dir).filter(f => /\.(yaml|json|csv)$/.test(f)).sort();
-  console.log('\n  Output files in OUTPUT/ENRICHED/' + newGraph + ':');
+  console.log('\n  Output files in OUTPUT/ENRICHED/' + newGraph + '_ENRICHED:');
   files.forEach(f => {
     const kb = (fs.statSync(path.join(dir, f)).size / 1024).toFixed(1);
-    console.log(`    ${f.padEnd(45)} ${kb} KB`);
+    console.log(`    ${f.padEnd(50)} ${kb} KB`);
   });
 }
 
