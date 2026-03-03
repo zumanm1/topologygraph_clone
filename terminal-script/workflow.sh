@@ -7,9 +7,9 @@
 #   1. (Optional) Upload a new OSPF LSDB file → Topolograph web app
 #   2. Fetch the raw (unmodified) graph → IN-OUT-FOLDER/{graph_time}/
 #   3. Run the terminal topology pipeline → 3 structured output folders:
-#         OUTPUT/AS-IS/{graph_time}/    ← original graph, nothing changed
-#         OUTPUT/GATEWAY/{graph_time}/  ← gateway-only, countries collapsed
-#         OUTPUT/ENRICHED/{graph_time}/ ← original + country / colour enrichment
+#         OUTPUT/AS-IS/{graph_time}_AS-IS/       ← original graph, nothing changed
+#         OUTPUT/GATEWAY/{graph_time}_GATEWAY/   ← gateway-only, countries collapsed
+#         OUTPUT/ENRICHED/{graph_time}_ENRICHED/ ← original + country / colour enrichment
 #   4. Push country colours + metadata back to the Topolograph UI
 #
 # Usage:
@@ -97,9 +97,9 @@ Options:
   --dry-run             Dry-run the UI push step
 
 Output folders:
-  OUTPUT/AS-IS/{graph_time}/    — original graph, zero modification
-  OUTPUT/GATEWAY/{graph_time}/  — gateway-only topology, countries collapsed
-  OUTPUT/ENRICHED/{graph_time}/ — all routers + country label + colour metadata
+  OUTPUT/AS-IS/{graph_time}_AS-IS/       — original graph, zero modification
+  OUTPUT/GATEWAY/{graph_time}_GATEWAY/   — gateway-only topology, countries collapsed
+  OUTPUT/ENRICHED/{graph_time}_ENRICHED/ — all routers + country label + colour metadata
 EOF
 }
 
@@ -157,13 +157,15 @@ step_terminal_pipeline() {
   mkdir -p "$tmp_work"
 
   # ── 3a: Copy AS-IS (raw unmodified graph files from IN-OUT-FOLDER) ───────────
-  local asis_out="$OUTPUT_ASIS/$GRAPH_TIME"
+  # Subfolder suffix _AS-IS makes it instantly clear which pipeline stage
+  # produced the folder even when viewed outside its parent directory.
+  local asis_out="$OUTPUT_ASIS/${GRAPH_TIME}_AS-IS"
   mkdir -p "$asis_out"
-  cp "$inout_gt/nodes.json" "$asis_out/nodes.json"
-  cp "$inout_gt/edges.json" "$asis_out/edges.json"
-  cp "$inout_gt/meta.json"  "$asis_out/meta.json"
+  cp "$inout_gt/nodes.json" "$asis_out/AS-IS_nodes.json"
+  cp "$inout_gt/edges.json" "$asis_out/AS-IS_edges.json"
+  cp "$inout_gt/meta.json"  "$asis_out/AS-IS_meta.json"
   # Also save the OSPF source file if it was provided
-  [[ -n "$OSPF_FILE" && -f "$OSPF_FILE" ]] && cp "$OSPF_FILE" "$asis_out/ospf-database.txt"
+  [[ -n "$OSPF_FILE" && -f "$OSPF_FILE" ]] && cp "$OSPF_FILE" "$asis_out/AS-IS_ospf-database.txt"
   log "AS-IS output: $asis_out"
 
   # ── 3b: Choose edge source for terminal tool ───────────────────────────────
@@ -204,25 +206,28 @@ step_terminal_pipeline() {
   fi
 
   # ── 3d: Distribute outputs to structured folders ───────────────────────────
-  local gw_out="$OUTPUT_GATEWAY/$GRAPH_TIME"
-  local en_out="$OUTPUT_ENRICHED/$GRAPH_TIME"
+  # Both the subfolder suffix and file prefix carry the pipeline-stage label,
+  # so any individual file is self-identifying without needing folder context.
+  local gw_out="$OUTPUT_GATEWAY/${GRAPH_TIME}_GATEWAY"
+  local en_out="$OUTPUT_ENRICHED/${GRAPH_TIME}_ENRICHED"
   mkdir -p "$gw_out" "$en_out"
 
-  # GATEWAY files
+  # GATEWAY files  (prefix: GATEWAY_)
   for f in gateway-only-topology.yaml gateway-only-topology.json \
-            country-core-summary.yaml  country-core-summary.json \
-            gateway-only-topology.filtered.yaml \
-            gateway-only-topology.filtered.json \
-            country-core-summary.filtered.yaml \
-            country-core-summary.filtered.json; do
-    [[ -f "$tmp_work/$f" ]] && cp "$tmp_work/$f" "$gw_out/"
+            country-core-summary.yaml  country-core-summary.json; do
+    [[ -f "$tmp_work/$f" ]] && cp "$tmp_work/$f" "$gw_out/GATEWAY_$f"
+  done
+  # Filtered variants keep their .filtered. infix AND the GATEWAY_ prefix
+  for f in gateway-only-topology.filtered.yaml gateway-only-topology.filtered.json \
+            country-core-summary.filtered.yaml  country-core-summary.filtered.json; do
+    [[ -f "$tmp_work/$f" ]] && cp "$tmp_work/$f" "$gw_out/GATEWAY_$f"
   done
   log "GATEWAY output: $gw_out"
 
-  # ENRICHED files
+  # ENRICHED files  (prefix: ENRICHED_)
   for f in original-topology-with-country.yaml original-topology-with-country.json \
             country-mapping.csv; do
-    [[ -f "$tmp_work/$f" ]] && cp "$tmp_work/$f" "$en_out/"
+    [[ -f "$tmp_work/$f" ]] && cp "$tmp_work/$f" "$en_out/ENRICHED_$f"
   done
   log "ENRICHED output: $en_out"
 
@@ -300,7 +305,7 @@ step_push_to_ui() {
 
   step "Push country colours → Topolograph UI"
 
-  local en_out="$OUTPUT_ENRICHED/$GRAPH_TIME"
+  local en_out="$OUTPUT_ENRICHED/${GRAPH_TIME}_ENRICHED"
   local dry_flag=""
   [[ "$DRY_RUN" == "true" ]] && dry_flag="--dry-run"
 
@@ -324,9 +329,9 @@ print_summary() {
   printf  "║  graph_time : %-47s║\n" "$GRAPH_TIME"
   echo "╠══════════════════════════════════════════════════════════════╣"
   echo "║  OUTPUT FOLDERS:                                             ║"
-  printf  "║  AS-IS    → OUTPUT/AS-IS/%-37s║\n"    "$GRAPH_TIME/"
-  printf  "║  GATEWAY  → OUTPUT/GATEWAY/%-35s║\n"  "$GRAPH_TIME/"
-  printf  "║  ENRICHED → OUTPUT/ENRICHED/%-34s║\n" "$GRAPH_TIME/"
+  printf  "║  AS-IS    → OUTPUT/AS-IS/%-37s║\n"    "${GRAPH_TIME}_AS-IS/"
+  printf  "║  GATEWAY  → OUTPUT/GATEWAY/%-35s║\n"  "${GRAPH_TIME}_GATEWAY/"
+  printf  "║  ENRICHED → OUTPUT/ENRICHED/%-34s║\n" "${GRAPH_TIME}_ENRICHED/"
   echo "╠══════════════════════════════════════════════════════════════╣"
   echo "║  NEXT STEPS:                                                 ║"
   echo "║  1. Open http://localhost:8081/                               ║"
