@@ -19,7 +19,8 @@
 #
 # Options:
 #   --ospf-file  <path>    OSPF database text file to upload (triggers upload step)
-#   --host-file  <path>    Host mapping file (txt or csv). Default: host-file.txt
+#   --host-file  <path>    Host mapping file (txt or csv).
+#                          Default: INPUT-FOLDER/Load-hosts.txt  (falls back to host-file.txt)
 #   --graph-time <value>   Use an existing graph (skip upload). Auto-detect if omitted.
 #   --base-url   <url>     Topolograph URL.  Default: http://localhost:8081
 #   --user       <name>    API username.     Default: ospf@topolograph.com
@@ -39,7 +40,12 @@ BASE_URL="${BASE_URL:-http://localhost:8081}"
 AUTH_USER="${AUTH_USER:-ospf@topolograph.com}"
 AUTH_PASS="${AUTH_PASS:-ospf}"
 OSPF_FILE="${OSPF_FILE:-}"
-HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/host-file.txt}"
+# Host file: prefer Load-hosts.txt (canonical), fall back to host-file.txt
+if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt" ]]; then
+  HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt}"
+else
+  HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/host-file.txt}"
+fi
 GRAPH_TIME="${GRAPH_TIME:-}"
 COUNTRIES_FILTER="${COUNTRIES_FILTER:-}"
 NO_PUSH="${NO_PUSH:-false}"
