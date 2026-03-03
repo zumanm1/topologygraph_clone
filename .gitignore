@@ -19,6 +19,7 @@ IN-OUT-FOLDER/.tmp*/
 # Credentials / env
 .env
 *.env
+.api-token
 
 # Topolograph docker volumes (MongoDB data lives in Docker volumes, not here)
 # Keep docker-compose and init scripts but exclude any generated secrets
