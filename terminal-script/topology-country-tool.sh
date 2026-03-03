@@ -18,8 +18,18 @@ OUTPUT_DIR="${OUTPUT_DIR:-$PROJECT_ROOT/OUTPUT/CURRENT}"
 TMP_DIR="$OUTPUT_DIR/.tmp"
 mkdir -p "$OUTPUT_DIR" "$TMP_DIR"
 
-HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/host-file.txt}"
-OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt}"
+# Host file: prefer Load-hosts.txt (canonical), fall back to host-file.txt
+if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt" ]]; then
+  HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt}"
+else
+  HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/host-file.txt}"
+fi
+# OSPF file: prefer ospf-database-2.txt (current default), fall back to ospf-database.txt
+if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" ]]; then
+  OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt}"
+else
+  OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt}"
+fi
 COUNTRY_OVERRIDE_FILE="${COUNTRY_OVERRIDE_FILE:-$PROJECT_ROOT/country-prefix-overrides.csv}"
 
 BASE_URL="${BASE_URL:-http://localhost:8081}"
