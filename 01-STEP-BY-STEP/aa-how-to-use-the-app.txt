@@ -1,0 +1,528 @@
+================================================================================
+  OSPF COUNTRY TOPOLOGY  —  HOW TO USE THE APP
+  Complete Step-by-Step Reference  (v01 — with self-identifying file naming)
+  Last updated: 2026-03-03
+================================================================================
+
+This guide teaches you the complete lifecycle of the Topolograph OSPF Country
+Topology pipeline. It supersedes 00-STEP-BY-STEP with a deeper explanation of
+every concept and the updated output file naming convention.
+
+A numbered script exists for EVERY step in the scripts/ folder.
+Screenshots for each UI step are in the screenshots/ folder.
+
+────────────────────────────────────────────────────────────────────────────────
+QUICK START  (app already running, use default files)
+────────────────────────────────────────────────────────────────────────────────
+
+  cd /Users/macbook/Documents/OSPF-DATABASE-TEST
+  ./start.sh
+  # Choose [1] — Run with default files
+
+That is all. The full pipeline runs in ~30 seconds. Outputs saved to OUTPUT/.
+
+────────────────────────────────────────────────────────────────────────────────
+HOW THE OUTPUT NAMING WORKS  ← NEW IN v01, READ THIS FIRST
+────────────────────────────────────────────────────────────────────────────────
+
+The pipeline produces 3 output folders per pipeline run. Each run is identified
+by a "graph_time" — a timestamp string like:  03Mar2026_20h05m03s_34_hosts
+
+OLD NAMING (00-STEP-BY-STEP — do not use):
+  OUTPUT/AS-IS/03Mar2026_20h05m03s_34_hosts/nodes.json   ← ambiguous
+  OUTPUT/GATEWAY/03Mar2026_20h05m03s_34_hosts/nodes.json ← same name!
+  OUTPUT/ENRICHED/03Mar2026_20h05m03s_34_hosts/country-mapping.csv
+
+NEW NAMING (01-STEP-BY-STEP — current):
+  OUTPUT/AS-IS/03Mar2026_20h05m03s_34_hosts_AS-IS/
+    AS-IS_nodes.json          ← folder suffix + file prefix = self-identifying
+    AS-IS_edges.json
+    AS-IS_meta.json
+    AS-IS_ospf-database.txt
+
+  OUTPUT/GATEWAY/03Mar2026_20h05m03s_34_hosts_GATEWAY/
+    GATEWAY_gateway-only-topology.yaml
+    GATEWAY_gateway-only-topology.json
+    GATEWAY_country-core-summary.yaml
+    GATEWAY_country-core-summary.json
+
+  OUTPUT/ENRICHED/03Mar2026_20h05m03s_34_hosts_ENRICHED/
+    ENRICHED_country-mapping.csv
+    ENRICHED_country-palette.json
+    ENRICHED_original-topology-with-country.yaml
+    ENRICHED_original-topology-with-country.json
+
+WHY: Each file carries its own identity. If you extract ENRICHED_country-mapping.csv
+from its folder, you know immediately:
+  ● Which pipeline stage produced it       (ENRICHED_ prefix)
+  ● Which graph_time it belongs to         (from the subfolder name)
+  ● What it contains                       (country-mapping)
+No README needed inside the folder. No guessing.
+
+────────────────────────────────────────────────────────────────────────────────
+PART A — LIFECYCLE: SHUTDOWN → REBUILD → RESTART
+────────────────────────────────────────────────────────────────────────────────
+
+WHEN YOU NEED THIS:
+  ● You edited topolograph.js (Country Filter panel code)
+  ● A new upstream Topolograph Docker image was released
+  ● You want a completely fresh container state
+
+STEP A1 — Stop the app completely
+  Script  : scripts/01-stop-app.sh
+  Command :
+    cd topolograph-docker
+    docker compose down --remove-orphans
+
+  What happens (in order):
+    1. Nginx (webserver)  stops — HTTP requests immediately fail
+    2. Flask (Gunicorn)   stops — REST API offline
+    3. MCP server         stops — model context protocol offline
+    4. MongoDB            stops — database connection closed
+    5. Docker networks removed (frontend, topolograph_backend)
+    ✔ MongoDB DATA is preserved in Docker volumes — graphs are not lost
+
+  Verify: curl http://localhost:8081 → "connection refused"
+
+STEP A2 — Confirm it is off
+  Script  : scripts/02-confirm-stopped.sh
+  Commands:
+    docker compose ps          # → empty table
+    curl http://localhost:8081 # → connection refused / timeout
+
+  Why this step exists:
+    A common mistake is to run "docker compose build" while old containers are
+    still running. This can leave ghost images or fail with port conflicts.
+    Always confirm offline before rebuilding.
+
+STEP A3 — Rebuild (only when code has changed)
+  Script  : scripts/03-rebuild-app.sh
+  Commands:
+    docker compose pull flask mcp-server       # fetch latest from Docker Hub
+    docker compose build --no-cache webserver  # rebuild Nginx from Dockerfile
+
+  What --no-cache does:
+    Forces Docker to re-execute every Dockerfile layer from scratch.
+    Without it, Docker may serve a cached Nginx image that does NOT contain
+    the latest topolograph.js — meaning your Country Filter changes won't appear.
+
+  What gets baked into the webserver image:
+    topolograph-docker/static/js/topolograph.js  → the custom JS with Country Filter
+
+  SKIP THIS STEP if: doing a plain restart with no code changes.
+
+STEP A4 — Start the app
+  Script  : scripts/04-start-app.sh
+  Command :
+    docker compose up -d
+
+  Startup order (defined by Docker Compose depends_on):
+    1. MongoDB starts first            → persistent store for graphs
+    2. Flask (Gunicorn) starts         → REST API connects to MongoDB
+    3. flask-create-creds (one-shot)   → creates ospf@topolograph.com user
+    4. Nginx webserver starts          → proxies / → Flask, serves static files
+    5. MCP server starts               → port 8000
+
+  Wait: ~10–15 seconds for all services to be ready.
+
+STEP A5 — Confirm it is running
+  Script  : scripts/05-confirm-running.sh
+  Checks  :
+    ✅  flask       container → Up
+    ✅  webserver   container → Up (port 8081)
+    ✅  mongodb     container → Up (port 27017)
+    ✅  mcp-server  container → Up (port 8000)
+    ✅  Web UI      → HTTP 200
+    ✅  REST API    → HTTP 200 (with Basic Auth)
+    ℹ   Graphs in database: N
+
+────────────────────────────────────────────────────────────────────────────────
+PART B — FULL PIPELINE WALKTHROUGH
+────────────────────────────────────────────────────────────────────────────────
+
+INPUT FILES (in INPUT-FOLDER/):
+  ospf-database-2.txt   — Cisco "show ip ospf database detail" output
+                          This is the raw source of truth for the network topology.
+                          34 routers, 108 OSPF adjacencies, spread across 2 OSPF areas.
+
+  Load-hosts.txt        — Maps router IP → hostname
+                          Format:  <router_id>   <hostname>
+                          Example: 18.18.18.1    zaf-cpt-r1
+                          Rule: first 3 chars of hostname = country code (ZAF)
+
+THE 3 OUTPUT STAGES (understanding each):
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  STAGE 1: AS-IS                                                         │
+  │  "What Topolograph holds — unmodified"                                  │
+  │                                                                         │
+  │  These are the raw JSON/text files as fetched from the Topolograph API. │
+  │  Nothing is changed. This is your AUDIT TRAIL.                          │
+  │  Prefix: AS-IS_    Subfolder suffix: _AS-IS                             │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  STAGE 2: GATEWAY                                                       │
+  │  "The skeleton — how countries are interconnected"                      │
+  │                                                                         │
+  │  A gateway router has at least one OSPF link to a router in a          │
+  │  DIFFERENT country. These are the "border routers."                     │
+  │  This view collapses countries to single nodes — great for maps.        │
+  │  Prefix: GATEWAY_   Subfolder suffix: _GATEWAY                          │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  STAGE 3: ENRICHED                                                      │
+  │  "The full enriched topology — what gets pushed to the UI"              │
+  │                                                                         │
+  │  All 34 routers with: country code, hostname, colour metadata, and     │
+  │  gateway flag. This is what push-to-ui.py reads and sends to the        │
+  │  Topolograph REST API via PATCH /api/diagram/{gt}/nodes/{id}.           │
+  │  Prefix: ENRICHED_   Subfolder suffix: _ENRICHED                        │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+STEP B1 — Upload the OSPF file
+  Script  : scripts/06-run-pipeline.sh  OR  ./start.sh
+  Command :
+    ./terminal-script/workflow.sh all \
+      --ospf-file INPUT-FOLDER/ospf-database-2.txt \
+      --host-file INPUT-FOLDER/Load-hosts.txt
+
+  Backend action — POST /api/graphs:
+    Body: [{"lsdb_output": "<file contents>",
+            "vendor_device": "Cisco",
+            "igp_protocol": "ospf"}]
+    Auth: Basic  ospf@topolograph.com : ospf
+    Response: {"graph_time": "03Mar2026_20h05m03s_34_hosts", "nodes": 34, "edges": 108}
+
+  What Topolograph does internally:
+    1. Parses OSPF LSA entries using TextFSM templates
+    2. Builds a graph (nodes = routers, edges = OSPF adjacencies)
+    3. Stores in MongoDB  'graphs'  collection
+    4. Returns graph_time — unique snapshot ID
+
+STEP B2 — The pipeline runs (backend terminal actions)
+  Pipeline script: terminal-script/workflow.sh all
+
+  B2a. step_upload_ospf     → POST /api/graphs (if --ospf-file given)
+  B2b. step_fetch_raw       → GET /api/diagram/{gt}/nodes + edges + meta
+                              Saved to: IN-OUT-FOLDER/{graph_time}/
+  B2c. topology-country-tool.sh
+                              Reads OSPF + host file → assigns country codes
+                              Detects gateway routers (cross-country links)
+                              Writes to OUTPUT/.tmp_work_{graph_time}/
+  B2d. step_distribute      → Copies files with self-identifying names:
+                              OUTPUT/AS-IS/{gt}_AS-IS/AS-IS_*.json
+                              OUTPUT/GATEWAY/{gt}_GATEWAY/GATEWAY_*.yaml/json
+                              OUTPUT/ENRICHED/{gt}_ENRICHED/ENRICHED_*.csv/json/yaml
+  B2e. push-to-ui.py        → Reads ENRICHED_country-mapping.csv
+                              PATCHes every node in Topolograph:
+                              PATCH /api/diagram/{gt}/nodes/{id}
+                              Payload: {country, is_gateway, hostname, color, title, group}
+
+STEP B3 — Open the Web UI and load the graph
+  URL: http://localhost:8081/upload-ospf-isis-lsdb
+
+  Actions:
+    1. Select "Cisco" radio (top of upload form)
+    2. Select the graph_time from the dropdown
+       (the most recent = top of the list)
+    3. Click "Load dynamic graph"
+    4. vis.js Network library renders 34 nodes + 108 edges
+
+  What happens in the browser:
+    AJAX → GET /api/diagram/{gt}/nodes → parsed into vis.js DataSet
+    AJAX → GET /api/diagram/{gt}/edges → parsed into vis.js DataSet
+    vis.js runs a physics simulation to position nodes (Barnes-Hut algorithm)
+    Country colors are read from each node's stored  color  property
+
+  Screenshot: screenshots/06-A6-graph-with-country-colours.png
+
+STEP B4 — Country Filter panel
+  Location: Top-right of the network diagram
+  Toggle  : Click "🌍 Country Filter"
+
+  Controls:
+    [Select All]  — check all countries (show all 34 routers)
+    [Select None] — uncheck all
+    Mode buttons:
+      [Show Only]  — show ONLY the checked countries (hide all others)
+      [Exclude]    — HIDE the checked countries (show all others)
+    [Apply]  — apply the current selection + mode
+    [Reset]  — restore all nodes, clear filter
+
+  How it works (purely client-side):
+    Each vis.js node has a  country  property set during push-to-ui.py.
+    When Apply is clicked, topolograph.js iterates all nodes and calls
+    nodes.update([{id: n.id, hidden: true/false}])
+    No server call is made. This is 100% browser-side JavaScript.
+
+  Example — Show only ZAF + GBR:
+    1. Click [Select None]
+    2. Check ✓ ZAF   Check ✓ GBR
+    3. Click [Show Only]
+    4. Click [Apply]
+    → Only 11 nodes remain visible (ZAF:8 + GBR:3)
+
+STEP B5 — Inspect the output files
+  Script: scripts/07-show-outputs.sh
+
+  AS-IS files:
+    AS-IS_nodes.json         → raw nodes: id, label, x, y, group, color
+    AS-IS_edges.json         → raw edges: from, to, cost, label
+    AS-IS_meta.json          → {areas:[0,1], protocol:"ospf", vendor:"Cisco"}
+    AS-IS_ospf-database.txt  → original Cisco LSDB output file
+
+  GATEWAY files:
+    GATEWAY_gateway-only-topology.yaml/json  → border routers + inter-country links
+    GATEWAY_country-core-summary.yaml/json   → per-country: gateway count, connected_to
+
+  ENRICHED files:
+    ENRICHED_country-mapping.csv                 → router_id, hostname, country, is_gateway
+    ENRICHED_country-palette.json                → {ZAF:{background:"#FF8C42", border:"#CC6D28",...}}
+    ENRICHED_original-topology-with-country.yaml → all 34 routers + full enrichment
+    ENRICHED_original-topology-with-country.json → same, JSON format
+
+────────────────────────────────────────────────────────────────────────────────
+PART C — HOST FILE MANAGEMENT
+────────────────────────────────────────────────────────────────────────────────
+
+The host file is the bridge between router IDs (IP addresses) and human-readable
+hostnames. The pipeline uses the first 3 characters of a hostname as the country
+code.
+
+Example:
+  18.18.18.1  →  zaf-cpt-r1   →  ZAF  (South Africa, Cape Town, Router 1)
+  15.15.15.1  →  gbr-lon-r1   →  GBR  (United Kingdom, London, Router 1)
+
+Canonical files:
+  INPUT-FOLDER/Load-hosts.txt   ← whitespace-separated (primary)
+  INPUT-FOLDER/Load-hosts.csv   ← CSV mirror (for web UI upload)
+
+To update:
+  Option 1 — Edit manually:
+    nano INPUT-FOLDER/Load-hosts.txt
+    # Format: <router_id>  <hostname>
+
+  Option 2 — Upload via Web UI:
+    http://localhost:8081/ospf-host-to-dns-mapping
+    Upload a CSV file → hostnames appear in Topolograph's database
+
+  Option 3 — Fetch from running graph:
+    ./terminal-script/save-load-hosts.sh --from-ui --graph-time <graph_time>
+
+────────────────────────────────────────────────────────────────────────────────
+PART D — API ACCESS
+────────────────────────────────────────────────────────────────────────────────
+
+Basic Auth (REST API — used by pipeline scripts):
+  Username: ospf@topolograph.com
+  Password: ospf
+  Example:  curl -u ospf@topolograph.com:ospf http://localhost:8081/api/graph/
+
+Bearer Token (web session — obtained via /api/auth/token):
+  Token stored: .api-token  (project root)
+  Load: source .api-token
+  Use:  curl -H "Authorization: Bearer $API_TOKEN" http://localhost:8081/api/graph/
+
+API documentation (interactive Swagger UI):
+  http://localhost:8081/api/ui/
+
+Key endpoints:
+  POST   /api/graphs                      → Upload new OSPF LSDB
+  GET    /api/graph/                      → List all graphs for current user
+  GET    /api/diagram/{graph_time}/nodes  → Get all nodes for a graph
+  PATCH  /api/diagram/{graph_time}/nodes/{id} → Update node (colour, country…)
+  GET    /api/diagram/{graph_time}/edges  → Get all edges
+
+Full token guide: DOCS/api-token-guide.md
+
+────────────────────────────────────────────────────────────────────────────────
+COUNTRY PALETTE  (10 countries in the test dataset)
+────────────────────────────────────────────────────────────────────────────────
+
+  Code  Country                 Colour (background)   Node count
+  ────  ─────────────────────   ───────────────────   ──────────
+  ZAF   South Africa            #FF8C42  (orange)          8
+  DRC   D.R. Congo              #4ECDC4  (teal-cyan)       4
+  MOZ   Mozambique              #45B7D1  (sky blue)        4
+  GBR   United Kingdom          #4D96FF  (blue)            3
+  FRA   France                  #F77F00  (amber)           3
+  LES   Lesotho                 #C77DFF  (violet)          3
+  POR   Portugal                #06D6A0  (mint green)      3
+  KEN   Kenya                   #6BCB77  (green)           2
+  TAN   Tanzania                #FFD93D  (yellow)          2
+  DJB   Djibouti                #FF6B6B  (coral red)       2
+                                                    Total: 34
+
+Gateway routers (border routers that link countries) are marked with 🌐 in
+their tooltip. Use [Show Only] in the Country Filter to isolate any country.
+
+────────────────────────────────────────────────────────────────────────────────
+QUICK COMMAND REFERENCE
+────────────────────────────────────────────────────────────────────────────────
+
+  # Interactive launcher (recommended entry point)
+  ./start.sh
+
+  # Stop
+  cd topolograph-docker && docker compose down
+
+  # Start (after stopping)
+  cd topolograph-docker && docker compose up -d
+
+  # Rebuild (after code changes only)
+  cd topolograph-docker
+  docker compose pull flask mcp-server
+  docker compose build --no-cache webserver
+  docker compose up -d
+
+  # Run pipeline directly
+  ./terminal-script/workflow.sh all \
+    --ospf-file INPUT-FOLDER/ospf-database-2.txt \
+    --host-file INPUT-FOLDER/Load-hosts.txt
+
+  # Show output files (with new naming)
+  bash 01-STEP-BY-STEP/scripts/07-show-outputs.sh
+
+  # Full lifecycle (run scripts in order)
+  bash 01-STEP-BY-STEP/scripts/01-stop-app.sh
+  bash 01-STEP-BY-STEP/scripts/02-confirm-stopped.sh
+  bash 01-STEP-BY-STEP/scripts/03-rebuild-app.sh   # only if updating
+  bash 01-STEP-BY-STEP/scripts/04-start-app.sh
+  bash 01-STEP-BY-STEP/scripts/05-confirm-running.sh
+  bash 01-STEP-BY-STEP/scripts/06-run-pipeline.sh
+  bash 01-STEP-BY-STEP/scripts/07-show-outputs.sh
+
+  # Live browser walkthrough (headless — saves screenshots to screenshots/)
+  node 01-STEP-BY-STEP/scripts/09-live-walkthrough-chrome.cjs
+
+  # Live browser walkthrough (visible browser — watch it run)
+  HEADLESS=false node 01-STEP-BY-STEP/scripts/09-live-walkthrough-chrome.cjs
+
+  # Walkthrough with a different graph_time
+  GRAPH_TIME=03Mar2026_20h05m03s_34_hosts \
+    node 01-STEP-BY-STEP/scripts/09-live-walkthrough-chrome.cjs
+
+────────────────────────────────────────────────────────────────────────────────
+PART E — BROWSER WALKTHROUGH SCRIPT (09-live-walkthrough-chrome.cjs)
+────────────────────────────────────────────────────────────────────────────────
+
+Script  : 01-STEP-BY-STEP/scripts/09-live-walkthrough-chrome.cjs
+Purpose : Automate the complete UI walkthrough with Playwright (Chromium)
+Output  : Screenshots in 01-STEP-BY-STEP/screenshots/  (NN-StepCode-desc.png)
+
+ENV VARS (all optional):
+  BASE_URL    = http://localhost:8081         (default)
+  GRAPH_TIME  = 03Mar2026_20h05m03s_34_hosts  (default)
+  TOPO_USER   = ospf@topolograph.com          (default)
+  TOPO_PASS   = ospf                          (default)
+  HEADLESS    = true                          (set false to watch browser)
+
+STEPS AUTOMATED:
+  AUTH  Login — establish authenticated session
+  A1    Upload LSDB page — vendor list
+  A2    Select Cisco radio button
+  A3    File upload documented; API alternative shown
+  A4    Select enriched graph from dropdown
+  A5    Load dynamic graph — vis.js renders 34 nodes / 108 edges
+  A6    Verify/inject country colours — Country Filter panel
+  A7    Open Country Filter panel — confirm 10 countries listed
+  A8    Filter: Show Only ZAF — 8 routers visible
+  A9    Filter: Exclude DRC  — 30 routers visible
+  A10   Filter: Reset        — all 34 restored
+  A11   Audit output files   — verify AS-IS / GATEWAY / ENRICHED folders
+  A12   Host mapping page    — router IP → hostname table
+  A13   Swagger API docs     — OAS3 endpoint reference
+  A14   Final view           — full coloured topology
+
+RESILIENCE FEATURES:
+  ● Every selector has fallbacks (id → class → text match)
+  ● safeClick() logs a warning instead of crashing when element not found
+  ● selectGraph() falls back to the last option if graph_time not found
+  ● Country injection fallback if push-to-ui.py has not run
+  ● process.exitCode=1 on error (CI-friendly)
+
+ALTERNATIVES NOTED IN SCRIPT:
+  ● File upload   → POST /api/graphs (workflow.sh / CI pipelines)
+  ● Host mapping  → CSV Import  OR  Netbox sync
+  ● Country push  → push-to-ui.py via PATCH /api/diagram/{gt}/nodes/{id}
+  ● Filter panel  → pure client-side vis.DataSet.update() — zero API calls
+  ● OpenAPI spec  → GET /api/openapi.json  (import to Postman/Insomnia)
+
+────────────────────────────────────────────────────────────────────────────────
+PART F — COLLAPSING FEATURE (country-level gateway aggregation)
+────────────────────────────────────────────────────────────────────────────────
+
+CONCEPT (Parnas 1972 — Information Hiding applied to network topology)
+  At scale (20+ routers per country) the full AS-IS view becomes a dense
+  hairball.  The COLLAPSING view hides intra-country core routers, showing only
+  border / gateway routers for each country.  Any country can be expanded on
+  demand.  OSPF SPT calculations remain fully intact — the server computes
+  Dijkstra on the complete MongoDB topology; vis.js `hidden` is client-only.
+
+4 VIEW-MODE BUTTONS  (injected into the Topolograph toolbar on graph load)
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │  [AS-IS]  [GATEWAY]  [ENRICHED]  [COLLAPSING]                           │
+  └──────────────────────────────────────────────────────────────────────────┘
+  AS-IS       → all 34 nodes, no country colours (plain OSPF view)
+  GATEWAY     → gateway-only nodes (28 of 34), country colours retained
+  ENRICHED    → all 34 nodes + country colours (default/recommended view)
+  COLLAPSING  → hybrid: Country Groups panel appears; double-click to expand
+
+COLLAPSING MODE — COUNTRY GROUPS PANEL
+  A floating "Country Groups" panel appears on the right side.
+  Each country row shows:  [Collapse] / [Expand] button + node counts
+
+  Collapse ZAF  →  3 ZAF core nodes hidden, gateway badge shows "(+3 hidden)"
+  Expand  ZAF  →  3 cores reappear, badge cleared
+  [Collapse All] → all 6 core nodes hidden (ZAF:3, GBR:1, FRA:1, POR:1)
+  [Expand All]   → all 34 nodes restored
+
+DOUBLE-CLICK EXPAND/COLLAPSE
+  In COLLAPSING mode, double-clicking any node toggles that country's state.
+  Gateway node (visible) → collapses the country
+  Any node in expanded country → collapses it
+  Gateway badge node    → expands the country back
+
+PIPELINE OUTPUT — COLLAPSING STAGE (4th stage)
+  Folder : OUTPUT/COLLAPSING/<graph_time>_COLLAPSING/
+  Files  :
+    COLLAPSING_country-collapse-config.json   ← per-country gateway/core split
+    COLLAPSING_collapsed-topology.json        ← gateway-only 28-node topology
+
+  Generate:
+    python3 terminal-script/generate-collapse-config.py \
+      --enriched-dir OUTPUT/ENRICHED/<graph_time>_ENRICHED \
+      --asis-dir     OUTPUT/AS-IS/<graph_time>_AS-IS \
+      --output-dir   OUTPUT/COLLAPSING/<graph_time>_COLLAPSING \
+      --graph-time   <graph_time>
+
+VALIDATION SCRIPT
+  Script  : 01-STEP-BY-STEP/scripts/10-validate-collapsing.cjs
+  Purpose : Automated Playwright validation of all COLLAPSING behaviours
+  Checks  : V1 buttons present, V2 panel appears, V3 collapse ZAF (-3 nodes),
+            V4 double-click expand, V5 collapse all (-6), V6 expand all (34),
+            V7 AS-IS mode, V8 ENRICHED mode restore
+
+  Run:
+    node 01-STEP-BY-STEP/scripts/10-validate-collapsing.cjs
+    HEADLESS=false node 01-STEP-BY-STEP/scripts/10-validate-collapsing.cjs
+
+QUICK COMMAND REFERENCE — COLLAPSING
+  # Generate COLLAPSING stage (once ENRICHED stage exists)
+  python3 terminal-script/generate-collapse-config.py \
+    --enriched-dir OUTPUT/ENRICHED/03Mar2026_20h05m03s_34_hosts_ENRICHED \
+    --asis-dir     OUTPUT/AS-IS/03Mar2026_20h05m03s_34_hosts_AS-IS \
+    --output-dir   OUTPUT/COLLAPSING/03Mar2026_20h05m03s_34_hosts_COLLAPSING \
+    --graph-time   03Mar2026_20h05m03s_34_hosts
+
+  # Validate COLLAPSING UI
+  node 01-STEP-BY-STEP/scripts/10-validate-collapsing.cjs
+
+  # After modifying topolograph.js — restart flask to reload bind-mount
+  docker restart flask
+
+================================================================================
+END OF GUIDE — v01
+================================================================================
