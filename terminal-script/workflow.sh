@@ -56,6 +56,7 @@ INOUT_DIR="$PROJECT_ROOT/IN-OUT-FOLDER"
 OUTPUT_ASIS="$PROJECT_ROOT/OUTPUT/AS-IS"
 OUTPUT_GATEWAY="$PROJECT_ROOT/OUTPUT/GATEWAY"
 OUTPUT_ENRICHED="$PROJECT_ROOT/OUTPUT/ENRICHED"
+OUTPUT_COLLAPSING="$PROJECT_ROOT/OUTPUT/COLLAPSING"
 
 log()  { echo "[workflow] $*"; }
 step() { echo; echo "══════════════════════════════════════════════════════════"; echo "[workflow] STEP: $*"; echo "══════════════════════════════════════════════════════════"; }
@@ -97,9 +98,10 @@ Options:
   --dry-run             Dry-run the UI push step
 
 Output folders:
-  OUTPUT/AS-IS/{graph_time}_AS-IS/       — original graph, zero modification
-  OUTPUT/GATEWAY/{graph_time}_GATEWAY/   — gateway-only topology, countries collapsed
-  OUTPUT/ENRICHED/{graph_time}_ENRICHED/ — all routers + country label + colour metadata
+  OUTPUT/AS-IS/{graph_time}_AS-IS/           — original graph, zero modification
+  OUTPUT/GATEWAY/{graph_time}_GATEWAY/       — gateway-only topology, countries collapsed
+  OUTPUT/ENRICHED/{graph_time}_ENRICHED/     — all routers + country label + colour metadata
+  OUTPUT/COLLAPSING/{graph_time}_COLLAPSING/ — gateway/core split + collapsed topology JSON
 EOF
 }
 
@@ -296,7 +298,34 @@ print(f"[_run_from_csv] Generated outputs in {out_dir}")
 PYEOF
 }
 
-# ── Step 4: Push colours → Topolograph UI ─────────────────────────────────────
+# ── Step 4: Generate COLLAPSING stage outputs ──────────────────────────────────
+step_generate_collapse_config() {
+  step "Generate COLLAPSING stage — gateway/core split + collapsed topology"
+
+  local en_out="$OUTPUT_ENRICHED/${GRAPH_TIME}_ENRICHED"
+  local as_out="$OUTPUT_ASIS/${GRAPH_TIME}_AS-IS"
+  local co_out="$OUTPUT_COLLAPSING/${GRAPH_TIME}_COLLAPSING"
+  mkdir -p "$co_out"
+
+  if [[ ! -d "$en_out" ]]; then
+    log "WARNING: ENRICHED dir not found ($en_out) — skipping COLLAPSING stage"
+    return
+  fi
+  if [[ ! -d "$as_out" ]]; then
+    log "WARNING: AS-IS dir not found ($as_out) — skipping COLLAPSING stage"
+    return
+  fi
+
+  python3 "$SCRIPT_DIR/generate-collapse-config.py" \
+    --enriched-dir "$en_out" \
+    --asis-dir     "$as_out" \
+    --output-dir   "$co_out" \
+    --graph-time   "$GRAPH_TIME"
+
+  log "COLLAPSING output: $co_out"
+}
+
+# ── Step 5: Push colours → Topolograph UI ─────────────────────────────────────
 step_push_to_ui() {
   if [[ "$NO_PUSH" == "true" ]]; then
     log "Skipping UI push (--no-push)."
@@ -331,7 +360,8 @@ print_summary() {
   echo "║  OUTPUT FOLDERS:                                             ║"
   printf  "║  AS-IS    → OUTPUT/AS-IS/%-37s║\n"    "${GRAPH_TIME}_AS-IS/"
   printf  "║  GATEWAY  → OUTPUT/GATEWAY/%-35s║\n"  "${GRAPH_TIME}_GATEWAY/"
-  printf  "║  ENRICHED → OUTPUT/ENRICHED/%-34s║\n" "${GRAPH_TIME}_ENRICHED/"
+  printf  "║  ENRICHED   → OUTPUT/ENRICHED/%-32s║\n"   "${GRAPH_TIME}_ENRICHED/"
+  printf  "║  COLLAPSING → OUTPUT/COLLAPSING/%-30s║\n" "${GRAPH_TIME}_COLLAPSING/"
   echo "╠══════════════════════════════════════════════════════════════╣"
   echo "║  NEXT STEPS:                                                 ║"
   echo "║  1. Open http://localhost:8081/                               ║"
@@ -348,9 +378,10 @@ main() {
 
     all)
       parse_args "$@"
-      step_upload_ospf      # uploads if --ospf-file given, else skips
-      step_fetch_raw        # always fetches from API → IN-OUT-FOLDER
+      step_upload_ospf           # uploads if --ospf-file given, else skips
+      step_fetch_raw             # always fetches from API → IN-OUT-FOLDER
       step_terminal_pipeline
+      step_generate_collapse_config
       step_push_to_ui
       print_summary
       ;;
@@ -360,6 +391,7 @@ main() {
       # Don't upload, don't fetch (graph already in Topolograph + local OSPF/host files)
       step_fetch_raw
       step_terminal_pipeline
+      step_generate_collapse_config
       step_push_to_ui
       print_summary
       ;;

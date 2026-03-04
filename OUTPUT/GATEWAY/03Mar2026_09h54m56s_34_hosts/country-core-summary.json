@@ -1,0 +1,197 @@
+{
+  "nodes": [
+    {
+      "name": "DJB",
+      "label": "DJB"
+    },
+    {
+      "name": "DRC",
+      "label": "DRC"
+    },
+    {
+      "name": "FRA",
+      "label": "FRA"
+    },
+    {
+      "name": "GBR",
+      "label": "GBR"
+    },
+    {
+      "name": "KEN",
+      "label": "KEN"
+    },
+    {
+      "name": "LES",
+      "label": "LES"
+    },
+    {
+      "name": "MOZ",
+      "label": "MOZ"
+    },
+    {
+      "name": "POR",
+      "label": "POR"
+    },
+    {
+      "name": "TAN",
+      "label": "TAN"
+    },
+    {
+      "name": "UNK",
+      "label": "UNK"
+    },
+    {
+      "name": "ZAF",
+      "label": "ZAF"
+    }
+  ],
+  "edges": [
+    {
+      "src_country": "DJB",
+      "dst_country": "KEN",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "DJB",
+      "dst_country": "ZAF",
+      "avg_cost": 64,
+      "min_cost": 64,
+      "link_count": 1
+    },
+    {
+      "src_country": "DRC",
+      "dst_country": "GBR",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "DRC",
+      "dst_country": "UNK",
+      "avg_cost": 64,
+      "min_cost": 64,
+      "link_count": 2
+    },
+    {
+      "src_country": "DRC",
+      "dst_country": "ZAF",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 2
+    },
+    {
+      "src_country": "FRA",
+      "dst_country": "GBR",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "FRA",
+      "dst_country": "POR",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "FRA",
+      "dst_country": "UNK",
+      "avg_cost": 64,
+      "min_cost": 64,
+      "link_count": 2
+    },
+    {
+      "src_country": "FRA",
+      "dst_country": "ZAF",
+      "avg_cost": 37,
+      "min_cost": 10,
+      "link_count": 2
+    },
+    {
+      "src_country": "GBR",
+      "dst_country": "KEN",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "GBR",
+      "dst_country": "ZAF",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "KEN",
+      "dst_country": "ZAF",
+      "avg_cost": 64,
+      "min_cost": 64,
+      "link_count": 1
+    },
+    {
+      "src_country": "LES",
+      "dst_country": "TAN",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "LES",
+      "dst_country": "UNK",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "LES",
+      "dst_country": "ZAF",
+      "avg_cost": 64,
+      "min_cost": 64,
+      "link_count": 1
+    },
+    {
+      "src_country": "MOZ",
+      "dst_country": "POR",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "MOZ",
+      "dst_country": "TAN",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 1
+    },
+    {
+      "src_country": "MOZ",
+      "dst_country": "ZAF",
+      "avg_cost": 10,
+      "min_cost": 10,
+      "link_count": 2
+    },
+    {
+      "src_country": "POR",
+      "dst_country": "ZAF",
+      "avg_cost": 64,
+      "min_cost": 64,
+      "link_count": 1
+    },
+    {
+      "src_country": "TAN",
+      "dst_country": "ZAF",
+      "avg_cost": 64,
+      "min_cost": 64,
+      "link_count": 1
+    },
+    {
+      "src_country": "UNK",
+      "dst_country": "ZAF",
+      "avg_cost": 64,
+      "min_cost": 64,
+      "link_count": 2
+    }
+  ]
+}

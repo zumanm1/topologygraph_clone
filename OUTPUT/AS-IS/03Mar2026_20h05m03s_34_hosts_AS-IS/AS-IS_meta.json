@@ -1,0 +1,19 @@
+{
+  "areas": [
+    0
+  ],
+  "graph_time": "03Mar2026_20h05m03s_34_hosts",
+  "hosts": {
+    "count": 34
+  },
+  "is_from_watcher": false,
+  "networks": {
+    "backuped": 54,
+    "count": 88,
+    "notbackuped": 34,
+    "url_link": "http://localhost:8081/api/network/03Mar2026_20h05m03s_34_hosts"
+  },
+  "protocol": "ospf",
+  "timestamp": "2026-03-03T20:05:03.288Z",
+  "watcher_name": ""
+}

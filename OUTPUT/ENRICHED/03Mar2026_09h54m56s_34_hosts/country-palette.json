@@ -1,0 +1,150 @@
+{
+  "graph_time": "03Mar2026_09h54m56s_34_hosts",
+  "palette": {
+    "LES": {
+      "background": "#C77DFF",
+      "border": "#A055D4",
+      "highlight": {
+        "background": "#D9A8FF",
+        "border": "#C77DFF"
+      },
+      "hover": {
+        "background": "#D9A8FF",
+        "border": "#C77DFF"
+      }
+    },
+    "UNK": {
+      "background": "#AAAAAA",
+      "border": "#888888",
+      "highlight": {
+        "background": "#CCCCCC",
+        "border": "#AAAAAA"
+      },
+      "hover": {
+        "background": "#CCCCCC",
+        "border": "#AAAAAA"
+      }
+    },
+    "TAN": {
+      "background": "#FFD93D",
+      "border": "#CCAA1A",
+      "highlight": {
+        "background": "#FFE675",
+        "border": "#FFD93D"
+      },
+      "hover": {
+        "background": "#FFE675",
+        "border": "#FFD93D"
+      }
+    },
+    "ZAF": {
+      "background": "#FF8C42",
+      "border": "#CC6D28",
+      "highlight": {
+        "background": "#FFB380",
+        "border": "#FF8C42"
+      },
+      "hover": {
+        "background": "#FFB380",
+        "border": "#FF8C42"
+      }
+    },
+    "MOZ": {
+      "background": "#45B7D1",
+      "border": "#2E95AF",
+      "highlight": {
+        "background": "#75CDE0",
+        "border": "#45B7D1"
+      },
+      "hover": {
+        "background": "#75CDE0",
+        "border": "#45B7D1"
+      }
+    },
+    "POR": {
+      "background": "#06D6A0",
+      "border": "#04A87D",
+      "highlight": {
+        "background": "#47E6BE",
+        "border": "#06D6A0"
+      },
+      "hover": {
+        "background": "#47E6BE",
+        "border": "#06D6A0"
+      }
+    },
+    "KEN": {
+      "background": "#6BCB77",
+      "border": "#4DA85A",
+      "highlight": {
+        "background": "#95DB9E",
+        "border": "#6BCB77"
+      },
+      "hover": {
+        "background": "#95DB9E",
+        "border": "#6BCB77"
+      }
+    },
+    "GBR": {
+      "background": "#4D96FF",
+      "border": "#2070D4",
+      "highlight": {
+        "background": "#80B5FF",
+        "border": "#4D96FF"
+      },
+      "hover": {
+        "background": "#80B5FF",
+        "border": "#4D96FF"
+      }
+    },
+    "DJB": {
+      "background": "#FF6B6B",
+      "border": "#D44A4A",
+      "highlight": {
+        "background": "#FF9898",
+        "border": "#FF6B6B"
+      },
+      "hover": {
+        "background": "#FF9898",
+        "border": "#FF6B6B"
+      }
+    },
+    "DRC": {
+      "background": "#4ECDC4",
+      "border": "#3AA39B",
+      "highlight": {
+        "background": "#7EDAD6",
+        "border": "#4ECDC4"
+      },
+      "hover": {
+        "background": "#7EDAD6",
+        "border": "#4ECDC4"
+      }
+    },
+    "FRA": {
+      "background": "#F77F00",
+      "border": "#C46200",
+      "highlight": {
+        "background": "#FAA84D",
+        "border": "#F77F00"
+      },
+      "hover": {
+        "background": "#FAA84D",
+        "border": "#F77F00"
+      }
+    }
+  },
+  "countries": [
+    "DJB",
+    "DRC",
+    "FRA",
+    "GBR",
+    "KEN",
+    "LES",
+    "MOZ",
+    "POR",
+    "TAN",
+    "UNK",
+    "ZAF"
+  ]
+}

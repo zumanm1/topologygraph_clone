@@ -21,10 +21,9 @@ IN-OUT-FOLDER/.tmp*/
 *.env
 .api-token
 
-# Topolograph docker volumes (MongoDB data lives in Docker volumes, not here)
-# Keep docker-compose and init scripts but exclude any generated secrets
+# Topolograph docker (nested git repo — tracked separately, not as submodule)
 topolograph-docker/.env
+topolograph-docker/
 
 # Large binary archives
 ARCHIVE-MISC/
-topolograph-docker/
