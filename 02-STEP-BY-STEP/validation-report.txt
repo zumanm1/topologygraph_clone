@@ -1,0 +1,155 @@
+╔══════════════════════════════════════════════════════════════════╗
+║   COLLAPSING FEATURE — END-TO-END VALIDATION REPORT             ║
+╠══════════════════════════════════════════════════════════════════╣
+║   Date    : 2026-03-04 14:25:55                                   ║
+║   Input   : INPUT-FOLDER/ospf-database-2.txt                    ║
+║   Project : /Users/macbook/Documents/OSPF-DATABASE-TEST
+╚══════════════════════════════════════════════════════════════════╝
+
+━━━ PHASE 1: Pipeline (AS-IS → GATEWAY → ENRICHED → COLLAPSING) ━━━
+
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Upload OSPF database → Topolograph
+══════════════════════════════════════════════════════════
+[workflow] File: /Users/macbook/Documents/OSPF-DATABASE-TEST/INPUT-FOLDER/ospf-database-2.txt
+[workflow] Uploaded. graph_time=04Mar2026_12h25m56s_34_hosts
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Fetch raw graph → IN-OUT-FOLDER
+══════════════════════════════════════════════════════════
+[fetch-from-api] Saving to: /Users/macbook/Documents/OSPF-DATABASE-TEST/IN-OUT-FOLDER/04Mar2026_12h25m56s_34_hosts
+[fetch-from-api]   meta.json saved
+[fetch-from-api]   nodes.json saved (34 nodes)
+[fetch-from-api]   edges.json saved (108 edges)
+[fetch-from-api]   edges.csv saved
+[fetch-from-api] Done. graph_time=04Mar2026_12h25m56s_34_hosts
+[workflow] graph_time confirmed: 04Mar2026_12h25m56s_34_hosts
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Run terminal topology pipeline
+══════════════════════════════════════════════════════════
+[workflow] AS-IS output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/AS-IS/04Mar2026_12h25m56s_34_hosts_AS-IS
+[workflow] Edge source: OSPF file (/Users/macbook/Documents/OSPF-DATABASE-TEST/INPUT-FOLDER/ospf-database-2.txt)
+[topology-tool] Done. Files written to: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/.tmp_work_04Mar2026_12h25m56s_34_hosts
+  - country-core-summary.json
+  - country-core-summary.yaml
+  - country-mapping.csv
+  - gateway-only-topology.json
+  - gateway-only-topology.yaml
+  - original-topology-with-country.json
+  - original-topology-with-country.yaml
+[workflow] GATEWAY output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/GATEWAY/04Mar2026_12h25m56s_34_hosts_GATEWAY
+[workflow] ENRICHED output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/04Mar2026_12h25m56s_34_hosts_ENRICHED
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Generate COLLAPSING stage — gateway/core split + collapsed topology
+══════════════════════════════════════════════════════════
+[collapse-config] graph_time   : 04Mar2026_12h25m56s_34_hosts
+[collapse-config] enriched_dir : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/04Mar2026_12h25m56s_34_hosts_ENRICHED
+[collapse-config] asis_dir     : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/AS-IS/04Mar2026_12h25m56s_34_hosts_AS-IS
+[collapse-config] output_dir   : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/COLLAPSING/04Mar2026_12h25m56s_34_hosts_COLLAPSING
+[collapse-config] Loaded 34 router entries from country-mapping.csv
+[collapse-config] Loaded 34 nodes from AS-IS_nodes.json
+[collapse-config] Loaded 108 edges from AS-IS_edges.json
+[collapse-config] Country split: 10 countries, 34 total, 28 gateways, 6 cores
+[collapse-config] Wrote COLLAPSING_country-collapse-config.json
+[collapse-config] Collapsed topology: 28 gateway nodes, 82 gateway edges (from 34 nodes, 108 edges)
+[collapse-config] Wrote COLLAPSING_collapsed-topology.json
+[collapse-config] WARNING: PyYAML not installed — skipping YAML output
+
+╔══════════════════════════════════════════════════╗
+║          COLLAPSING STAGE COMPLETE               ║
+╠══════════════════════════════════════════════════╣
+║  Countries : 10                                  ║
+║  Total     : 34                                  ║
+║  Gateways  : 28                                  ║
+║  Core      : 6                                   ║
+╠══════════════════════════════════════════════════╣
+║    DJB    total=2  gw=2  core=0                 ║
+║    DRC    total=4  gw=4  core=0                 ║
+║    FRA    total=3  gw=2  core=1                 ║
+║    GBR    total=3  gw=2  core=1                 ║
+║    KEN    total=2  gw=2  core=0                 ║
+║    LES    total=3  gw=3  core=0                 ║
+║    MOZ    total=4  gw=4  core=0                 ║
+║    POR    total=3  gw=2  core=1                 ║
+║    TAN    total=2  gw=2  core=0                 ║
+║    ZAF    total=8  gw=5  core=3                 ║
+╚══════════════════════════════════════════════════╝
+
+[workflow] COLLAPSING output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/COLLAPSING/04Mar2026_12h25m56s_34_hosts_COLLAPSING
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Push country colours → Topolograph UI
+══════════════════════════════════════════════════════════
+[push-to-ui] Loading country mapping: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/04Mar2026_12h25m56s_34_hosts_ENRICHED/ENRICHED_country-mapping.csv
+[push-to-ui] 34 routers mapped to countries
+[push-to-ui] Countries: DJB:2 | DRC:4 | FRA:3 | GBR:3 | KEN:2 | LES:3 | MOZ:4 | POR:3 | TAN:2 | ZAF:8
+[push-to-ui] Fetching nodes for graph_time=04Mar2026_12h25m56s_34_hosts …
+[push-to-ui] 34 nodes in graph
+
+[push-to-ui] Patched: 34 OK  |  0 FAILED  |  0 skipped
+[push-to-ui] ✓  All nodes have hostname mappings — no UNK nodes.
+[push-to-ui] Palette written: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/04Mar2026_12h25m56s_34_hosts_ENRICHED/ENRICHED_country-palette.json
+[push-to-ui] Done — open http://localhost:8081/ and load graph_time=04Mar2026_12h25m56s_34_hosts
+             The Country Filter panel will appear automatically in the UI.
+[workflow] UI push complete.
+
+╔══════════════════════════════════════════════════════════════╗
+║               WORKFLOW COMPLETE                              ║
+╠══════════════════════════════════════════════════════════════╣
+║  graph_time : 04Mar2026_12h25m56s_34_hosts                   ║
+╠══════════════════════════════════════════════════════════════╣
+║  OUTPUT FOLDERS:                                             ║
+║  AS-IS    → OUTPUT/AS-IS/04Mar2026_12h25m56s_34_hosts_AS-IS/  ║
+║  GATEWAY  → OUTPUT/GATEWAY/04Mar2026_12h25m56s_34_hosts_GATEWAY/║
+║  ENRICHED   → OUTPUT/ENRICHED/04Mar2026_12h25m56s_34_hosts_ENRICHED/║
+║  COLLAPSING → OUTPUT/COLLAPSING/04Mar2026_12h25m56s_34_hosts_COLLAPSING/║
+╠══════════════════════════════════════════════════════════════╣
+║  NEXT STEPS:                                                 ║
+║  1. Open http://localhost:8081/                               ║
+║  2. Select the graph from the dropdown                       ║
+║  3. Use the 🌍 Country Filter panel (top-right)              ║
+╚══════════════════════════════════════════════════════════════╝
+
+━━━ PHASE 1 COMPLETE ━━━
+  graph_time : 04Mar2026_12h25m56s_34_hosts
+
+── Pipeline artefact verification ──
+  ✅ OUTPUT/AS-IS/04Mar2026_12h25m56s_34_hosts_AS-IS/ — 4 files
+  ✅ OUTPUT/GATEWAY/04Mar2026_12h25m56s_34_hosts_GATEWAY/ — 4 files
+  ✅ OUTPUT/ENRICHED/04Mar2026_12h25m56s_34_hosts_ENRICHED/ — 4 files
+  ✅ OUTPUT/COLLAPSING/04Mar2026_12h25m56s_34_hosts_COLLAPSING/ — 2 files
+
+── COLLAPSING JSON integrity ──
+  config  : 10 countries | 34 routers | 28 gateways | 6 cores
+  topology: 28 gateway nodes | 82 gateway edges
+  ✅ 34 routers confirmed
+  ✅ 10 countries confirmed
+  ✅ 28 gateways confirmed
+  ✅ 6 core nodes confirmed (ZAF:3, GBR:1, FRA:1, POR:1)
+  ✅ All 28 gateway nodes have country codes
+
+━━━ PHASE 2: Playwright UI/UX Validation (B1–B15) ━━━
+
+
+╔══════════════════════════════════════════════════════════════╗
+║   validate-collapsing-full.cjs — COLLAPSING E2E Validation  ║
+╚══════════════════════════════════════════════════════════════╝
+  BASE_URL   : http://localhost:8081
+  GRAPH_TIME : 04Mar2026_12h25m56s_34_hosts
+  HEADLESS   : true
+  SCREENSHOTS: true → /Users/macbook/Documents/OSPF-DATABASE-TEST/02-STEP-BY-STEP/screenshots
+
+[validate] B1: Upload page reachable
+  ℹ  Screenshot → 11-collapsing-01-B1-upload-page.png
+  ✅ PASS [B1]: Upload page loaded — "OSPF/OSPFv3/IS-IS LSDB visualization online for building Net…"
+[validate] B2: Select graph 04Mar2026_12h25m56s_34_hosts from dropdown and load
+  ℹ  Dropdown: injected → selected: 04Mar2026_12h25m56s_34_hosts
+  ℹ  Screenshot → 11-collapsing-02-B2-graph-selected.png
+  ℹ  Load button (input#load_graph_button) clicked — waiting for vis.js render (6 s)…
+  ℹ  Screenshot → 11-collapsing-03-B2-graph-rendered.png
+  ❌ FAIL [B3]: vis.js DataSet not accessible — graph may not have loaded
+
+Cannot proceed — graph did not load. Ensure Topolograph is running and graph_time exists.
