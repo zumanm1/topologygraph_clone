@@ -1,0 +1,135 @@
+╔══════════════════════════════════════════════════════════════════╗
+║   MULTI-MODE FEATURES — END-TO-END VALIDATION REPORT            ║
+╠══════════════════════════════════════════════════════════════════╣
+║   Date      : 2026-03-05 08:25:43                                 ║
+║   Sprint    : HOT-F0, AS-F1/3/4, GW-F1/2/4, EN-F1/4/5, CL-F1/3/4  ║
+║   Input     : INPUT-FOLDER/ospf-database-2.txt                  ║
+║   Project   : /Users/macbook/Documents/OSPF-DATABASE-TEST
+╚══════════════════════════════════════════════════════════════════╝
+
+━━━ PHASE 1: SKIPPED — using provided graph_time=04Mar2026_12h25m56s_34_hosts ━━━
+
+━━━ PHASE 2: Playwright Feature Validation (F0–F20) ━━━
+
+╔══════════════════════════════════════════════════════════════════╗
+║   MULTI-MODE FEATURE VALIDATION  v1                             ║
+╠══════════════════════════════════════════════════════════════════╣
+║   BASE_URL   : http://localhost:8081                             ║
+║   GRAPH_TIME : 04Mar2026_12h25m56s_34_hosts                      ║
+║   HEADLESS   : true                                              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[features] F0 — Login as ospf@topolograph.com
+  ℹ  Screenshot → 01-F0-login-form.png
+  ℹ  Screenshot → 02-F0-after-login.png
+  ✅ PASS: F0 — Login successful, redirected to: /dashboard
+
+[features] F1 — Load enriched graph 04Mar2026_12h25m56s_34_hosts, verify view-mode bar + tool buttons
+  ℹ  Screenshot → 03-F1-upload-page.png
+  ℹ  F1 — Dropdown selected: 04Mar2026_12h25m56s_34_hosts
+  ℹ  Screenshot → 04-F1-graph-selected.png
+  ℹ  F1 — Load button clicked
+  ℹ  F1 — [attempt 1/8] vis.js nodes: 34
+  ℹ  Screenshot → 05-F1-graph-loaded.png
+  ℹ  F1 — Graph loaded: 34 nodes in vis.js
+  ✅ PASS: F1 — #viewModeBar present
+  ✅ PASS: F1 — 4 .vmBtn view buttons present (AS-IS / GATEWAY / ENRICHED / COLLAPSING)
+  ✅ PASS: F1 — Costs checkbox (AS-F1) present
+  ✅ PASS: F1 — ⚡ Asymm button (AS-F3) present
+  ✅ PASS: F1 — 🌡 Heatmap button (AS-F4) present
+  ✅ PASS: F1 — 📊 Matrix button (GW-F1) present
+  ✅ PASS: F1 — 🛡 Redundancy button (GW-F4) present
+  ✅ PASS: F1 — vis.js dataset loaded: 34 nodes
+
+[features] F2 — HOT-F0: verify hostname+IP dual-line labels on nodes
+  ℹ  F2 — 34/34 nodes have dual-line labels
+  ℹ  F2 — Sample labels: ["les-mar-r1\n9.9.9.1","les-mar-r2\n9.9.9.2","les-moa-r3\n9.9.9.3"]
+  ✅ PASS: F2 — HOT-F0: 34 nodes show hostname\nIP dual labels
+
+[features] F3 — AS-F1: OSPF cost label toggle via Costs checkbox
+  ℹ  F3 — Original edge labels (first 5): ["","","","",""]
+  ℹ  Screenshot → 06-F3-cost-labels-on.png
+  ℹ  F3 — Labels after check ON (first 5): ["","","","",""]
+  ℹ  F3 — Labels after check OFF (first 5): ["","","","",""]
+  ✅ PASS: F3 — AS-F1: _applyCostLabels() is defined and checkbox is wired
+
+[features] F4 — GW-F2: GATEWAY mode auto-applies cost-based edge colouring
+  ℹ  Screenshot → 07-F4-gateway-mode.png
+  ℹ  F4 — 54 edges, 2 distinct colours
+  ℹ  F4 — Colour sample: #e74c3c, #27ae60
+  ✅ PASS: F4 — GW-F2: 2 distinct edge colours applied (green→red gradient)
+
+[features] F5 — EN-F1: _applyEnrichedEdgeStyle defined and callable
+  ℹ  F5 — 54 edges: 21 dashed (cross-country), 33 solid (intra)
+  ✅ PASS: F5 — EN-F1: edge style applied — 21 cross-country, 33 intra-country
+
+[features] F6 — AS-F4: 🌡 Heatmap button toggles degree heatmap
+  ℹ  Screenshot → 08-F6-heatmap-on.png
+  ✅ PASS: F6 — AS-F4: #btnDegreeHeatmap has .active class after click
+  ℹ  F6 — Node colors changed: true
+  ✅ PASS: F6 — AS-F4 (F20): Heatmap OFF — .active removed
+
+[features] F7 — AS-F3: ⚡ Asymm button → asymmetric link detection
+  ℹ  Screenshot → 09-F7-asymm.png
+  ✅ PASS: F7 — AS-F3: #btnAsymmetric .active after click
+  ✅ PASS: F7 — AS-F3: Toast "No asymmetric links" shown (all links symmetric)
+
+[features] F8 — EN-F5: Click node → #niPanel inspector appears
+  ℹ  Screenshot → 10-F8-node-inspector.png
+  ✅ PASS: F8 — EN-F5: #niPanel visible after node selection
+  ℹ  F8 — Inspector content preview: 🔍 Node Properties × Router ID	9.9.9.1 Hostname	les-mar-r1 Country	LES Gateway	✓ Yes Degree	3 edges Node ID	9.9.9.1
+
+[features] F9 — EN-F4: UNK nodes panel (present if unmapped nodes exist)
+  ℹ  F9 — UNK node count: 0
+  ✅ PASS: F9 — EN-F4: No UNK nodes in this graph (all mapped) — panel correctly absent
+  ℹ  Screenshot → 11-F9-unk-panel.png
+
+[features] F10 — GW-F1: 📊 Matrix button → #matrixPanel with country table
+  ℹ  Screenshot → 12-F10-matrix-panel.png
+  ✅ PASS: F10 — GW-F1: #matrixPanel created
+  ✅ PASS: F10 — GW-F1: Matrix table has 11 header cells (countries)
+  ✅ PASS: F10/F19 — GW-F1: Clicked a matrix cell → _highlightEdges() invoked
+
+[features] F11 — GW-F4: 🛡 Redundancy button → gateway colour overlay + #redundancyPanel
+  ℹ  Screenshot → 13-F11-redundancy.png
+  ✅ PASS: F11 — GW-F4: #redundancyPanel created
+  ℹ  F11 — Redundancy panel content: 🛡 Gateway Redundancy ×  ⚠ 30 SPOF condition(s):  les-mar-r1 (LES → DRC) les-mar-r2 (LES → TAN) les-moa-r3 (LES → ZAF) drc-moa-r1 (DRC → LES) tan-mbz-r1 (TAN → LES) tan-mbz-r1 (TAN → ZAF) zaf-mtz-r1 (
+  ✅ PASS: F11 — GW-F4: applyRedundancyScore() is defined
+
+[features] F12 — Entering COLLAPSING mode to test panel footer
+  ℹ  Screenshot → 14-F12-collapsing-mode.png
+  ✅ PASS: F12 — CL-F4: 🔗 Link Costs button present in Collapse panel footer
+  ✅ PASS: F14 — CL-F1: 💾 Save State button present in Collapse panel footer
+  ℹ  Screenshot → 15-F13-cost-table.png
+  ✅ PASS: F13 — CL-F4: #costTablePanel appeared after clicking 🔗 Link Costs
+  ✅ PASS: F15 — CL-F1: localStorage["topolograph_collapse_v1"] written after Save State
+
+[features] F17 — CL-F3: Collapse ZAF → gateway node gains "▲ N hidden" badge
+  ℹ  Screenshot → 16-F17-zaf-collapsed.png
+  ✅ PASS: F17 — CL-F3: 5 gateway node(s) show "▲ N hidden" badge
+  ℹ  F16 — Saved collapse state: {"ZAF":true}
+  ✅ PASS: F16 — CL-F1: Collapse state correctly serialised to localStorage
+
+[features] F18 — GW-F2: Entering GATEWAY mode to recheck edge colour uniqueness
+  ✅ PASS: F18 — GW-F2: 2 distinct edge colours in GATEWAY mode
+  ℹ  Screenshot → 17-ZZ-final-state.png
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║   MULTI-MODE FEATURES — END-TO-END VALIDATION SUMMARY           ║
+╠══════════════════════════════════════════════════════════════════╣
+║  PASSED : 31                                                    ║
+║  FAILED : 0                                                     ║
+║  TOTAL  : 31                                                    ║
+║  STATUS : ALL FEATURE CHECKS PASSED ✅                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+━━━ Screenshots saved to: /Users/macbook/Documents/OSPF-DATABASE-TEST/03-STEP-BY-STEP/screenshots/ ━━━
+
+╔══════════════════════════════════════════════════════════════════╗
+║  TOTAL: 31  PASSED  |  0   FAILED                                 ║
+║  STATUS: ALL FEATURE CHECKS PASSED ✅                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+  Full report: /Users/macbook/Documents/OSPF-DATABASE-TEST/03-STEP-BY-STEP/validation-report.txt
+  Screenshots: /Users/macbook/Documents/OSPF-DATABASE-TEST/03-STEP-BY-STEP/screenshots/
