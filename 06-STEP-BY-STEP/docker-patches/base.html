@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous"> -->
+<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+<meta name="yandex-verification" content="37c77296e58bd8d5" />
+{% block metadata %}{% endblock %}
+<link rel="icon" href="../../favicon.ico">
+{% if title %}
+<title>{{ title }}</title>
+{% else %}
+<title>OSPF visualization and analysis offline for network engineers</title>
+{% endif %}
+
+{% if description %}
+<meta name="description" content="{{ description }}">
+{% endif %}
+
+{% if meta_keywords %}
+<meta name="keywords" content="{{ meta_keywords }}">
+{% endif %}
+
+<!-- Open graph meta -->
+<meta property="og:url" content="https://topolograph.com">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Topolograph - OSPF/IS-IS Visualizer">
+{% if title %}
+<meta property="og:title" content="{{ title }}">
+{% else %}
+<meta property="og:title" content="OSPF/IS-IS topology visualization and analysis offline for network engineers">
+{% endif %}
+<!-- Page Specific Meta -->
+{% if description_broad %}
+<meta property="og:description" content="{{ description_broad }}">
+{% endif %}
+
+<link href="/static/css/topolograph.css" rel="stylesheet">
+
+</head>
+<body>
+<!-- Optional JavaScript -->
+<!--  JavaScript  libraries for save single host to group mapping function-->
+<script src="/static/js/jquery-3.7.1.min.js"></script>
+<script src="/static/js/topolograph.js"></script>
+
+
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!--<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>-->
+<script src="/static/js/popper.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>-->
+<script src="/static/js/bootstrap.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-51254749-2"></script>
+<!-- Yandex.Metrika counter --> <script type="text/javascript" > (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)}) (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym"); ym(54115606, "init", { clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true }); </script> <noscript><div><img src="https://mc.yandex.ru/watch/54115606" style="position:absolute; left:-9999px;" alt="" /></div></noscript> <!-- /Yandex.Metrika counter -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-51254749-2');
+</script>
+{% if (show_head is not defined) or (show_head is defined and show_head) %}
+<nav class="navbar navbar-expand-xl navbar-light style="background-color: rgb(107, 181, 255, 0.5);"">
+  <a class="navbar-brand" href="/">Topolograph</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/upload-ospf-isis-lsdb">Upload LSDB</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/yaml-diagram">Create topology</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Devices</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="/ospf-host-to-dns-mapping">Hostnames</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/groups">Groups & VRFs</a>
+          <a class="dropdown-item" href="/ospf_host_to_group_mapping">Group & VRFs membership</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/ospf-host-to-dns-and-group-mapping-migrate">Host & Group migration</a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/how-to">HOW TO</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">API</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="/api/ui/">Rest Schema</a>
+          <a class="dropdown-item" href="/auth-source-api-net">Authorised source IP ranges</a>
+          <a class="dropdown-item" href="/admin_dashboard">Token</a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/ospf-isis-monitoring">OSPF/IS-IS Real-Time Monitoring</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarAnalysisDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Analysis</a>
+        <div class="dropdown-menu" aria-labelledby="navbarAnalysisDropdown">
+          <a class="dropdown-item" href="javascript:void(0)" onclick="if(typeof buildOspfCostMatrix==='function'){buildOspfCostMatrix();}else{window.location='/';}">🗺 Cost Matrix</a>
+          <a class="dropdown-item" href="javascript:void(0)" onclick="if(typeof buildOspfWhatIf==='function'){buildOspfWhatIf();}else{window.location='/';}">⚡ What-If Analysis</a>
+        </div>
+      </li>
+    </ul>
+    <ul class="navbar-nav mr-1 mt-2 mt-lg-0">
+
+    </ul>
+  <ul class="navbar-nav mr-0 mt-2 mt-lg-0">
+    <li class="nav-item dropdown">
+      <div class="btn-group">
+        <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">&#x1F517; Links
+        </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="https://github.com/Vadims06/topolograph"><img src="/static/github_icon.png" height="15px"> Topolograph</a>
+            <a class="dropdown-item" href="https://github.com/Vadims06/topolograph-docker"><img src="/static/docker_icon.png" height="16px"> Docker version</a>
+            <a class="dropdown-item" href="https://github.com/Vadims06/ospfwatcher"><img src="/static/github_icon.png" height="15px"> OSPF Watcher</a>
+            <a class="dropdown-item" href="https://github.com/Vadims06/isiswatcher/"><img src="/static/github_icon.png" height="15px"> IS-IS Watcher</a>
+            <a class="dropdown-item" href="https://github.com/Vadims06/topolograph-mcp-server"><img src="/static/github_icon.png" height="15px"> MCP Server</a>
+            <a class="dropdown-item" href="https://github.com/Vadims06/topolograph-sdk"><img src="/static/github_icon.png" height="15px"> Topolograph SDK</a>
+            <a class="dropdown-item" href="https://pypi.org/project/topolograph-sdk/"><img src="/static/github_icon.png" height="15px"> Topolograph SDK (PyPI)</a>
+            <a class="dropdown-item" href="https://github.com/Vadims06/network-ai-assistant"><img src="/static/github_icon.png" height="15px"> Network AI Assistant</a>
+          </div>
+      </div>
+    </li>
+    <li class="nav-item dropdown">
+      <div class="btn-group">
+        <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">&#x1F4AC; Contact</button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="https://topolograph.com"><img src="/static/favicon.ico" height="15px"> Topolograph</a>
+            <a class="dropdown-item" href="https://t.me/topolograph"><img src="/static/telegram_icon.png" height="15px"> Telegram group</a>
+            <a class="dropdown-item" href="mailto:admin@topolograph.com"><img src="/static/email_icon.png" height="15px"> Email to Admin</a>
+          </div>
+      </div>
+    </li>
+	  <li class="nav-item dropdown">
+        <!--<a class="nav-link dropdown-toggle " href="/login" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Login</a>
+        <div class="dropdown-menu dropleft" aria-labelledby="navbarDropdown">!-->
+      <div class="btn-group dropleft">
+        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Login</button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" style="background-color:#DB4437;color:white" href="/google/login">Google Login</a>
+            <a class="dropdown-item" href="/register">Local Registration</a>
+            <a class="dropdown-item" href="/login">Local Login</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="/logout">Logout</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="/admin">
+              <i class="fa fa-user-circle"></i> Admin Panel
+            </a>
+            <div class="dropdown-divider"></div>
+          </div>
+      </div>
+    </li>
+  </ul>
+</div>
+</nav>
+<hr>
+{% endif %}
+    <div {% if use_full_screen is not defined %} class="container" {% else %} {% endif %}>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          <ul>
+              {% for category, message in messages %}
+              {% if not category or category == 'message'%}
+                {% set category = 'info' %}
+              {% endif %}
+              <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+              {% endfor %}
+          </ul>
+          {% endif %}
+        {% endwith %}
+        <div id="btnStopStartPhysics" style="display:none;" class="btnStopStartPhys"></div>
+        {% block content %}{% endblock %}
+        <pre></pre>
+        <pre></pre> <!-- for bottomBar-->
+        <div id="bottomBar" class="bottomBar">Topolograph 
+          {% if VERSION %}
+            {{ VERSION }}
+          {% else %}
+            latest
+          {% endif %}
+          <a class="megaphone-link" href="https://t.me/topolograph">&#x1F4E3; Join to the community!</a>
+        </div>
+    </div>
+</body>
+</html>
