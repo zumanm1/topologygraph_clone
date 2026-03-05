@@ -1,0 +1,244 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               ║
+╠══════════════════════════════════════════════════════════════════════╣
+║   Date        : 2026-03-05 18:26:44
+║   Graph time  : 05Mar2026_11h35m45s_54_hosts
+║   OSPF file   : ospf-database-3.txt (54 routers, 20 UNK)
+║   Host file   : Load-hosts.txt (34 entries — 20 UNK unmapped)
+║   Headless    : true
+║   Run pipeline: false
+║   Project     : /Users/macbook/Documents/OSPF-DATABASE-TEST
+╚══════════════════════════════════════════════════════════════════════╝
+
+━━━ PHASE 0: Pre-Flight Checks ━━━
+
+  ✅ PASS: Webserver responding at http://localhost:8081
+  ✅ PASS: Input file: ospf-database-2.txt (    1947 lines)
+  ✅ PASS: Input file: ospf-database-3.txt (    2768 lines)
+  ✅ PASS: Load-hosts.txt exists (34 router entries)
+  ✅ PASS: Load-hosts.txt has exactly 34 entries (20 UNK routers unmapped)
+  ✅ PASS: host-mapping-e2e.csv exists (54 router mappings)
+  ✅ PASS: host-mapping-e2e.csv covers 54 routers (≥54)
+  ✅ PASS: Node.js v22.22.0
+  ✅ PASS: Playwright found
+  ✅ PASS: 54-host COLLAPSING artefact found: 05Mar2026_11h35m45s_54_hosts_COLLAPSING
+UNK: total=20 gw=4 core=16
+  ✅ PASS: UNK present in COLLAPSING config with routers
+  ✅ PASS: IN-OUT-FOLDER/05Mar2026_11h35m45s_54_hosts exists (54 nodes)
+
+  PHASE 0: ALL PRE-FLIGHT CHECKS PASSED ✅
+
+━━━ PHASE 1: JSON Artefact Integrity (54-router topology) ━━━
+  Graph time: 05Mar2026_11h35m45s_54_hosts
+
+  [detected] hosts=54 gw=32 countries=11 cores=22
+  [1a] IN-OUT-FOLDER
+  ✅ PASS: IN-OUT files loaded
+  ✅ PASS: nodes: 54 == 54
+  ✅ PASS: edges: 148 >= 100
+  ✅ PASS: edges.csv present
+  [1b] AS-IS
+  ✅ PASS: AS-IS nodes: 54 == 54
+  ✅ PASS: AS-IS edges: 148 >= 100
+  [1c] GATEWAY
+  ✅ PASS: GATEWAY nodes: 32 == 32
+  ✅ PASS: GATEWAY edges: 25
+  ✅ PASS: ZAF gateways: 5 == 5
+  ✅ PASS: UNK gateways: 4 >= 4 (hub routers)
+  [1d] ENRICHED
+  ✅ PASS: ENRICHED countries: 11 >= 11 (DJB, DRC, FRA, GBR, KEN, LES, MOZ, POR, TAN, UNK, ZAF)
+  ✅ PASS: UNK present in ENRICHED country mapping
+  ✅ PASS: ENRICHED topology JSON exists
+  [1e] COLLAPSING
+       11 ctry | 54 rtr | 32 gw | 22 core
+  ✅ PASS: 11 countries (>=11)
+  ✅ PASS: 54 routers == 54
+  ✅ PASS: 32 gateways == 32
+  ✅ PASS: 22 core nodes == 22
+  ✅ PASS: collapsed topo: 32 nodes == 32
+  ✅ PASS: ZAF core nodes: 3 == 3
+  ✅ PASS: UNK total: 20 == 20
+  ✅ PASS: UNK gateways: 4 == 4 (hub routers)
+  ✅ PASS: UNK core: 16 == 16 (leaf routers)
+       UNK: 20 routers (4 gw hubs + 16 core leaves) — cross-country OSPF adjacencies
+  [1f] CURRENT
+  ✅ PASS: CURRENT gateway topology exists
+  ✅ PASS: CURRENT country-core summary exists
+
+  PHASE 1 RESULT: 24 passed, 0 failed
+
+━━━ PHASE 1 COMPLETE ━━━
+
+━━━ PHASE 2: PIPELINE RUN SKIPPED (add --run-pipeline-db3 to trigger) ━━━
+
+━━━ PHASE 3: Playwright E2E (12 phases, 90+ checks) ━━━
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  06-STEP-BY-STEP — DEEP END-TO-END VALIDATION (12 phases, 90+ checks)  ║
+║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
+║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+  ℹ  Graph time : 05Mar2026_11h35m45s_54_hosts
+  ℹ  Base URL   : http://localhost:8081
+  ℹ  Headless   : true
+  ℹ  Screenshots: /Users/macbook/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/screenshots
+  ℹ  OSPF file  : ospf-database-3.txt (54 routers, 20 UNK)
+  ℹ  Host file  : Load-hosts.txt (34 entries — 20 UNK routers unmapped)
+
+━━━ AUTH ━━━
+  ✅ PASS [AUTH]: Logged in as ospf@topolograph.com
+  ℹ  Screenshot → 01-login-success.png
+
+━━━ LOAD — 54-Router Graph (ospf-database-3.txt + Load-hosts.txt) ━━━
+  ✅ PASS [LOAD]: Graph loaded — 54 vis.js nodes (54 expected)
+  ℹ  Screenshot → 02-graph-loaded-54.png
+
+━━━ P1: AS-IS View (54 routers, 20 UNK) ━━━
+  ✅ PASS [P1-ASIS]: AS-IS visible nodes: 54 (≥50 expected for 54-router graph)
+  ✅ PASS [P1-ASIS]: AS-IS visible edges: 74
+  ℹ  UNK nodes in graph: 20
+  ✅ PASS [P1-ASIS]: UNK nodes present: 20 (≥20 expected — unmapped routers)
+  ✅ PASS [P1-ASIS]: Toolbar button #btnUnkHighlight present
+  ✅ PASS [P1-ASIS]: Toolbar button #btnHostnameUpload present
+  ✅ PASS [P1-ASIS]: Toolbar button #btnCostMatrix present
+  ✅ PASS [P1-ASIS]: Toolbar button #btnWhatIf present
+  ℹ  Screenshot → 03-asis-54.png
+
+━━━ P2: ENRICHED View (11 countries, UNK grey nodes) ━━━
+  ✅ PASS [P2-ENRICH]: ENRICHED visible nodes: 54 (≥50)
+  ✅ PASS [P2-ENRICH]: Country Filter panel present
+  ✅ PASS [P2-ENRICH]: 34 nodes with named country (≥34 expected)
+  ✅ PASS [P2-ENRICH]: UNK nodes visible in ENRICHED: 20 (grey, unmapped)
+  ✅ PASS [P2-ENRICH]: 11 distinct countries (≥11 expected: 10 + UNK)
+  ℹ  Screenshot → 04-enriched-54.png
+
+━━━ P3: GATEWAY View (32 gw + UNK hubs visible, 22 cores hidden) ━━━
+  ✅ PASS [P3-GW]: GATEWAY visible nodes: 48 (≥32 gateways including UNK hubs)
+  ⚠  WARN [P3-GW]: Core nodes hidden: 6 — expected ≥22
+  ✅ PASS [P3-GW]: UNK hub gateways visible: 20 (≥4 hubs with cross-country adjacencies)
+  ℹ  Screenshot → 05-gateway-54.png
+
+━━━ P4: CURRENT View ━━━
+  ✅ PASS [P4-CURR]: CURRENT mode loaded — 48 visible nodes
+  ℹ  Screenshot → 06-current-54.png
+
+━━━ P5: COLLAPSING Mode (deeper: UNK non-interactive, ZAF badge, Collapse All) ━━━
+  ✅ PASS [P5-COL]: COLLAPSING panel rendered
+  ℹ  Screenshot → 07-collapsing-panel-54.png
+  ✅ PASS [P5-COL]: UNK section present in COLLAPSING panel
+  ✅ PASS [P5-COL]: UNK row is non-interactive (no collapse button — correct for unmapped group)
+  ℹ  Screenshot (clipped) → 07b-collapsing-unk-row.png
+  ✅ PASS [P5-COL]: collapseCountry("ZAF") executed
+  ✅ PASS [P5-COL]: Badge "▲ N hidden" found on 5 gateway node(s)
+  ✅ PASS [P5-COL]: Σcost aggregation badge on 5 node(s)
+  ✅ PASS [P5-COL]: Persistent Path Overlay: 25 cross-country edges visible
+  ℹ  Screenshot → 08-zaf-collapsed-54.png
+  ℹ  Screenshot (clipped) → 09-zaf-badge-zoom-54.png
+  ✅ PASS [P5-COL]: Collapse All → 22 nodes hidden (≥22 expected: ZAF:3 + FRA:1 + GBR:1 + POR:1 + UNK:16)
+  ✅ PASS [P5-COL]: Expand All executed
+
+━━━ P6: Sprint 3 — UNK Highlight ━━━
+  ✅ PASS [P6-UNK]: _toggleUnkHighlight() → active=true
+  ℹ  Screenshot → 10-unk-highlight-54.png
+  ✅ PASS [P6-UNK]: All UNK nodes remain visible during highlight
+  ✅ PASS [P6-UNK]: UNK highlight toggled off
+  ✅ PASS [P6-UNK]: UNK button present in GATEWAY mode (cross-mode)
+
+━━━ P7: Sprint 3 — Hostname Upload (54-router CSV, UNK preserved) ━━━
+  ✅ PASS [P7-HOST]: Hostname Upload panel rendered
+  ℹ  Screenshot (clipped) → 11-hostname-upload-54.png
+  ✅ PASS [P7-HOST]: Panel shows graph context stats
+  ✅ PASS [P7-HOST]: Drag-drop zone present
+  ℹ  Using host-mapping-e2e.csv (55 lines — covers 54 routers)
+  ✅ PASS [P7-HOST]: host-mapping-e2e.csv covers 54 routers (≥54 expected)
+  ✅ PASS [P7-HOST]: _applyHostnameMapping() applied 54-router CSV successfully
+  ℹ  Screenshot → 12-hostname-applied-54.png
+  ℹ  UNK count after CSV apply: 20
+  ✅ PASS [P7-HOST]: UNK preserved after CSV apply: 20 nodes (correct — not in host file)
+  ✅ PASS [P7-HOST]: Manual node reclassify (nodes.update) works
+
+━━━ P8: Cost Matrix — Deep Validation ━━━
+  ✅ PASS [P8-MAT]: Cost Matrix panel rendered (#ospfCostMatrixPanel)
+  ℹ  Screenshot (clipped) → 13-cost-matrix-54.png
+  ✅ PASS [P8-MAT]: Matrix rows: 11 (≥11 expected: 10 countries + UNK)
+  ✅ PASS [P8-MAT]: UNK country row present in Cost Matrix
+  ⚠  WARN [P8-MAT]: UNK has no non-zero cost cells — UNK hubs may not be routing correctly
+  ✅ PASS [P8-MAT]: 33 non-zero Dijkstra cost cells (≥30 expected)
+  ✅ PASS [P8-MAT]: View-mode badge present in panel header
+  ✅ PASS [P8-MAT]: Dimensions label (N×N) present in panel
+  ✅ PASS [P8-MAT]: Cost range gradient legend present
+  ✅ PASS [P8-MAT]: Excel export button found: "⬇ Excel"
+  ✅ PASS [P8-MAT]: Refresh button found: "↺"
+  ✅ PASS [P8-MAT]: _exportMatrixToExcel function exists
+  ✅ PASS [P8-MAT]: _refreshCostMatrix function exists
+  ✅ PASS [P8-MAT]: Off-diagonal cell found and clickable
+  ℹ  Testing ↺ Refresh button rebuilds panel (verifying _refreshCostMatrix fix)...
+  ✅ PASS [P8-MAT]: ↺ Refresh: panel REBUILT (not closed) — bug fix verified ✓
+  ✅ PASS [P8-MAT]: After ↺ Refresh: 11 rows (matrix rebuilt correctly)
+  ℹ  Screenshot → 14-cost-matrix-refreshed.png
+  ✅ PASS [P8-MAT]: Cost Matrix renders in GATEWAY mode (cross-mode feature)
+  ℹ  Screenshot → 15-cost-matrix-gateway-54.png
+
+━━━ P9: What-If Analysis — Deep Validation ━━━
+  ✅ PASS [P9-WI]: What-If panel rendered (#ospfWhatIfPanel)
+  ℹ  Screenshot (clipped) → 16-whatif-54.png
+  ✅ PASS [P9-WI]: Edge picker has 74 edges (≥70 for 54-router graph)
+  ✅ PASS [P9-WI]: View-mode badge + "Works across" cross-mode message present
+  ✅ PASS [P9-WI]: CSV Export button found: "⬇ Export Report"
+  ✅ PASS [P9-WI]: _applyWhatIf function exists
+  ✅ PASS [P9-WI]: _exportWhatIfReport function exists
+  ✅ PASS [P9-WI]: _runWhatIfAnalysis function exists
+  ✅ PASS [P9-WI]: Current cost auto-filled: 100 (picker change → #wiOldCost)
+  ✅ PASS [P9-WI]: Analysis ran — result: "Edge cost change100 → 1 ▼99Affected country pairs2 / 110Risk Score2% L..."
+  ℹ  Screenshot (clipped) → 17-whatif-analysis-result.png
+  ✅ PASS [P9-WI]: "Edge cost change" summary card present
+  ✅ PASS [P9-WI]: Affected country pairs: 2 / 110
+  ✅ PASS [P9-WI]: Risk classification: LOW
+  ✅ PASS [P9-WI]: Δ (Delta) column present in affected paths table
+  ✅ PASS [P9-WI]: Before → After cost change shown in affected paths
+  ✅ PASS [P9-WI]: Apply Change button enabled after analysis
+  ℹ  Edge to apply: 13.13.13.1_to_22.22.22.1, cost: 100 → 1
+  ℹ  Screenshot (clipped) → 18-whatif-applied.png
+  ✅ PASS [P9-WI]: Edge cost updated in vis.js DataSet: 13.13.13.1_to_22.22.22.1 → cost=1
+  ✅ PASS [P9-WI]: Confirmation "✅ Cost change applied" shown after Apply
+  ✅ PASS [P9-WI]: Apply button disabled after apply (prevents double-apply)
+  ✅ PASS [P9-WI]: _exportWhatIfReport callable with lastResult (CSV export ready)
+  ✅ PASS [P9-WI]: What-If available in COLLAPSING state (cross-mode)
+  ℹ  Screenshot → 19-whatif-collapsing-54.png
+
+━━━ P10: Integration — Apply Change → Cost Matrix Auto-Refresh ━━━
+  ℹ  Testing: Apply Cost Change while Cost Matrix open → matrix survives + updates
+  ✅ PASS [P10-INT]: Cost Matrix opened for integration test
+  ℹ  Baseline cost: DJB→ZAF = 64
+  ✅ PASS [P10-INT]: Recorded baseline cost: DJB→ZAF = 64
+  ✅ PASS [P10-INT]: Both Cost Matrix AND What-If panels open simultaneously
+  ℹ  P10 analysis: 1 affected pairs
+  ✅ PASS [P10-INT]: Analysis shows 1 affected paths (routing will change)
+  ℹ  Screenshot → 20-matrix-post-apply.png
+  ✅ PASS [P10-INT]: Cost Matrix panel SURVIVED Apply Change (auto-refresh worked ✓)
+  ✅ PASS [P10-INT]: Cost Matrix data UPDATED after Apply Change (Dijkstra recomputed)
+  ℹ  Matrix cost DJB→ZAF unchanged: 64 (edge may not be on this path)
+  ℹ  Screenshot → 21-integration-complete.png
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║   06-STEP-BY-STEP — FINAL SUMMARY                                       ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║  PASSED : 78                                                          ║
+║  FAILED : 0                                                           ║
+║  WARNED : 2                                                           ║
+║  TOTAL  : 80                                                          ║
+║  STATUS : ALL 06-STEP-BY-STEP CHECKS PASSED ✅                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+━━━ Screenshots: /Users/macbook/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/screenshots/ ━━━
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  TOTAL PASSED : 114                                                    ║
+║  TOTAL FAILED : 0                                                      ║
+║  WARNINGS     : 2                                                      ║
+║  STATUS: ALL 06-STEP-BY-STEP CHECKS PASSED ✅                        ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  Full report : /Users/macbook/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/validation-report.txt
+  Screenshots : /Users/macbook/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/screenshots/
+  Graph time  : 05Mar2026_11h35m45s_54_hosts
