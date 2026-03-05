@@ -1,0 +1,534 @@
+╔══════════════════════════════════════════════════════════════════╗
+║   COLLAPSING DEEP-DIVE VALIDATION  v3  (L0–L10 + IP Fabric)    ║
+╠══════════════════════════════════════════════════════════════════╣
+║   BASE_URL     : http://localhost:8081                        ║
+║   HEADLESS     : true                                         ║
+║   GRAPH_TIMES  : 4                                            ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[collapsing-deep] AUTH — Login
+  ℹ  Screenshot → 00-00-login-form.png
+  ℹ  Screenshot → 01-00-login.png
+  ✅ PASS: AUTH — Logged in as ospf@topolograph.com
+
+══════════════════════════════════════════════════════════════════
+  GRAPH 1/4: 04Mar2026_12h25m56s_34_hosts
+══════════════════════════════════════════════════════════════════
+  ℹ  Disk artefact: 34 routers | 28 gateways | 6 cores | 10 countries
+
+[collapsing-deep] L0 — Load graph 04Mar2026_12h25m56s_34_hosts
+  ℹ  Screenshot → 02-04Mar2026_-L0-loaded.png
+  ✅ PASS: L0[04Mar2026_12h25m56s_34_hosts] — Graph loaded — 34 vis.js nodes
+  ✅ PASS: L0[04Mar2026_12h25m56s_34_hosts] — Node count matches disk: 34 = 34 routers
+
+[collapsing-deep] L1 — Activate COLLAPSING mode
+  ℹ  Screenshot → 03-04Mar2026_-L1-collapsing-mode.png
+  ✅ PASS: L1[04Mar2026_12h25m56s_34_hosts] — #countryCollapsePanel is visible after COLLAPSING mode click
+  ✅ PASS: L1[04Mar2026_12h25m56s_34_hosts] — COLLAPSING button has .active class
+
+[collapsing-deep] L2 — Panel structure
+  ✅ PASS: L2[04Mar2026_12h25m56s_34_hosts] — Panel has 20 country rows (≥10)
+  ✅ PASS: L2[04Mar2026_12h25m56s_34_hosts] — "Collapse All" bulk button present
+  ✅ PASS: L2[04Mar2026_12h25m56s_34_hosts] — "Expand All / Restore" bulk button present
+  ✅ PASS: L2[04Mar2026_12h25m56s_34_hosts] — 💾 Save State button in panel footer
+  ✅ PASS: L2[04Mar2026_12h25m56s_34_hosts] — 🔗 Link Costs button in panel footer
+  ℹ  Screenshot → 04-04Mar2026_-L2-panel.png
+
+[collapsing-deep] L3-L6 — Per-country collapse / expand (10 countries)
+  ℹ  Pre-collapse visible nodes=34  edges=54
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — DJB: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — DJB: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — DJB: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — DJB: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — DJB: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — DRC: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — DRC: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — DRC: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — DRC: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — DRC: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — FRA: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — FRA: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — FRA: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — FRA: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — FRA: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — GBR: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — GBR: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — GBR: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — GBR: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — GBR: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — KEN: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — KEN: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — KEN: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — KEN: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — KEN: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — LES: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — LES: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — LES: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — LES: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — LES: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — MOZ: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — MOZ: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — MOZ: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — MOZ: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — MOZ: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — POR: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — POR: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — POR: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — POR: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — POR: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — TAN: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — TAN: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — TAN: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — TAN: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — TAN: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h25m56s_34_hosts] — ZAF: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h25m56s_34_hosts] — ZAF: 5 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_12h25m56s_34_hosts] — ZAF: visible nodes dropped (34→31, expect -3)
+  ✅ PASS: L6[04Mar2026_12h25m56s_34_hosts] — ZAF: 3/3 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_12h25m56s_34_hosts] — ZAF: expand restores visible count (34)
+  ℹ  Screenshot → 05-04Mar2026_-L3-per-country-cycle.png
+
+[collapsing-deep] L3c — Bulk "Collapse All"
+  ℹ  Screenshot → 06-04Mar2026_-L3c-collapse-all.png
+  ✅ PASS: L3c[04Mar2026_12h25m56s_34_hosts] — "Collapse All" triggered
+  ℹ  After Collapse All: visible nodes=28  edges=41
+  ✅ PASS: L3c[04Mar2026_12h25m56s_34_hosts] — After Collapse All: 28 nodes visible (≤28 gateways)
+  ℹ  Badge count after Collapse All: 11
+  ✅ PASS: L3c[04Mar2026_12h25m56s_34_hosts] — 11 gateway nodes show "▲ hidden" badges after Collapse All
+  ℹ  Screenshot → 07-04Mar2026_-L3c-expand-all.png
+  ✅ PASS: L3c[04Mar2026_12h25m56s_34_hosts] — After Expand All: 34 nodes visible = all 34 routers
+
+[collapsing-deep] L7a — Link Costs table (CL-F4)
+  ℹ  Screenshot → 08-04Mar2026_-L7a-cost-table.png
+  ✅ PASS: L7a[04Mar2026_12h25m56s_34_hosts] — 🔗 Link Costs button clicked
+  ✅ PASS: L7a[04Mar2026_12h25m56s_34_hosts] — #costTablePanel appeared
+  ✅ PASS: L7a[04Mar2026_12h25m56s_34_hosts] — Cost table has 19 rows (country-pair data present)
+
+[collapsing-deep] L7b — Save State / localStorage (CL-F1)
+  ℹ  Screenshot → 09-04Mar2026_-L7b-save-state.png
+  ✅ PASS: L7b[04Mar2026_12h25m56s_34_hosts] — 💾 Save State triggered
+  ✅ PASS: L7b[04Mar2026_12h25m56s_34_hosts] — localStorage["topolograph_collapse_v1"] = {"default":{"DJB":false,"DRC":false,"FRA":false,"GBR":false,"KEN":false,"LES":false,"MOZ":false,"POR":false,"TAN":false,"ZAF":true}}
+  ✅ PASS: L7b[04Mar2026_12h25m56s_34_hosts] — localStorage correctly records ZAF as collapsed
+
+[collapsing-deep] L8 — Cross-mode restore (ENRICHED → COLLAPSING)
+  ℹ  Collapse state before switch: {"DJB":false,"DRC":false,"FRA":false,"GBR":false,"KEN":false,"LES":false,"MOZ":false,"POR":false,"TAN":false,"ZAF":true}
+  ℹ  Screenshot → 10-04Mar2026_-L8-switched-to-enriched.png
+  ℹ  In ENRICHED mode: 34 nodes visible
+  ✅ PASS: L8[04Mar2026_12h25m56s_34_hosts] — ENRICHED mode shows all 34 routers
+  ℹ  Screenshot → 11-04Mar2026_-L8-returned-to-collapsing.png
+  ✅ PASS: L8[04Mar2026_12h25m56s_34_hosts] — After return to COLLAPSING: ZAF 3/3 non-gateway nodes still hidden
+
+[collapsing-deep] L9 — Persistent Path Overlay (IP Fabric parity)
+  ℹ  Screenshot → 12-04Mar2026_-L9-persistent-path-overlay.png
+  ℹ  L9[04Mar2026_12h25m56s_34_hosts]: Total visible edges after ZAF collapse: 47
+  ℹ  L9[04Mar2026_12h25m56s_34_hosts]: Inter-country edges still visible: 21
+  ℹ  L9[04Mar2026_12h25m56s_34_hosts]: Inter-country edges with both endpoints hidden (should be 0): 0
+  ✅ PASS: L9[04Mar2026_12h25m56s_34_hosts] — Persistent Path Overlay ✓ — 21 inter-country edges visible after ZAF collapse
+  ✅ PASS: L9[04Mar2026_12h25m56s_34_hosts] — No edges have both endpoints hidden (dangling hidden edges = 0) ✓
+
+[collapsing-deep] L10 — Cost Aggregation badge (IP Fabric parity)
+  ℹ  Screenshot → 13-04Mar2026_-L10-cost-aggregation-badge.png
+  ℹ  L10[04Mar2026_12h25m56s_34_hosts]: ZAF badge nodes count: 5
+  ℹ  L10[04Mar2026_12h25m56s_34_hosts]:   label="zaf-mtz-r1\n18.18.18.4\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_12h25m56s_34_hosts]:   label="zaf-mtb-r2\n18.18.18.8\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_12h25m56s_34_hosts]:   label="zaf-jnb-r1\n18.18.18.7\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_12h25m56s_34_hosts]:   label="zaf-cpt-r2\n18.18.18.2\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_12h25m56s_34_hosts]:   label="zaf-cpt-r1\n18.18.18.1\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ✅ PASS: L10[04Mar2026_12h25m56s_34_hosts] — ZAF gateways show collapse badge (5 nodes with ▲)
+  ✅ PASS: L10[04Mar2026_12h25m56s_34_hosts] — Cost Aggregation ✓ — badge contains ∑cost: 448
+
+  ─── 04Mar2026_12h25m56s_34_hosts done ───
+
+══════════════════════════════════════════════════════════════════
+  GRAPH 2/4: 04Mar2026_11h14m54s_34_hosts
+══════════════════════════════════════════════════════════════════
+  ℹ  Disk artefact: 34 routers | 28 gateways | 6 cores | 10 countries
+
+[collapsing-deep] L0 — Load graph 04Mar2026_11h14m54s_34_hosts
+  ℹ  Screenshot → 14-04Mar2026_-L0-loaded.png
+  ✅ PASS: L0[04Mar2026_11h14m54s_34_hosts] — Graph loaded — 34 vis.js nodes
+  ✅ PASS: L0[04Mar2026_11h14m54s_34_hosts] — Node count matches disk: 34 = 34 routers
+
+[collapsing-deep] L1 — Activate COLLAPSING mode
+  ℹ  Screenshot → 15-04Mar2026_-L1-collapsing-mode.png
+  ✅ PASS: L1[04Mar2026_11h14m54s_34_hosts] — #countryCollapsePanel is visible after COLLAPSING mode click
+  ✅ PASS: L1[04Mar2026_11h14m54s_34_hosts] — COLLAPSING button has .active class
+
+[collapsing-deep] L2 — Panel structure
+  ✅ PASS: L2[04Mar2026_11h14m54s_34_hosts] — Panel has 20 country rows (≥10)
+  ✅ PASS: L2[04Mar2026_11h14m54s_34_hosts] — "Collapse All" bulk button present
+  ✅ PASS: L2[04Mar2026_11h14m54s_34_hosts] — "Expand All / Restore" bulk button present
+  ✅ PASS: L2[04Mar2026_11h14m54s_34_hosts] — 💾 Save State button in panel footer
+  ✅ PASS: L2[04Mar2026_11h14m54s_34_hosts] — 🔗 Link Costs button in panel footer
+  ℹ  Screenshot → 16-04Mar2026_-L2-panel.png
+
+[collapsing-deep] L3-L6 — Per-country collapse / expand (10 countries)
+  ℹ  Pre-collapse visible nodes=34  edges=54
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — DJB: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — DJB: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — DJB: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — DJB: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — DJB: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — DRC: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — DRC: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — DRC: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — DRC: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — DRC: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — FRA: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — FRA: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — FRA: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — FRA: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — FRA: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — GBR: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — GBR: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — GBR: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — GBR: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — GBR: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — KEN: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — KEN: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — KEN: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — KEN: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — KEN: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — LES: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — LES: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — LES: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — LES: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — LES: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — MOZ: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — MOZ: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — MOZ: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — MOZ: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — MOZ: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — POR: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — POR: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — POR: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — POR: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — POR: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — TAN: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — TAN: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — TAN: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — TAN: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — TAN: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_11h14m54s_34_hosts] — ZAF: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_11h14m54s_34_hosts] — ZAF: 5 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_11h14m54s_34_hosts] — ZAF: visible nodes dropped (34→31, expect -3)
+  ✅ PASS: L6[04Mar2026_11h14m54s_34_hosts] — ZAF: 3/3 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_11h14m54s_34_hosts] — ZAF: expand restores visible count (34)
+  ℹ  Screenshot → 17-04Mar2026_-L3-per-country-cycle.png
+
+[collapsing-deep] L3c — Bulk "Collapse All"
+  ℹ  Screenshot → 18-04Mar2026_-L3c-collapse-all.png
+  ✅ PASS: L3c[04Mar2026_11h14m54s_34_hosts] — "Collapse All" triggered
+  ℹ  After Collapse All: visible nodes=28  edges=41
+  ✅ PASS: L3c[04Mar2026_11h14m54s_34_hosts] — After Collapse All: 28 nodes visible (≤28 gateways)
+  ℹ  Badge count after Collapse All: 11
+  ✅ PASS: L3c[04Mar2026_11h14m54s_34_hosts] — 11 gateway nodes show "▲ hidden" badges after Collapse All
+  ℹ  Screenshot → 19-04Mar2026_-L3c-expand-all.png
+  ✅ PASS: L3c[04Mar2026_11h14m54s_34_hosts] — After Expand All: 34 nodes visible = all 34 routers
+
+[collapsing-deep] L7a — Link Costs table (CL-F4)
+  ℹ  Screenshot → 20-04Mar2026_-L7a-cost-table.png
+  ✅ PASS: L7a[04Mar2026_11h14m54s_34_hosts] — 🔗 Link Costs button clicked
+  ✅ PASS: L7a[04Mar2026_11h14m54s_34_hosts] — #costTablePanel appeared
+  ✅ PASS: L7a[04Mar2026_11h14m54s_34_hosts] — Cost table has 19 rows (country-pair data present)
+
+[collapsing-deep] L7b — Save State / localStorage (CL-F1)
+  ℹ  Screenshot → 21-04Mar2026_-L7b-save-state.png
+  ✅ PASS: L7b[04Mar2026_11h14m54s_34_hosts] — 💾 Save State triggered
+  ✅ PASS: L7b[04Mar2026_11h14m54s_34_hosts] — localStorage["topolograph_collapse_v1"] = {"default":{"DJB":false,"DRC":false,"FRA":false,"GBR":false,"KEN":false,"LES":false,"MOZ":false,"POR":false,"TAN":false,"ZAF":true}}
+  ✅ PASS: L7b[04Mar2026_11h14m54s_34_hosts] — localStorage correctly records ZAF as collapsed
+
+[collapsing-deep] L8 — Cross-mode restore (ENRICHED → COLLAPSING)
+  ℹ  Collapse state before switch: {"DJB":false,"DRC":false,"FRA":false,"GBR":false,"KEN":false,"LES":false,"MOZ":false,"POR":false,"TAN":false,"ZAF":true}
+  ℹ  Screenshot → 22-04Mar2026_-L8-switched-to-enriched.png
+  ℹ  In ENRICHED mode: 34 nodes visible
+  ✅ PASS: L8[04Mar2026_11h14m54s_34_hosts] — ENRICHED mode shows all 34 routers
+  ℹ  Screenshot → 23-04Mar2026_-L8-returned-to-collapsing.png
+  ✅ PASS: L8[04Mar2026_11h14m54s_34_hosts] — After return to COLLAPSING: ZAF 3/3 non-gateway nodes still hidden
+
+[collapsing-deep] L9 — Persistent Path Overlay (IP Fabric parity)
+  ℹ  Screenshot → 24-04Mar2026_-L9-persistent-path-overlay.png
+  ℹ  L9[04Mar2026_11h14m54s_34_hosts]: Total visible edges after ZAF collapse: 47
+  ℹ  L9[04Mar2026_11h14m54s_34_hosts]: Inter-country edges still visible: 21
+  ℹ  L9[04Mar2026_11h14m54s_34_hosts]: Inter-country edges with both endpoints hidden (should be 0): 0
+  ✅ PASS: L9[04Mar2026_11h14m54s_34_hosts] — Persistent Path Overlay ✓ — 21 inter-country edges visible after ZAF collapse
+  ✅ PASS: L9[04Mar2026_11h14m54s_34_hosts] — No edges have both endpoints hidden (dangling hidden edges = 0) ✓
+
+[collapsing-deep] L10 — Cost Aggregation badge (IP Fabric parity)
+  ℹ  Screenshot → 25-04Mar2026_-L10-cost-aggregation-badge.png
+  ℹ  L10[04Mar2026_11h14m54s_34_hosts]: ZAF badge nodes count: 5
+  ℹ  L10[04Mar2026_11h14m54s_34_hosts]:   label="18.18.18.4\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_11h14m54s_34_hosts]:   label="18.18.18.8\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_11h14m54s_34_hosts]:   label="18.18.18.7\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_11h14m54s_34_hosts]:   label="18.18.18.2\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_11h14m54s_34_hosts]:   label="18.18.18.1\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ✅ PASS: L10[04Mar2026_11h14m54s_34_hosts] — ZAF gateways show collapse badge (5 nodes with ▲)
+  ✅ PASS: L10[04Mar2026_11h14m54s_34_hosts] — Cost Aggregation ✓ — badge contains ∑cost: 448
+
+  ─── 04Mar2026_11h14m54s_34_hosts done ───
+
+══════════════════════════════════════════════════════════════════
+  GRAPH 3/4: 04Mar2026_12h01m30s_34_hosts
+══════════════════════════════════════════════════════════════════
+  ℹ  Disk artefact: 34 routers | 28 gateways | 6 cores | 10 countries
+
+[collapsing-deep] L0 — Load graph 04Mar2026_12h01m30s_34_hosts
+  ℹ  Screenshot → 26-04Mar2026_-L0-loaded.png
+  ✅ PASS: L0[04Mar2026_12h01m30s_34_hosts] — Graph loaded — 34 vis.js nodes
+  ✅ PASS: L0[04Mar2026_12h01m30s_34_hosts] — Node count matches disk: 34 = 34 routers
+
+[collapsing-deep] L1 — Activate COLLAPSING mode
+  ℹ  Screenshot → 27-04Mar2026_-L1-collapsing-mode.png
+  ✅ PASS: L1[04Mar2026_12h01m30s_34_hosts] — #countryCollapsePanel is visible after COLLAPSING mode click
+  ✅ PASS: L1[04Mar2026_12h01m30s_34_hosts] — COLLAPSING button has .active class
+
+[collapsing-deep] L2 — Panel structure
+  ✅ PASS: L2[04Mar2026_12h01m30s_34_hosts] — Panel has 20 country rows (≥10)
+  ✅ PASS: L2[04Mar2026_12h01m30s_34_hosts] — "Collapse All" bulk button present
+  ✅ PASS: L2[04Mar2026_12h01m30s_34_hosts] — "Expand All / Restore" bulk button present
+  ✅ PASS: L2[04Mar2026_12h01m30s_34_hosts] — 💾 Save State button in panel footer
+  ✅ PASS: L2[04Mar2026_12h01m30s_34_hosts] — 🔗 Link Costs button in panel footer
+  ℹ  Screenshot → 28-04Mar2026_-L2-panel.png
+
+[collapsing-deep] L3-L6 — Per-country collapse / expand (10 countries)
+  ℹ  Pre-collapse visible nodes=34  edges=54
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — DJB: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — DJB: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — DJB: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — DJB: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — DJB: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — DRC: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — DRC: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — DRC: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — DRC: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — DRC: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — FRA: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — FRA: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — FRA: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — FRA: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — FRA: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — GBR: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — GBR: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — GBR: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — GBR: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — GBR: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — KEN: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — KEN: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — KEN: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — KEN: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — KEN: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — LES: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — LES: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — LES: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — LES: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — LES: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — MOZ: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — MOZ: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — MOZ: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — MOZ: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — MOZ: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — POR: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — POR: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — POR: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — POR: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — POR: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — TAN: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — TAN: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — TAN: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — TAN: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — TAN: expand restores visible count (34)
+  ✅ PASS: L3[04Mar2026_12h01m30s_34_hosts] — ZAF: collapse triggered (method=click)
+  ✅ PASS: L4[04Mar2026_12h01m30s_34_hosts] — ZAF: 5 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[04Mar2026_12h01m30s_34_hosts] — ZAF: visible nodes dropped (34→31, expect -3)
+  ✅ PASS: L6[04Mar2026_12h01m30s_34_hosts] — ZAF: 3/3 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[04Mar2026_12h01m30s_34_hosts] — ZAF: expand restores visible count (34)
+  ℹ  Screenshot → 29-04Mar2026_-L3-per-country-cycle.png
+
+[collapsing-deep] L3c — Bulk "Collapse All"
+  ℹ  Screenshot → 30-04Mar2026_-L3c-collapse-all.png
+  ✅ PASS: L3c[04Mar2026_12h01m30s_34_hosts] — "Collapse All" triggered
+  ℹ  After Collapse All: visible nodes=28  edges=41
+  ✅ PASS: L3c[04Mar2026_12h01m30s_34_hosts] — After Collapse All: 28 nodes visible (≤28 gateways)
+  ℹ  Badge count after Collapse All: 11
+  ✅ PASS: L3c[04Mar2026_12h01m30s_34_hosts] — 11 gateway nodes show "▲ hidden" badges after Collapse All
+  ℹ  Screenshot → 31-04Mar2026_-L3c-expand-all.png
+  ✅ PASS: L3c[04Mar2026_12h01m30s_34_hosts] — After Expand All: 34 nodes visible = all 34 routers
+
+[collapsing-deep] L7a — Link Costs table (CL-F4)
+  ℹ  Screenshot → 32-04Mar2026_-L7a-cost-table.png
+  ✅ PASS: L7a[04Mar2026_12h01m30s_34_hosts] — 🔗 Link Costs button clicked
+  ✅ PASS: L7a[04Mar2026_12h01m30s_34_hosts] — #costTablePanel appeared
+  ✅ PASS: L7a[04Mar2026_12h01m30s_34_hosts] — Cost table has 19 rows (country-pair data present)
+
+[collapsing-deep] L7b — Save State / localStorage (CL-F1)
+  ℹ  Screenshot → 33-04Mar2026_-L7b-save-state.png
+  ✅ PASS: L7b[04Mar2026_12h01m30s_34_hosts] — 💾 Save State triggered
+  ✅ PASS: L7b[04Mar2026_12h01m30s_34_hosts] — localStorage["topolograph_collapse_v1"] = {"default":{"DJB":false,"DRC":false,"FRA":false,"GBR":false,"KEN":false,"LES":false,"MOZ":false,"POR":false,"TAN":false,"ZAF":true}}
+  ✅ PASS: L7b[04Mar2026_12h01m30s_34_hosts] — localStorage correctly records ZAF as collapsed
+
+[collapsing-deep] L8 — Cross-mode restore (ENRICHED → COLLAPSING)
+  ℹ  Collapse state before switch: {"DJB":false,"DRC":false,"FRA":false,"GBR":false,"KEN":false,"LES":false,"MOZ":false,"POR":false,"TAN":false,"ZAF":true}
+  ℹ  Screenshot → 34-04Mar2026_-L8-switched-to-enriched.png
+  ℹ  In ENRICHED mode: 34 nodes visible
+  ✅ PASS: L8[04Mar2026_12h01m30s_34_hosts] — ENRICHED mode shows all 34 routers
+  ℹ  Screenshot → 35-04Mar2026_-L8-returned-to-collapsing.png
+  ✅ PASS: L8[04Mar2026_12h01m30s_34_hosts] — After return to COLLAPSING: ZAF 3/3 non-gateway nodes still hidden
+
+[collapsing-deep] L9 — Persistent Path Overlay (IP Fabric parity)
+  ℹ  Screenshot → 36-04Mar2026_-L9-persistent-path-overlay.png
+  ℹ  L9[04Mar2026_12h01m30s_34_hosts]: Total visible edges after ZAF collapse: 47
+  ℹ  L9[04Mar2026_12h01m30s_34_hosts]: Inter-country edges still visible: 21
+  ℹ  L9[04Mar2026_12h01m30s_34_hosts]: Inter-country edges with both endpoints hidden (should be 0): 0
+  ✅ PASS: L9[04Mar2026_12h01m30s_34_hosts] — Persistent Path Overlay ✓ — 21 inter-country edges visible after ZAF collapse
+  ✅ PASS: L9[04Mar2026_12h01m30s_34_hosts] — No edges have both endpoints hidden (dangling hidden edges = 0) ✓
+
+[collapsing-deep] L10 — Cost Aggregation badge (IP Fabric parity)
+  ℹ  Screenshot → 37-04Mar2026_-L10-cost-aggregation-badge.png
+  ℹ  L10[04Mar2026_12h01m30s_34_hosts]: ZAF badge nodes count: 5
+  ℹ  L10[04Mar2026_12h01m30s_34_hosts]:   label="18.18.18.4\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_12h01m30s_34_hosts]:   label="18.18.18.8\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_12h01m30s_34_hosts]:   label="18.18.18.7\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_12h01m30s_34_hosts]:   label="18.18.18.2\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[04Mar2026_12h01m30s_34_hosts]:   label="18.18.18.1\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ✅ PASS: L10[04Mar2026_12h01m30s_34_hosts] — ZAF gateways show collapse badge (5 nodes with ▲)
+  ✅ PASS: L10[04Mar2026_12h01m30s_34_hosts] — Cost Aggregation ✓ — badge contains ∑cost: 448
+
+  ─── 04Mar2026_12h01m30s_34_hosts done ───
+
+══════════════════════════════════════════════════════════════════
+  GRAPH 4/4: 03Mar2026_20h05m03s_34_hosts
+══════════════════════════════════════════════════════════════════
+  ℹ  Disk artefact: 34 routers | 28 gateways | 6 cores | 10 countries
+
+[collapsing-deep] L0 — Load graph 03Mar2026_20h05m03s_34_hosts
+  ℹ  Screenshot → 38-03Mar2026_-L0-loaded.png
+  ✅ PASS: L0[03Mar2026_20h05m03s_34_hosts] — Graph loaded — 34 vis.js nodes
+  ✅ PASS: L0[03Mar2026_20h05m03s_34_hosts] — Node count matches disk: 34 = 34 routers
+
+[collapsing-deep] L1 — Activate COLLAPSING mode
+  ℹ  Screenshot → 39-03Mar2026_-L1-collapsing-mode.png
+  ✅ PASS: L1[03Mar2026_20h05m03s_34_hosts] — #countryCollapsePanel is visible after COLLAPSING mode click
+  ✅ PASS: L1[03Mar2026_20h05m03s_34_hosts] — COLLAPSING button has .active class
+
+[collapsing-deep] L2 — Panel structure
+  ✅ PASS: L2[03Mar2026_20h05m03s_34_hosts] — Panel has 20 country rows (≥10)
+  ✅ PASS: L2[03Mar2026_20h05m03s_34_hosts] — "Collapse All" bulk button present
+  ✅ PASS: L2[03Mar2026_20h05m03s_34_hosts] — "Expand All / Restore" bulk button present
+  ✅ PASS: L2[03Mar2026_20h05m03s_34_hosts] — 💾 Save State button in panel footer
+  ✅ PASS: L2[03Mar2026_20h05m03s_34_hosts] — 🔗 Link Costs button in panel footer
+  ℹ  Screenshot → 40-03Mar2026_-L2-panel.png
+
+[collapsing-deep] L3-L6 — Per-country collapse / expand (10 countries)
+  ℹ  Pre-collapse visible nodes=34  edges=54
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — DJB: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — DJB: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — DJB: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — DJB: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — DJB: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — DRC: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — DRC: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — DRC: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — DRC: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — DRC: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — FRA: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — FRA: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — FRA: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — FRA: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — FRA: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — GBR: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — GBR: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — GBR: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — GBR: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — GBR: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — KEN: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — KEN: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — KEN: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — KEN: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — KEN: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — LES: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — LES: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — LES: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — LES: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — LES: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — MOZ: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — MOZ: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — MOZ: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — MOZ: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — MOZ: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — POR: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — POR: 2 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — POR: visible nodes dropped (34→33, expect -1)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — POR: 1/1 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — POR: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — TAN: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — TAN: no non-gateway nodes — badge N/A (all are gateways)
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — TAN: no non-gateway nodes, visible count unchanged (expected)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — TAN: no non-gateway nodes to hide (correct)
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — TAN: expand restores visible count (34)
+  ✅ PASS: L3[03Mar2026_20h05m03s_34_hosts] — ZAF: collapse triggered (method=click)
+  ✅ PASS: L4[03Mar2026_20h05m03s_34_hosts] — ZAF: 5 gateway node(s) show "▲ hidden" badge
+  ✅ PASS: L5[03Mar2026_20h05m03s_34_hosts] — ZAF: visible nodes dropped (34→31, expect -3)
+  ✅ PASS: L6[03Mar2026_20h05m03s_34_hosts] — ZAF: 3/3 non-gateway nodes hidden ✓
+  ✅ PASS: L3b[03Mar2026_20h05m03s_34_hosts] — ZAF: expand restores visible count (34)
+  ℹ  Screenshot → 41-03Mar2026_-L3-per-country-cycle.png
+
+[collapsing-deep] L3c — Bulk "Collapse All"
+  ℹ  Screenshot → 42-03Mar2026_-L3c-collapse-all.png
+  ✅ PASS: L3c[03Mar2026_20h05m03s_34_hosts] — "Collapse All" triggered
+  ℹ  After Collapse All: visible nodes=28  edges=41
+  ✅ PASS: L3c[03Mar2026_20h05m03s_34_hosts] — After Collapse All: 28 nodes visible (≤28 gateways)
+  ℹ  Badge count after Collapse All: 11
+  ✅ PASS: L3c[03Mar2026_20h05m03s_34_hosts] — 11 gateway nodes show "▲ hidden" badges after Collapse All
+  ℹ  Screenshot → 43-03Mar2026_-L3c-expand-all.png
+  ✅ PASS: L3c[03Mar2026_20h05m03s_34_hosts] — After Expand All: 34 nodes visible = all 34 routers
+
+[collapsing-deep] L7a — Link Costs table (CL-F4)
+  ℹ  Screenshot → 44-03Mar2026_-L7a-cost-table.png
+  ✅ PASS: L7a[03Mar2026_20h05m03s_34_hosts] — 🔗 Link Costs button clicked
+  ✅ PASS: L7a[03Mar2026_20h05m03s_34_hosts] — #costTablePanel appeared
+  ✅ PASS: L7a[03Mar2026_20h05m03s_34_hosts] — Cost table has 19 rows (country-pair data present)
+
+[collapsing-deep] L7b — Save State / localStorage (CL-F1)
+  ℹ  Screenshot → 45-03Mar2026_-L7b-save-state.png
+  ✅ PASS: L7b[03Mar2026_20h05m03s_34_hosts] — 💾 Save State triggered
+  ✅ PASS: L7b[03Mar2026_20h05m03s_34_hosts] — localStorage["topolograph_collapse_v1"] = {"default":{"DJB":false,"DRC":false,"FRA":false,"GBR":false,"KEN":false,"LES":false,"MOZ":false,"POR":false,"TAN":false,"ZAF":true}}
+  ✅ PASS: L7b[03Mar2026_20h05m03s_34_hosts] — localStorage correctly records ZAF as collapsed
+
+[collapsing-deep] L8 — Cross-mode restore (ENRICHED → COLLAPSING)
+  ℹ  Collapse state before switch: {"DJB":false,"DRC":false,"FRA":false,"GBR":false,"KEN":false,"LES":false,"MOZ":false,"POR":false,"TAN":false,"ZAF":true}
+  ℹ  Screenshot → 46-03Mar2026_-L8-switched-to-enriched.png
+  ℹ  In ENRICHED mode: 34 nodes visible
+  ✅ PASS: L8[03Mar2026_20h05m03s_34_hosts] — ENRICHED mode shows all 34 routers
+  ℹ  Screenshot → 47-03Mar2026_-L8-returned-to-collapsing.png
+  ✅ PASS: L8[03Mar2026_20h05m03s_34_hosts] — After return to COLLAPSING: ZAF 3/3 non-gateway nodes still hidden
+
+[collapsing-deep] L9 — Persistent Path Overlay (IP Fabric parity)
+  ℹ  Screenshot → 48-03Mar2026_-L9-persistent-path-overlay.png
+  ℹ  L9[03Mar2026_20h05m03s_34_hosts]: Total visible edges after ZAF collapse: 47
+  ℹ  L9[03Mar2026_20h05m03s_34_hosts]: Inter-country edges still visible: 21
+  ℹ  L9[03Mar2026_20h05m03s_34_hosts]: Inter-country edges with both endpoints hidden (should be 0): 0
+  ✅ PASS: L9[03Mar2026_20h05m03s_34_hosts] — Persistent Path Overlay ✓ — 21 inter-country edges visible after ZAF collapse
+  ✅ PASS: L9[03Mar2026_20h05m03s_34_hosts] — No edges have both endpoints hidden (dangling hidden edges = 0) ✓
+
+[collapsing-deep] L10 — Cost Aggregation badge (IP Fabric parity)
+  ℹ  Screenshot → 49-03Mar2026_-L10-cost-aggregation-badge.png
+  ℹ  L10[03Mar2026_20h05m03s_34_hosts]: ZAF badge nodes count: 5
+  ℹ  L10[03Mar2026_20h05m03s_34_hosts]:   label="18.18.18.4\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[03Mar2026_20h05m03s_34_hosts]:   label="18.18.18.8\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[03Mar2026_20h05m03s_34_hosts]:   label="18.18.18.7\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[03Mar2026_20h05m03s_34_hosts]:   label="18.18.18.2\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ℹ  L10[03Mar2026_20h05m03s_34_hosts]:   label="18.18.18.1\n▲ 3 hidden | Σcost: 448" extractedCost=448
+  ✅ PASS: L10[03Mar2026_20h05m03s_34_hosts] — ZAF gateways show collapse badge (5 nodes with ▲)
+  ✅ PASS: L10[03Mar2026_20h05m03s_34_hosts] — Cost Aggregation ✓ — badge contains ∑cost: 448
+
+  ─── 03Mar2026_20h05m03s_34_hosts done ───
+
+
+╔══════════════════════════════════════════════════════════════════╗
+║   COLLAPSING DEEP-DIVE — FINAL SUMMARY                          ║
+╠══════════════════════════════════════════════════════════════════╣
+║  PASSED : 301                                                   ║
+║  FAILED : 0                                                     ║
+║  TOTAL  : 301                                                   ║
+║  STATUS : ALL COLLAPSING DEEP-DIVE CHECKS PASSED ✅             ║
+╚══════════════════════════════════════════════════════════════════╝
