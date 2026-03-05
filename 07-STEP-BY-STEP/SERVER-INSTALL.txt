@@ -1,0 +1,150 @@
+================================================================================
+ SERVER-INSTALL.txt
+ OSPF Country Topology — Software Requirements & Server Installation Steps
+================================================================================
+
+================================================================================
+ SOFTWARE REQUIREMENTS
+================================================================================
+
+  Software          Minimum Version   Purpose
+  ──────────────────────────────────────────────────────────────────────────────
+  Docker            20.x              Runs Topolograph (Flask + MongoDB + Nginx + MCP)
+  Docker Compose    v2.x              Orchestrates the 4 containers
+  Git               2.x               Clone both repositories
+  Python 3          3.8+              Pipeline scripts (push-to-ui.py, generate-collapse-config.py)
+  pip               any               Install requests Python library
+  Node.js           18+               Playwright E2E tests only
+  jq                1.6+              JSON parsing in fetch-from-api.sh
+  bash              4.x               All shell scripts (workflow.sh, etc.)
+  awk               any               OSPF file parsing in topology-country-tool.sh
+  curl              any               API calls in shell scripts
+
+================================================================================
+ INSTALLATION STEPS ON A LINUX SERVER
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 1 — Install Docker
+────────────────────────────────────────────────────────────────────────────────
+
+  sudo apt-get update
+  sudo apt-get install -y ca-certificates curl
+  sudo install -m 0755 -d /etc/apt/keyrings
+  sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+       -o /etc/apt/keyrings/docker.asc
+  sudo chmod a+r /etc/apt/keyrings/docker.asc
+  echo "deb [arch=$(dpkg --print-architecture) \
+       signed-by=/etc/apt/keyrings/docker.asc] \
+       https://download.docker.com/linux/ubuntu \
+       $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" | \
+       sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get update
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io \
+       docker-buildx-plugin docker-compose-plugin
+  sudo usermod -aG docker $USER && newgrp docker
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 2 — Install remaining tools
+────────────────────────────────────────────────────────────────────────────────
+
+  sudo apt-get install -y git python3 python3-pip jq curl
+  pip3 install requests
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 3 — Install Node.js 18 (for tests only)
+────────────────────────────────────────────────────────────────────────────────
+
+  curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+  sudo apt-get install -y nodejs
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 4 — Clone Topolograph Docker (Repo 1)
+────────────────────────────────────────────────────────────────────────────────
+
+  cd ~
+  git clone https://github.com/Vadims06/topolograph-docker.git
+  cd topolograph-docker
+  cp env.example .env
+
+  Edit .env and set the following values:
+
+    TOPOLOGRAPH_PORT=8081
+    MONGODB_DATABASE=admin
+    MONGODB_USERNAME=admin
+    MONGODB_PASSWORD=myadminpassword
+    MONGODB_HOSTNAME=mongodb
+    TOPOLOGRAPH_WEB_API_USERNAME_EMAIL=ospf@topolograph.com
+    TOPOLOGRAPH_WEB_API_PASSWORD=ospf
+    TOPOLOGRAPH_WEB_API_AUTHORISED_NETWORKS=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 5 — Start Docker containers
+────────────────────────────────────────────────────────────────────────────────
+
+  docker compose pull
+  docker compose up -d
+  docker ps    # verify: webserver, flask, mongodb, mcp-server all Up
+
+  Expected:
+    NAMES        STATUS          PORTS
+    webserver    Up X minutes    0.0.0.0:8081->8081/tcp
+    flask        Up X minutes    5000/tcp
+    mcp-server   Up X minutes    0.0.0.0:8000->8000/tcp
+    mongodb      Up X minutes    0.0.0.0:27017->27017/tcp
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 6 — Clone the pipeline project (Repo 2)
+────────────────────────────────────────────────────────────────────────────────
+
+  mkdir -p ~/Documents && cd ~/Documents
+  git clone https://github.com/zumanm1/topologygraph_clone.git OSPF-DATABASE-TEST
+  cd OSPF-DATABASE-TEST
+  git checkout feat/collapsing-stage
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 7 — Apply the custom JS and navbar patch
+────────────────────────────────────────────────────────────────────────────────
+
+  cp topolograph-docker/init/topolograph.js \
+     ~/topolograph-docker/init/topolograph.js
+
+  docker cp 06-STEP-BY-STEP/docker-patches/base.html \
+     flask:/home/flask/flask/templates/base.html
+
+  docker restart flask
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 8 — Install Playwright (tests only)
+────────────────────────────────────────────────────────────────────────────────
+
+  cd tests && npm install && npx playwright install chromium && cd ..
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 9 — Run the pipeline
+────────────────────────────────────────────────────────────────────────────────
+
+  bash terminal-script/workflow.sh all
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 10 — Verify
+────────────────────────────────────────────────────────────────────────────────
+
+  Open browser to:  http://<your-server-ip>:8081/
+  Login:            ospf@topolograph.com / ospf
+
+  Or run full 114-check validation:
+    bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh
+
+================================================================================
+ RELATED DOCUMENTS
+================================================================================
+
+  READ2-INTSTAL.txt                              (project root — full guide)
+  07-STEP-BY-STEP/READ2-INTSTAL.txt              (07 folder — full guide)
+  07-STEP-BY-STEP/docs/02-COMPLETE-WALKTHROUGH.md (step-by-step walkthrough)
+  07-STEP-BY-STEP/docs/03-FOLDER-FILE-REFERENCE.md (all output files explained)
+
+================================================================================
+ END OF SERVER-INSTALL.txt
+================================================================================
