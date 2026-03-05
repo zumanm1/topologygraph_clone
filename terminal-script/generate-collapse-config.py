@@ -53,6 +53,8 @@ def parse_args():
                    help='Path to <graph_time>_COLLAPSING folder (will be created)')
     p.add_argument('--graph-time',   required=True,
                    help='graph_time identifier string')
+    p.add_argument('--prefs-file',    required=False, default='',
+               help='Optional path to collapse-preferences.json (CL-F1 pipeline default-collapse override)')
     return p.parse_args()
 
 
@@ -149,7 +151,7 @@ def build_country_split(mapping):
     return dict(split)
 
 
-def build_collapse_config(graph_time, split):
+def build_collapse_config(graph_time, split, default_collapse=None):
     """
     Produces the COLLAPSING_country-collapse-config.json structure.
     Includes per-country metadata and default expand state.
@@ -164,7 +166,7 @@ def build_collapse_config(graph_time, split):
             'core_count':       len(cor),
             'gateway_ids':      gw,
             'core_ids':         cor,
-            'default_collapsed': False,  # all expanded by default
+            'default_collapsed': bool(default_collapse and code in default_collapse),
         }
 
     total_routers  = sum(v['total']         for v in countries.values())
@@ -272,8 +274,18 @@ def main():
     # 2. Build country gateway/core split
     split = build_country_split(mapping)
 
+    # CL-F1: load optional collapse-preferences.json
+    default_collapse = []
+    if args.prefs_file and os.path.exists(args.prefs_file):
+        try:
+            prefs = read_json(args.prefs_file)
+            default_collapse = [c.upper() for c in prefs.get('collapse_by_default', [])]
+            log(f'CL-F1: collapse-preferences loaded — default_collapse={default_collapse}')
+        except Exception as e:
+            log(f'WARNING: could not read prefs-file: {e}')
+
     # 3. Generate collapse config
-    config = build_collapse_config(args.graph_time, split)
+    config = build_collapse_config(args.graph_time, split, default_collapse=default_collapse)
     write_json(
         os.path.join(args.output_dir, 'COLLAPSING_country-collapse-config.json'),
         config
