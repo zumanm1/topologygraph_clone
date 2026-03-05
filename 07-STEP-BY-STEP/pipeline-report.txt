@@ -1,0 +1,198 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║      07-STEP-BY-STEP — ospf-database-3b.txt Pipeline        ║
+╚══════════════════════════════════════════════════════════════╝
+
+  OSPF file : /Users/macbook/Documents/OSPF-DATABASE-TEST/INPUT-FOLDER/ospf-database-3b.txt
+  Host file : /Users/macbook/Documents/OSPF-DATABASE-TEST/INPUT-FOLDER/Load-hosts-3b.txt
+  Base URL  : http://localhost:8081
+
+━━━ PHASE 0: Pre-Flight Checks ━━━
+  [0;32m✅ PASS[0m: ospf-database-3b.txt exists (    2768 lines)
+  [0;32m✅ PASS[0m: Load-hosts-3b.txt exists (34 non-comment entries)
+  [0;32m✅ PASS[0m: Topolograph web UI responding at http://localhost:8081
+  [0;32m✅ PASS[0m: Python3 + requests module available
+  [0;32m✅ PASS[0m: workflow.sh found
+
+  [0;32m✅ PASS[0m: All pre-flight checks passed
+
+━━━ PHASE 1: Full Pipeline (upload → enrich → collapse → push) ━━━
+
+  ℹ  Command: workflow.sh all --ospf-file ospf-database-3b.txt --host-file Load-hosts-3b.txt
+
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Upload OSPF database → Topolograph
+══════════════════════════════════════════════════════════
+[workflow] File: /Users/macbook/Documents/OSPF-DATABASE-TEST/INPUT-FOLDER/ospf-database-3b.txt
+[workflow] Uploaded. graph_time=05Mar2026_18h13m11s_54_hosts
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Fetch raw graph → IN-OUT-FOLDER
+══════════════════════════════════════════════════════════
+[fetch-from-api] Saving to: /Users/macbook/Documents/OSPF-DATABASE-TEST/IN-OUT-FOLDER/05Mar2026_18h13m11s_54_hosts
+[fetch-from-api]   meta.json saved
+[fetch-from-api]   nodes.json saved (54 nodes)
+[fetch-from-api]   edges.json saved (148 edges)
+[fetch-from-api]   edges.csv saved
+[fetch-from-api] Done. graph_time=05Mar2026_18h13m11s_54_hosts
+[workflow] graph_time confirmed: 05Mar2026_18h13m11s_54_hosts
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Run terminal topology pipeline
+══════════════════════════════════════════════════════════
+[workflow] AS-IS output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/AS-IS/05Mar2026_18h13m11s_54_hosts_AS-IS
+[workflow] Edge source: OSPF file (/Users/macbook/Documents/OSPF-DATABASE-TEST/INPUT-FOLDER/ospf-database-3b.txt)
+[topology-tool] Done. Files written to: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/.tmp_work_05Mar2026_18h13m11s_54_hosts
+  - country-core-summary.json
+  - country-core-summary.yaml
+  - country-mapping.csv
+  - gateway-only-topology.json
+  - gateway-only-topology.yaml
+  - original-topology-with-country.json
+  - original-topology-with-country.yaml
+[workflow] GATEWAY output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/GATEWAY/05Mar2026_18h13m11s_54_hosts_GATEWAY
+[workflow] ENRICHED output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Generate COLLAPSING stage — gateway/core split + collapsed topology
+══════════════════════════════════════════════════════════
+[collapse-config] graph_time   : 05Mar2026_18h13m11s_54_hosts
+[collapse-config] enriched_dir : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED
+[collapse-config] asis_dir     : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/AS-IS/05Mar2026_18h13m11s_54_hosts_AS-IS
+[collapse-config] output_dir   : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/COLLAPSING/05Mar2026_18h13m11s_54_hosts_COLLAPSING
+[collapse-config] Loaded 54 router entries from country-mapping.csv
+[collapse-config] Loaded 54 nodes from AS-IS_nodes.json
+[collapse-config] Loaded 148 edges from AS-IS_edges.json
+[collapse-config] Country split: 11 countries, 54 total, 32 gateways, 22 cores
+[collapse-config] Wrote COLLAPSING_country-collapse-config.json
+[collapse-config] Collapsed topology: 32 gateway nodes, 90 gateway edges (from 54 nodes, 148 edges)
+[collapse-config] Wrote COLLAPSING_collapsed-topology.json
+[collapse-config] Wrote COLLAPSING_collapsed-topology.yaml
+
+╔══════════════════════════════════════════════════╗
+║          COLLAPSING STAGE COMPLETE               ║
+╠══════════════════════════════════════════════════╣
+║  Countries : 11                                  ║
+║  Total     : 54                                  ║
+║  Gateways  : 32                                  ║
+║  Core      : 22                                  ║
+╠══════════════════════════════════════════════════╣
+║    DJB    total=2  gw=2  core=0                 ║
+║    DRC    total=4  gw=4  core=0                 ║
+║    FRA    total=3  gw=2  core=1                 ║
+║    GBR    total=3  gw=2  core=1                 ║
+║    KEN    total=2  gw=2  core=0                 ║
+║    LES    total=3  gw=3  core=0                 ║
+║    MOZ    total=4  gw=4  core=0                 ║
+║    POR    total=3  gw=2  core=1                 ║
+║    TAN    total=2  gw=2  core=0                 ║
+║    UNK    total=20  gw=4  core=16               ║
+║    ZAF    total=8  gw=5  core=3                 ║
+╚══════════════════════════════════════════════════╝
+
+[workflow] COLLAPSING output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/COLLAPSING/05Mar2026_18h13m11s_54_hosts_COLLAPSING
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Push country colours → Topolograph UI
+══════════════════════════════════════════════════════════
+[push-to-ui] Loading country mapping: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
+[push-to-ui] 54 routers mapped to countries
+[push-to-ui] Countries: DJB:2 | DRC:4 | FRA:3 | GBR:3 | KEN:2 | LES:3 | MOZ:4 | POR:3 | TAN:2 | UNK:20 | ZAF:8
+[push-to-ui] Fetching nodes for graph_time=05Mar2026_18h13m11s_54_hosts …
+[push-to-ui] 54 nodes in graph
+
+[push-to-ui] Patched: 54 OK  |  0 FAILED  |  0 skipped
+[push-to-ui] ⚠  UNK nodes (20) — no hostname in host file:
+             • 19.19.19.1  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 19.19.19.2  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 19.19.19.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 19.19.19.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 19.19.19.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.1  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.2  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.1  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.2  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.1  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.2  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+[push-to-ui] Palette written: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED/ENRICHED_country-palette.json
+[push-to-ui] Done — open http://localhost:8081/ and load graph_time=05Mar2026_18h13m11s_54_hosts
+             The Country Filter panel will appear automatically in the UI.
+[workflow] UI push complete.
+
+╔══════════════════════════════════════════════════════════════╗
+║               WORKFLOW COMPLETE                              ║
+╠══════════════════════════════════════════════════════════════╣
+║  graph_time : 05Mar2026_18h13m11s_54_hosts                   ║
+╠══════════════════════════════════════════════════════════════╣
+║  OUTPUT FOLDERS:                                             ║
+║  AS-IS    → OUTPUT/AS-IS/05Mar2026_18h13m11s_54_hosts_AS-IS/  ║
+║  GATEWAY  → OUTPUT/GATEWAY/05Mar2026_18h13m11s_54_hosts_GATEWAY/║
+║  ENRICHED   → OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED/║
+║  COLLAPSING → OUTPUT/COLLAPSING/05Mar2026_18h13m11s_54_hosts_COLLAPSING/║
+╠══════════════════════════════════════════════════════════════╣
+║  NEXT STEPS:                                                 ║
+║  1. Open http://localhost:8081/                               ║
+║  2. Select the graph from the dropdown                       ║
+║  3. Use the 🌍 Country Filter panel (top-right)              ║
+╚══════════════════════════════════════════════════════════════╝
+
+  [0;32m✅ PASS[0m: Pipeline completed in 4s
+
+━━━ PHASE 2: Verify Output Files ━━━
+  ℹ  Latest graph_time: 05Mar2026_18h13m11s_54_hosts
+
+  [0;32m✅ PASS[0m: IN-OUT: meta.json
+  [0;32m✅ PASS[0m: IN-OUT: nodes.json
+  [0;32m✅ PASS[0m: IN-OUT: edges.json
+  [0;32m✅ PASS[0m: IN-OUT: edges.csv
+  [0;32m✅ PASS[0m: IN-OUT: 54 nodes (expected 54)
+  [0;32m✅ PASS[0m: AS-IS: AS-IS_nodes.json
+  [0;32m✅ PASS[0m: AS-IS: AS-IS_edges.json
+  [0;32m✅ PASS[0m: AS-IS: ospf-database copy
+  [0;32m✅ PASS[0m: ENRICHED: country-mapping.csv
+  [0;32m✅ PASS[0m: ENRICHED: original-topology.json
+  [0;32m✅ PASS[0m: ENRICHED: 11 countries (expected ≥11)
+  [0;32m✅ PASS[0m: ENRICHED: 20 UNK routers (expected ≥20)
+  [0;32m✅ PASS[0m: GATEWAY: gateway-only-topology.json
+  [0;32m✅ PASS[0m: GATEWAY: country-core-summary.json
+  [0;32m✅ PASS[0m: COLLAPSING: country-collapse-config.json
+  [0;32m✅ PASS[0m: COLLAPSING: collapsed-topology.json
+  [0;32m✅ PASS[0m: COLLAPSING: 11 countries, 54 routers, 32 gw, 22 core
+
+━━━ Files Created ━━━
+  ℹ  IN-OUT-FOLDER/05Mar2026_18h13m11s_54_hosts/ (4 files)
+  ℹ  OUTPUT/AS-IS/05Mar2026_18h13m11s_54_hosts_AS-IS/ (4 files)
+  ℹ  OUTPUT/GATEWAY/05Mar2026_18h13m11s_54_hosts_GATEWAY/ (4 files)
+  ℹ  OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED/ (4 files)
+  ℹ  OUTPUT/COLLAPSING/05Mar2026_18h13m11s_54_hosts_COLLAPSING/ (3 files)
+  ℹ  Total: 19 new files on disk + 54 PATCH calls to Topolograph API
+
+━━━ Next Steps ━━━
+
+  1. Open browser: http://localhost:8081/
+  2. Login: ospf@topolograph.com / ospf
+  3. Dropdown → select: 05Mar2026_18h13m11s_54_hosts
+  4. Click 'Load dynamic graph'
+  5. Use navbar 'Analysis' → Cost Matrix / What-If Analysis
+
+  To run E2E validation (from 06-STEP-BY-STEP):
+    bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh --graph-time=05Mar2026_18h13m11s_54_hosts
+
+╔══════════════════════════════════════════════════════════════╗
+║   07-STEP-BY-STEP PIPELINE REPORT                           ║
+║    graph_time : 05Mar2026_18h13m11s_54_hosts                   ║
+║    duration   : 4s                                             ║
+║  STATUS : ✅ ALL CHECKS PASSED                               ║
+╚══════════════════════════════════════════════════════════════╝
+
+  Full report : /Users/macbook/Documents/OSPF-DATABASE-TEST/07-STEP-BY-STEP/pipeline-report.txt
