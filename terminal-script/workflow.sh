@@ -39,7 +39,17 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASE_URL="${BASE_URL:-http://localhost:8081}"
 AUTH_USER="${AUTH_USER:-ospf@topolograph.com}"
 AUTH_PASS="${AUTH_PASS:-ospf}"
-OSPF_FILE="${OSPF_FILE:-}"
+# OSPF file: prefer ospf-database-3.txt (54 routers, current default),
+#            fall back to ospf-database-2.txt (34 routers), then blank (no upload)
+if [[ -z "${OSPF_FILE:-}" ]]; then
+  if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" ]]; then
+    OSPF_FILE="$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt"
+  elif [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" ]]; then
+    OSPF_FILE="$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt"
+  else
+    OSPF_FILE=""
+  fi
+fi
 # Host file: prefer Load-hosts.txt (canonical), fall back to host-file.txt
 if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt" ]]; then
   HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt}"

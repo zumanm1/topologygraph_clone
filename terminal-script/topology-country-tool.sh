@@ -24,8 +24,11 @@ if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt" ]]; then
 else
   HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/host-file.txt}"
 fi
-# OSPF file: prefer ospf-database-2.txt (current default), fall back to ospf-database.txt
-if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" ]]; then
+# OSPF file: prefer ospf-database-3.txt (54 routers, current default),
+#            fall back to ospf-database-2.txt (34 routers), then ospf-database.txt
+if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" ]]; then
+  OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt}"
+elif [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" ]]; then
   OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt}"
 else
   OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt}"
