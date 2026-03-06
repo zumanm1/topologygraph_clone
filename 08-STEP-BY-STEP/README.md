@@ -31,7 +31,8 @@ In practical terms, `08-STEP-BY-STEP` is now the **canonical merged test package
 
 - `ospf-database-54-unk-test.txt`
 - `Load-hosts-54-unk-test.txt`
-- `host-mapping-e2e.csv`
+- `Load-hosts.csv`
+- `Load-hosts-3b.txt`
 - `collapse-preferences.json`
 
 These fixtures preserve the desired regression shape for testing:
@@ -39,6 +40,7 @@ These fixtures preserve the desired regression shape for testing:
 - 54 routers in the OSPF database
 - 34 mapped hosts in the default host file
 - 20 remaining `UNK` routers for validation across ENRICHED, GATEWAY, COLLAPSING, Cost Matrix, and hostname upload flows
+- a standard CSV/TXT host-file pair for browser-side hostname-derived country-code validation
 
 This makes the Docker app self-contained for basic and deep testing directly after clone.
 
@@ -281,7 +283,8 @@ The retained verification points are:
 - Phase 1 JSON artefact integrity
 - deep Playwright validation across AS-IS, ENRICHED, GATEWAY, CURRENT, and COLLAPSING
 - `UNK` visibility and behavior validation
-- hostname upload and reclassification checks
+- hostname upload and hostname-derived reclassification checks
+- dedicated hostname-derived country-code regression (standard host file + conflicting 3-col file)
 - layout save/load/reset/export validation through the dedicated layout service
 - hostname-mapping page load regression after Docker restart
 - Cost Matrix render and refresh regression checks
@@ -308,6 +311,7 @@ That command now does all of the following in one flow:
 - validates Bearer-token API security on `8081`
 - runs the packaged 54-router UNK pipeline
 - runs the deep Docker-native validation against the resulting graph
+- runs the dedicated hostname-derived country-code regression against the resulting graph
 - runs the dedicated layout-persistence Playwright smoke test
 - runs a dedicated hostname-mapping page regression check
 

@@ -106,11 +106,67 @@ fi
 info "Bearer-token /api/graph/ validation: PASS"
 
 info "Running Docker-native 07-equivalent pipeline validation"
-docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
-  --ospf-file="$OSPF_FILE" \
-  --host-file="$HOST_FILE"
+GRAPH_TIME="$(docker compose exec -T \
+  -e OSPF_FILE="$OSPF_FILE" \
+  -e API_USER="$TOPOLOGRAPH_WEB_API_USERNAME_EMAIL" \
+  -e API_PASS="$TOPOLOGRAPH_WEB_API_PASSWORD" \
+  e2e-runner node - <<'NODE'
+const { chromium } = require('playwright');
 
-GRAPH_TIME="$(ls -1 "$PROJECT_ROOT/IN-OUT-FOLDER" | grep '_54_hosts' | sort | tail -1)"
+const BASE_URL = 'http://webserver:8081';
+const OSPF_FILE = `/app/INPUT-FOLDER/${process.env.OSPF_FILE || ''}`;
+const API_USER = process.env.API_USER || 'ospf@topolograph.com';
+const API_PASS = process.env.API_PASS || 'ospf';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+
+  await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+  await page.fill('#login', API_USER);
+  await page.fill('#password', API_PASS);
+  await Promise.race([
+    page.press('#password', 'Enter'),
+    page.click('input[type="submit"], button[type="submit"]').catch(() => {}),
+  ]);
+  await page.waitForTimeout(1500);
+
+  await page.goto(`${BASE_URL}/upload-ospf-isis-lsdb`, { waitUntil: 'networkidle', timeout: 30000 });
+  const before = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
+  await page.click('#Cisco').catch(() => {});
+  await page.evaluate(() => {
+    const wrap = document.getElementById('devinputGroupFile02');
+    if (wrap) wrap.removeAttribute('hidden');
+    const input = document.getElementById('inputOSPFFileID');
+    if (input) { input.style.display = 'block'; input.removeAttribute('hidden'); }
+  });
+  await page.locator('#inputOSPFFileID').setInputFiles(OSPF_FILE);
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle', timeout: 30000 }),
+    page.locator('input[name="upload_files_btn"]').click(),
+  ]);
+
+  const after = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
+  const created = after.filter(v => !before.includes(v));
+  const graphTime = created.length ? created[0] : after[0] || '';
+  console.log(graphTime);
+  await browser.close();
+})().catch(err => {
+  console.error(err.message || String(err));
+  process.exit(1);
+});
+NODE
+)"
+
+GRAPH_TIME="$(printf '%s\n' "$GRAPH_TIME" | tail -1 | tr -d '\r')"
+
+docker compose exec pipeline bash /app/terminal-script/workflow.sh enrich-existing \
+  --graph-time "$GRAPH_TIME" \
+  --ospf-file "/app/INPUT-FOLDER/$OSPF_FILE" \
+  --host-file "/app/INPUT-FOLDER/$HOST_FILE" \
+  --base-url  "http://webserver:8081" \
+  --user      "$TOPOLOGRAPH_WEB_API_USERNAME_EMAIL" \
+  --pass      "$TOPOLOGRAPH_WEB_API_PASSWORD"
 
 if [[ -z "$GRAPH_TIME" ]]; then
   echo "[08-step] ERROR: could not resolve latest 54-host graph_time"
@@ -119,8 +175,12 @@ fi
 
 info "Resolved graph_time: $GRAPH_TIME"
 info "Running Docker-native 06-equivalent deep validation"
-docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+docker compose exec e2e-runner bash /app/docker/scripts/docker-e2e.sh \
   --graph-time="$GRAPH_TIME"
+
+info "Running hostname-derived country-code regression check"
+docker compose exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
+  node /app/tests/validate-country-derivation.cjs
 
 info "Running layout-persistence regression check"
 docker compose exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \

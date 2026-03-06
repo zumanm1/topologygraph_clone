@@ -119,6 +119,20 @@ else
   fail "workflow.sh NOT found — check project structure"
 fi
 
+# 0f. Docker pipeline container
+if docker compose ps --status running pipeline >/dev/null 2>&1; then
+  pass "pipeline container available for authenticated internal upload path"
+else
+  fail "pipeline container is not running — start Docker stack first"
+fi
+
+# 0g. Docker e2e-runner container
+if docker compose ps --status running e2e-runner >/dev/null 2>&1; then
+  pass "e2e-runner container available for browser upload path"
+else
+  fail "e2e-runner container is not running — start test profile first"
+fi
+
 echo ""
 if [[ $FAILED -gt 0 ]]; then
   echo -e "${RED}  ❌ $FAILED pre-flight check(s) failed. Fix above and re-run.${NC}"
@@ -130,16 +144,74 @@ pass "All pre-flight checks passed"
 echo ""
 echo "━━━ PHASE 1: Full Pipeline (upload → enrich → collapse → push) ━━━"
 echo ""
-info "Command: workflow.sh all --ospf-file ospf-database-3b.txt --host-file Load-hosts-3b.txt"
+info "Command: browser upload via e2e-runner → workflow.sh enrich-existing inside pipeline container"
 echo ""
 # ─────────────────────────────────────────────────────────────────────────────
 
 PIPELINE_START=$(date +%s)
 
-bash "$PROJECT_ROOT/terminal-script/workflow.sh" all \
-  --ospf-file "$OSPF_FILE" \
-  --host-file "$HOST_FILE" \
-  --base-url  "$BASE_URL" \
+GRAPH_TIME=$(docker compose exec -T e2e-runner node - <<'NODE'
+const { chromium } = require('playwright');
+
+const BASE_URL = 'http://webserver:8081';
+const OSPF_FILE = '/app/INPUT-FOLDER/ospf-database-3b.txt';
+const API_USER = 'ospf@topolograph.com';
+const API_PASS = 'ospf';
+
+(async () => {
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+
+  await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+  await page.fill('#login', API_USER);
+  await page.fill('#password', API_PASS);
+  await Promise.race([
+    page.press('#password', 'Enter'),
+    page.click('input[type="submit"], button[type="submit"]').catch(() => {}),
+  ]);
+  await page.waitForTimeout(1500);
+
+  await page.goto(`${BASE_URL}/upload-ospf-isis-lsdb`, { waitUntil: 'networkidle', timeout: 30000 });
+  const before = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
+  await page.click('#Cisco').catch(() => {});
+  await page.evaluate(() => {
+    const wrap = document.getElementById('devinputGroupFile02');
+    if (wrap) wrap.removeAttribute('hidden');
+    const input = document.getElementById('inputOSPFFileID');
+    if (input) { input.style.display = 'block'; input.removeAttribute('hidden'); }
+  });
+  await page.locator('#inputOSPFFileID').setInputFiles(OSPF_FILE);
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle', timeout: 30000 }),
+    page.locator('input[name="upload_files_btn"]').click(),
+  ]);
+
+  const after = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
+  const created = after.filter(v => !before.includes(v));
+  const graphTime = created.length ? created[0] : after[0] || '';
+  console.log(graphTime);
+  await browser.close();
+})().catch(err => {
+  console.error(err.message || String(err));
+  process.exit(1);
+});
+NODE
+)
+
+GRAPH_TIME="$(printf '%s\n' "$GRAPH_TIME" | tail -1 | tr -d '\r')"
+
+if [[ -z "$GRAPH_TIME" ]]; then
+  fail "Browser upload did not return a graph_time"
+  exit 1
+fi
+
+info "Browser-uploaded graph_time: $GRAPH_TIME"
+
+docker compose exec pipeline bash /app/terminal-script/workflow.sh enrich-existing \
+  --graph-time "$GRAPH_TIME" \
+  --ospf-file "/app/INPUT-FOLDER/$(basename "$OSPF_FILE")" \
+  --host-file "/app/INPUT-FOLDER/$(basename "$HOST_FILE")" \
+  --base-url  "http://webserver:8081" \
   --user      "$API_USER" \
   --pass      "$API_PASS" \
   $EXTRA_ARGS
@@ -154,9 +226,6 @@ pass "Pipeline completed in ${PIPELINE_SECS}s"
 echo ""
 echo "━━━ PHASE 2: Verify Output Files ━━━"
 # ─────────────────────────────────────────────────────────────────────────────
-
-# Find the latest 54-host graph_time
-GRAPH_TIME=$(ls "$PROJECT_ROOT/IN-OUT-FOLDER" | grep "_54_hosts" | sort | tail -1)
 
 if [[ -z "$GRAPH_TIME" ]]; then
   fail "Could not find 54-host graph_time in IN-OUT-FOLDER"
@@ -204,6 +273,55 @@ with open('$EN_DIR/ENRICHED_country-mapping.csv') as f:
     print(len(unk))
 " 2>/dev/null || echo 0)
 [[ "$UNK_COUNT" -ge 20 ]] && pass "ENRICHED: $UNK_COUNT UNK routers (expected ≥20)" || fail "ENRICHED: expected ≥20 UNK, got $UNK_COUNT"
+
+python3 - <<PYEOF >/tmp/07-country-derived-checks.txt 2>/dev/null || true
+import csv
+import json
+rows = {}
+with open('$EN_DIR/ENRICHED_country-mapping.csv', newline='') as f:
+    for row in csv.DictReader(f):
+        rows[row.get('router_id','').strip()] = row
+
+checks = [
+    ('12.12.12.2', 'ken-mob-r2', 'KEN'),
+    ('13.13.13.1', 'drc-moa-r1', 'DRC'),
+    ('18.18.18.4', 'zaf-mtz-r1', 'ZAF'),
+]
+for rid, hostname, country in checks:
+    row = rows.get(rid, {})
+    ok = row.get('hostname','').strip() == hostname and row.get('country_code','').strip().upper() == country
+    print(json.dumps({'rid': rid, 'ok': ok, 'hostname': row.get('hostname','').strip(), 'country': row.get('country_code','').strip().upper()}))
+ip_row = rows.get('19.19.19.1', {})
+print(json.dumps({'rid': '19.19.19.1', 'ok': ip_row.get('country_code','').strip().upper() == 'UNK', 'hostname': ip_row.get('hostname','').strip(), 'country': ip_row.get('country_code','').strip().upper()}))
+PYEOF
+
+while IFS= read -r line; do
+  RID=$(python3 - <<PYEOF "$line"
+import json, sys
+print(json.loads(sys.argv[1])['rid'])
+PYEOF
+)
+  OK=$(python3 - <<PYEOF "$line"
+import json, sys
+print('true' if json.loads(sys.argv[1])['ok'] else 'false')
+PYEOF
+)
+  HOSTNAME=$(python3 - <<PYEOF "$line"
+import json, sys
+print(json.loads(sys.argv[1])['hostname'])
+PYEOF
+)
+  COUNTRY=$(python3 - <<PYEOF "$line"
+import json, sys
+print(json.loads(sys.argv[1])['country'])
+PYEOF
+)
+  if [[ "$OK" == "true" ]]; then
+    pass "ENRICHED: $RID => $HOSTNAME => $COUNTRY (hostname-derived)"
+  else
+    fail "ENRICHED: $RID derivation mismatch (hostname=$HOSTNAME country=$COUNTRY)"
+  fi
+done < /tmp/07-country-derived-checks.txt
 
 # GATEWAY checks
 GW_DIR="$PROJECT_ROOT/OUTPUT/GATEWAY/${GRAPH_TIME}_GATEWAY"

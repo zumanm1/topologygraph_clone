@@ -124,7 +124,8 @@ step_upload_ospf() {
   log "File: $OSPF_FILE"
 
   GRAPH_TIME=$(python3 - <<PYEOF
-import requests, json, sys
+import json, re, sys
+import requests
 
 base = "${BASE_URL}"
 auth = ("${AUTH_USER}", "${AUTH_PASS}")
@@ -133,12 +134,23 @@ ospf_path = "${OSPF_FILE}"
 # Ensure credentials exist
 requests.post(f"{base}/create-default-credentials", auth=auth, timeout=10)
 
+s = requests.Session()
+r = s.get(f"{base}/login", timeout=15)
+r.raise_for_status()
+csrf = re.search(r'name="csrf_token"[^>]*value="([^"]+)"', r.text)
+payload = {"login": auth[0], "password": auth[1]}
+if csrf:
+    payload["csrf_token"] = csrf.group(1)
+
+r = s.post(f"{base}/login", data=payload, timeout=15, allow_redirects=True)
+r.raise_for_status()
+
 with open(ospf_path) as f:
     lsdb_text = f.read()
 
-r = requests.post(f"{base}/api/graphs",
+r = s.post(f"{base}/api/graphs",
     json=[{"lsdb_output": lsdb_text, "vendor_device": "Cisco", "igp_protocol": "ospf"}],
-    auth=auth, timeout=120)
+    timeout=120)
 r.raise_for_status()
 data = r.json()
 gt = data.get("graph_time", "")

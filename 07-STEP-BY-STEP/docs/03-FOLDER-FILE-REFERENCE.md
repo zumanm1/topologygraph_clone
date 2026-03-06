@@ -42,7 +42,7 @@ INPUT-FOLDER/
 ├── Load-hosts.csv           ← same as above, CSV format
 │
 ├── collapse-preferences.json ← which countries are collapsed by default in UI
-└── host-mapping-e2e.csv     ← used by P7 Playwright test (54-router CSV)
+└── host-mapping-e2e.csv     ← legacy enriched fixture; no longer the canonical source for automatic country derivation
 ```
 
 ### `ospf-database-3b.txt` — Format Explained
@@ -73,7 +73,7 @@ Space-separated, one entry per line. Comments start with `#`.
 
 ```
 # router_id   hostname
-1.1.1.1       zaf-cpt-r1      ← ZAF country (first 3 chars = ZAF)
+1.1.1.1       zaf-cpt-r1      ← ZAF country (token before first dash = zaf)
 1.1.1.2       zaf-cpt-r2
 ...
 9.9.9.1       les-mar-r1      ← LES country
@@ -81,8 +81,13 @@ Space-separated, one entry per line. Comments start with `#`.
 # 19.x, 20.x, 21.x, 22.x NOT listed → classified as UNK
 ```
 
-The pipeline extracts the country code from the first 3 characters of
-the hostname and uppercases it: `zaf-cpt-r1` → `ZAF`.
+The pipeline extracts the country code from the hostname token before the
+first dash, then takes the first three letters and uppercases them:
+
+- `zaf-cpt-r1` → `ZAF`
+- `ken-mob-r2` → `KEN`
+- `drc-gom-r1` → `DRC`
+- `19.19.19.1` → `UNK` (IP-like hostname)
 
 ---
 
@@ -282,7 +287,7 @@ router_id,hostname,country_code,is_gateway
 Columns:
 - `router_id` — the router's IP address (OSPF Router ID)
 - `hostname` — from `Load-hosts-3b.txt` (empty for UNK routers)
-- `country_code` — 3-letter code derived from hostname prefix
+- `country_code` — 3-letter code derived from the hostname token before the first dash; IP-like hostnames become `UNK`
 - `is_gateway` — true if this router has neighbours in >1 country
 
 #### `ENRICHED_country-palette.json`

@@ -531,7 +531,7 @@ async function visibleNodeCount(page) {
 
   // ── P7: Hostname Upload ───────────────────────────────────────────────────
   log('');
-  log('━━━ P7: Sprint 3 — Hostname Upload (54-router CSV, UNK preserved) ━━━');
+  log('━━━ P7: Sprint 3 — Hostname Upload (standard host file, derived countries, UNK preserved) ━━━');
 
   await page.evaluate(() => { if (typeof buildHostnameUploadPanel==='function') buildHostnameUploadPanel(); });
   await settle(page, 600);
@@ -553,23 +553,32 @@ async function visibleNodeCount(page) {
     ? pass('P7-HOST', 'Drag-drop zone present')
     : fail('P7-HOST', 'Drag-drop zone not found');
 
-  // Load the 54-router mapping CSV
-  const csvPath54 = path.join(__dirname, '..', 'INPUT-FOLDER', 'host-mapping-e2e.csv');
-  const csvPath34 = path.join(__dirname, '..', 'INPUT-FOLDER', 'Load-hosts.csv');
+  // Load the standard host-file fixture: router_id -> hostname, country derived from hostname
+  const standardCsvPath = path.join(__dirname, '..', 'INPUT-FOLDER', 'Load-hosts.csv');
+  const standardTxtPath = path.join(__dirname, '..', 'INPUT-FOLDER', 'Load-hosts-3b.txt');
+  const canonicalTxtPath = path.join(__dirname, '..', 'INPUT-FOLDER', 'Load-hosts.txt');
   let testCsv = '';
-  if (fs.existsSync(csvPath54)) {
-    testCsv = fs.readFileSync(csvPath54, 'utf8');
+  if (fs.existsSync(standardCsvPath)) {
+    testCsv = fs.readFileSync(standardCsvPath, 'utf8');
     const lines = testCsv.trim().split('\n').length;
-    info(`Using host-mapping-e2e.csv (${lines} lines — covers 54 routers)`);
-    lines >= 55
-      ? pass('P7-HOST', `host-mapping-e2e.csv covers ${lines-1} routers (≥54 expected)`)
-      : warn('P7-HOST', `host-mapping-e2e.csv has ${lines-1} router entries — expected ≥54`);
-  } else if (fs.existsSync(csvPath34)) {
-    testCsv = fs.readFileSync(csvPath34, 'utf8');
-    info('Using Load-hosts.csv fallback (34 routers — UNK nodes will stay UNK)');
+    info(`Using Load-hosts.csv (${lines-1} mapped routers, standard CSV host file)`);
+    lines >= 35
+      ? pass('P7-HOST', `Load-hosts.csv provides ${lines-1} standard host mappings (≥34 expected)`)
+      : warn('P7-HOST', `Load-hosts.csv has ${lines-1} host mappings — expected ≥34`);
+  } else if (fs.existsSync(standardTxtPath)) {
+    testCsv = fs.readFileSync(standardTxtPath, 'utf8');
+    const lines = testCsv.split(/\r?\n/).filter(line => line.trim() && !line.trim().startsWith('#')).length;
+    info(`Using Load-hosts-3b.txt (${lines} mapped routers, standard TXT host file)`);
+    lines >= 34
+      ? pass('P7-HOST', `Load-hosts-3b.txt provides ${lines} standard host mappings (≥34 expected)`)
+      : warn('P7-HOST', `Load-hosts-3b.txt has ${lines} host mappings — expected ≥34`);
+  } else if (fs.existsSync(canonicalTxtPath)) {
+    testCsv = fs.readFileSync(canonicalTxtPath, 'utf8');
+    const lines = testCsv.split(/\r?\n/).filter(line => line.trim() && !line.trim().startsWith('#')).length;
+    info(`Using Load-hosts.txt (${lines} mapped routers, canonical TXT host file)`);
   } else {
-    testCsv = 'router_id,hostname,country\n9.9.9.1,les-mar-r1,LES';
-    info('No CSV file found — using minimal inline fallback');
+    testCsv = 'device_ip_address,device_name\n9.9.9.1,les-mar-r1\n12.12.12.2,ken-mob-r2\n13.13.13.1,drc-moa-r1\n18.18.18.4,zaf-mtz-r1';
+    info('No standard host file found — using minimal inline hostname mapping fallback');
   }
 
   const applyResult = await page.evaluate((csv) => {
@@ -580,21 +589,89 @@ async function visibleNodeCount(page) {
     } catch(e) { return 'error:' + e.message; }
   }, testCsv);
   applyResult === 'ok'
-    ? pass('P7-HOST', '_applyHostnameMapping() applied 54-router CSV successfully')
+    ? pass('P7-HOST', '_applyHostnameMapping() applied standard host file successfully')
     : fail('P7-HOST', `_applyHostnameMapping failed: ${applyResult}`);
   await settle(page, 600);
   await shot(page, '12-hostname-applied-54');
+
+  const derivedSamples = await page.evaluate(() => {
+    try {
+      const wanted = ['12.12.12.2', '13.13.13.1', '18.18.18.4', '19.19.19.1'];
+      return nodes.get().filter(n => wanted.includes(String(n.name || n.id))).map(n => ({
+        id: String(n.name || n.id),
+        hostname: n.hostname || '',
+        country: (n.country || 'UNK').toUpperCase(),
+        label: n.label || ''
+      }));
+    } catch(e) { return [{ error: e.message }]; }
+  });
+  const sampleById = new Map(derivedSamples.map(row => [row.id, row]));
+  const expectedDerived = [
+    ['12.12.12.2', 'ken-mob-r2', 'KEN'],
+    ['13.13.13.1', 'drc-moa-r1', 'DRC'],
+    ['18.18.18.4', 'zaf-mtz-r1', 'ZAF']
+  ];
+  expectedDerived.forEach(([rid, hostname, country]) => {
+    const row = sampleById.get(rid);
+    row && row.hostname === hostname && row.country === country && row.label.includes('[' + country + ']')
+      ? pass('P7-HOST', `${rid} derives ${country} from hostname ${hostname}`)
+      : fail('P7-HOST', `${rid} derivation mismatch: ${JSON.stringify(row || null)}`);
+  });
+  const unkRow = sampleById.get('19.19.19.1');
+  unkRow && unkRow.country === 'UNK'
+    ? pass('P7-HOST', 'IP-like hostname remains UNK after standard host-file apply')
+    : warn('P7-HOST', `Expected 19.19.19.1 to remain UNK, saw ${JSON.stringify(unkRow || null)}`);
 
   const postUnk = await page.evaluate(() => {
     try { return nodes.get().filter(n => (n.country||'UNK').toUpperCase()==='UNK').length; } catch(e) { return -1; }
   });
   info(`UNK count after CSV apply: ${postUnk}`);
-  // With 54-router CSV, UNK nodes (19-22.x.x.x) should still be UNK
+  // With a 34-entry standard host file, the remaining routers (19-22.x.x.x) should still be UNK.
   postUnk >= 20
-    ? pass('P7-HOST', `UNK preserved after CSV apply: ${postUnk} nodes (correct — not in host file)`)
+    ? pass('P7-HOST', `UNK preserved after host-file apply: ${postUnk} nodes (correct — not in host file)`)
     : postUnk >= 0
-      ? warn('P7-HOST', `UNK after apply: ${postUnk} (expected ≥20 — check host-mapping-e2e.csv covers all 54)`)
+      ? warn('P7-HOST', `UNK after apply: ${postUnk} (expected ≥20 — check standard host file coverage)`)
       : fail('P7-HOST', 'Could not read UNK count');
+
+  const conflictCsv = [
+    'router_id,hostname,country',
+    '12.12.12.2,ken-mob-r2,ZZZ',
+    '18.18.18.4,zaf-mtz-r1,AAA',
+    '19.19.19.1,19.19.19.1,BBB'
+  ].join('\n');
+  const conflictResult = await page.evaluate((csv) => {
+    try {
+      _applyHostnameMapping(csv, 'conflict-e2e.csv');
+      return 'ok';
+    } catch(e) { return 'error:' + e.message; }
+  }, conflictCsv);
+  conflictResult === 'ok'
+    ? pass('P7-HOST', 'Conflicting 3-column host file applied for override-resistance check')
+    : fail('P7-HOST', `Conflicting 3-column apply failed: ${conflictResult}`);
+  await settle(page, 600);
+
+  const conflictSamples = await page.evaluate(() => {
+    try {
+      const wanted = ['12.12.12.2', '18.18.18.4', '19.19.19.1'];
+      return nodes.get().filter(n => wanted.includes(String(n.name || n.id))).map(n => ({
+        id: String(n.name || n.id),
+        hostname: n.hostname || '',
+        country: (n.country || 'UNK').toUpperCase(),
+        label: n.label || ''
+      }));
+    } catch(e) { return [{ error: e.message }]; }
+  });
+  const conflictById = new Map(conflictSamples.map(row => [row.id, row]));
+  [
+    ['12.12.12.2', 'KEN'],
+    ['18.18.18.4', 'ZAF'],
+    ['19.19.19.1', 'UNK']
+  ].forEach(([rid, country]) => {
+    const row = conflictById.get(rid);
+    row && row.country === country
+      ? pass('P7-HOST', `${rid} kept hostname-derived country ${country} despite conflicting static column`)
+      : fail('P7-HOST', `${rid} conflict handling mismatch: ${JSON.stringify(row || null)}`);
+  });
 
   // Manual reclassify test
   const manualResult = await page.evaluate(() => {
