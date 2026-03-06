@@ -77,6 +77,7 @@ services:
       context: .
       dockerfile: docker/flask/Dockerfile
     image: ospf-flask-patched:latest
+    platform: linux/amd64
     container_name: flask
     restart: unless-stopped
     environment:
@@ -106,6 +107,7 @@ services:
   # ── MCP Server ─────────────────────────────────────────────────────────────
   mcp-server:
     image: vadims06/topolograph-mcp-server:v1.0.0
+    platform: linux/amd64
     container_name: mcp-server
     restart: unless-stopped
     environment:
@@ -141,6 +143,7 @@ services:
   # ── Flask credential initialiser (one-shot) ────────────────────────────────
   flask-create-creds:
     image: vadims06/topolograph:latest
+    platform: linux/amd64
     container_name: flask-create-creds
     restart: "no"
     environment:
