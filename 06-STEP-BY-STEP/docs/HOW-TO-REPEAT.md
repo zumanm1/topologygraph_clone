@@ -10,9 +10,10 @@
 ## Quick Run
 
 ```bash
-# Prerequisites: Docker running (port 8081), pipeline already run with ospf-database-3.txt
+# Prerequisites: Docker running (port 8081), project cloned, .env created
 cd /path/to/OSPF-DATABASE-TEST
-bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh
+docker compose --profile test up -d e2e-runner
+bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 ```
 
 **Expected result**: `ALL 06-STEP-BY-STEP CHECKS PASSED ✅` (90+ checks, 0 failures)
@@ -56,17 +57,20 @@ UNK: total=20 gw=4 core=16
 ### Step 2: Run deep validation
 
 ```bash
-bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh
+GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
+docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+  --graph-time="$GRAPH_TIME"
 ```
 
 Or with a visible browser:
 ```bash
-bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh --visible
+docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+  --graph-time="$GRAPH_TIME" --visible
 ```
 
 Or trigger fresh pipeline + validation in one shot:
 ```bash
-bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh --run-pipeline-db3
+bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 ```
 
 ---

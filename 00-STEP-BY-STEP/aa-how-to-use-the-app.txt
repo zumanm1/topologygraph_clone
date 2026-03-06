@@ -33,9 +33,8 @@ WHEN TO DO THIS:
 STEP A1 — Stop the app completely
   Script: scripts/01-stop-app.sh
   Command:
-    cd topolograph-docker
     docker compose down --remove-orphans
-  Confirms:  All 4 containers stop (flask, webserver, mongodb, mcp-server)
+  Confirms:  The app containers stop cleanly
   Verify:    http://localhost:8081 should return connection refused
 
 STEP A2 — Confirm it is off
@@ -48,8 +47,7 @@ STEP A2 — Confirm it is off
 STEP A3 — Rebuild (only when there are updates)
   Script: scripts/03-rebuild-app.sh
   Commands:
-    docker compose pull flask mcp-server        # pull latest upstream
-    docker compose build --no-cache webserver   # rebuild Nginx image
+    docker compose build --no-cache flask webserver pipeline   # rebuild patched images
   Note: Skip this step for a normal restart. Only needed after code changes.
   After rebuild: the new topolograph.js (with Country Filter panel) is baked in.
 
@@ -57,7 +55,7 @@ STEP A4 — Start the app
   Script: scripts/04-start-app.sh
   Command:
     docker compose up -d
-  Wait: ~10–15 seconds for all 4 containers to be healthy.
+  Wait: ~10–15 seconds for the stack to be healthy.
   Web UI opens at: http://localhost:8081
 
 STEP A5 — Confirm it is running
@@ -246,10 +244,10 @@ QUICK COMMAND REFERENCE
   ./start.sh
 
   # Stop app
-  cd topolograph-docker && docker compose down
+  docker compose down
 
   # Start app
-  cd topolograph-docker && docker compose up -d
+  docker compose up -d
 
   # Run pipeline directly (non-interactive)
   ./terminal-script/workflow.sh all \

@@ -6,8 +6,8 @@ After restarting the app, the following was validated:
 
 | Check | Result |
 |-------|--------|
-| **Containers** | All 4 running: `webserver`, `flask`, `mongodb`, `mcp-server` |
-| **HTTP** | `http://localhost:8080/` returns 200 |
+| **Containers** | All 5 core services running: `pipeline`, `webserver`, `flask`, `mongodb`, `mcp-server` |
+| **HTTP** | `http://localhost:8081/` returns 200 |
 | **App identity** | Page is Topolograph (OSPF/IS-IS topology UI), not default Nginx |
 | **Default credentials** | `POST /create-default-credentials` → `{"status":"ok"}` |
 | **API upload** | `POST /api/graph` with `ospf-database.txt` → 201, `graph_time` and 34 hosts |
@@ -21,8 +21,8 @@ So: **the app is restarted and working end-to-end.**
 
 **Quick check (reachability + credentials):**
 ```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/
-curl -s -X POST http://localhost:8080/create-default-credentials
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/
+curl -s -X POST http://localhost:8081/create-default-credentials
 ```
 
 **Full validation (HTTP, identity, credentials, API upload, containers):**
@@ -44,24 +44,25 @@ python3 upload_and_validate.py
 
 ### 1. What runs when you “start the app”
 
-`docker compose up -d` in `topolograph-docker/` starts four services:
+`docker compose up -d` from the repository root starts the core services:
 
 | Container | Role | Port (host) | Depends on |
 |-----------|------|-------------|------------|
 | **mongodb** | Stores graphs, users, API state | 27017 | — |
 | **flask** | Topolograph backend: parses LSDB, builds graph, REST API, auth | (none exposed) | mongodb |
-| **webserver** | Nginx: reverse proxy; forwards `/` and `/api/*` to Flask, `/mcp` to MCP server | **8080** | flask, mcp-server |
+| **webserver** | Nginx: reverse proxy; forwards `/` and `/api/*` to Flask, `/mcp` to MCP server | **8081** | flask, mcp-server |
 | **mcp-server** | MCP server for AI/LLM tools (path, nodes, etc.) | 8000 | flask (via API) |
+| **pipeline** | Bash + Python runner for the packaged OSPF pipeline | — | webserver, flask |
 
-You only need to open **http://localhost:8080** in the browser. Nginx receives the request and proxies it to Flask. Flask serves the web UI and the REST API under `/api/`.
+You only need to open **http://localhost:8081** in the browser. Nginx receives the request and proxies it to Flask. Flask serves the web UI and the REST API under `/api/`.
 
 ### 2. Request flow (high level)
 
-1. **Browser** → `http://localhost:8080/` → **webserver (Nginx)**.
+1. **Browser** → `http://localhost:8081/` → **webserver (Nginx)**.
 2. Nginx matches `location /` and **proxy_pass** to **flask:5000**.
 3. **Flask** serves the main HTML (Topolograph title, “Login / Local login”, etc.).
-4. For **login**, the same origin (`http://localhost:8080`) is used; Flask handles session/auth.
-5. For **upload**, the UI or your script sends `POST http://localhost:8080/api/graph` with `lsdb_output`, `vendor_device`, `igp_protocol`. Flask parses the LSDB (e.g. Cisco TextFSM), builds the graph, stores it in **MongoDB**, and returns `graph_time`, `hosts`, `networks`, `reports`.
+4. For **login**, the same origin (`http://localhost:8081`) is used; Flask handles session/auth.
+5. For **upload**, the UI or your script sends `POST http://localhost:8081/api/graph` with `lsdb_output`, `vendor_device`, `igp_protocol`. Flask parses the LSDB (e.g. Cisco TextFSM), builds the graph, stores it in **MongoDB**, and returns `graph_time`, `hosts`, `networks`, `reports`.
 
 So “restart the app” = restart these four containers; “validate it’s working” = check that the same flow (HTTP 200, Topolograph page, credentials, API upload, and optional network API) all succeed.
 
@@ -75,7 +76,7 @@ That message is the **default Nginx index** page. So you’re hitting **an Nginx
 2. Flask (Topolograph) uses **Cisco TextFSM** templates (from the `topolograph` repo) to parse Router LSAs and build nodes + edges.
 3. Graph is stored in **MongoDB** and identified by **graph_time** (e.g. `26Feb2026_10h17m30s_34_hosts`).
 4. You can then:
-   - Open that graph in the UI at **http://localhost:8080** (after login).
+   - Open that graph in the UI at **http://localhost:8081** (after login).
    - Call **GET /api/network/<graph_time>** to get networks/prefixes and RIDs.
    - Use **POST /api/path** for shortest path, backup path, etc. (see Topolograph README/API docs).
 
@@ -87,8 +88,8 @@ That message is the **default Nginx index** page. So you’re hitting **an Nginx
 
 ## Summary
 
-- **Restart:** `cd topolograph-docker && docker compose down && docker compose up -d` (or use `./start_topolograph.sh` from repo root).
-- **Validate:** Run `./validate_topolograph.sh` and/or `python3 upload_and_validate.py`; confirm HTTP 200, Topolograph page, credentials OK, upload returns 200/201, and network API returns data.
-- **Login URL:** **http://localhost:8080/** with **Login / Local login** and credentials from `.env` (e.g. `ospf@topolograph.com` / `ospf`).
+- **Restart:** `docker compose down && docker compose up -d` from the repository root.
+- **Validate:** Run `bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh` for the canonical Docker-native validation flow.
+- **Login URL:** **http://localhost:8081/** with **Login / Local login** and credentials from `.env` (e.g. `ospf@topolograph.com` / `ospf`).
 
 With the checks above, everything is validated and working.

@@ -63,7 +63,6 @@ This is the unique identifier for one topology snapshot. Every API call, output 
 
 **What you do:**
 ```bash
-cd topolograph-docker
 docker compose down --remove-orphans
 ```
 
@@ -72,7 +71,7 @@ docker compose down --remove-orphans
 2. `flask` (Gunicorn) stops → REST API goes offline
 3. `mcp-server` stops → port 8000 closes
 4. `mongodb` stops → database connection closed
-5. Docker networks `topolograph-docker_frontend` and `topolograph_backend` are removed
+5. Docker networks `frontend` and `backend` are removed
 6. **MongoDB DATA IS PRESERVED** — graph data lives in Docker volumes, not containers
 
 **Deeper teaching point:**
@@ -90,7 +89,6 @@ Without it, ghost containers can accumulate over time.
 
 **What you do:**
 ```bash
-cd topolograph-docker
 docker compose ps      # → empty table (no containers listed)
 curl -s http://localhost:8081   # → curl: (7) Failed to connect
 ```
@@ -119,8 +117,7 @@ topolograph.js changes may silently not be included in the new image.
 
 **What you do:**
 ```bash
-docker compose pull flask mcp-server        # fetch latest upstream images
-docker compose build --no-cache webserver   # rebuild Nginx from scratch
+docker compose build --no-cache flask webserver pipeline   # rebuild patched images from scratch
 ```
 
 **Why `--no-cache` matters:**
@@ -132,11 +129,11 @@ may have changed, but the image would still contain the OLD version.
 **What gets baked into the webserver image:**
 ```
 Dockerfile context:
-  topolograph-docker/
-    templates/app.conf.template  → Nginx config
-    start-nginx.sh               → entrypoint script
-  bind mounts (at runtime):
-    topolograph-docker/static/js/topolograph.js  → the Country Filter code
+  docker/
+    flask/Dockerfile             → patched Flask image
+    webserver/templates/         → Nginx config
+    webserver/start-nginx.sh     → entrypoint script
+    pipeline/Dockerfile          → pipeline runtime image
 ```
 
 **Script:** `scripts/03-rebuild-app.sh`
@@ -158,9 +155,10 @@ mongodb ────────────────────────
                                          ↓
 flask  ──── depends_on: mongodb ────► starts when MongoDB is ready
                                          ↓
-flask-create-creds (one-shot) ─────► creates user ospf@topolograph.com
-                                         ↓
 webserver ── depends_on: flask ─────► starts when Flask is ready
+                                         ↓
+pipeline ─── depends_on: webserver ─► waits for the app and runs on demand
+                                         ↓
 mcp-server ─────────────────────────► starts independently
 ```
 
@@ -186,6 +184,7 @@ curl -u ospf@topolograph.com:ospf http://localhost:8081/api/graph/
 **Expected container status:**
 ```
 NAME         STATUS      PORTS
+pipeline     Up
 flask        Up          5000/tcp
 webserver    Up          0.0.0.0:8081->8081/tcp
 mongodb      Up          0.0.0.0:27017->27017/tcp

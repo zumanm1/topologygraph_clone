@@ -85,7 +85,7 @@ So you can:
 
 ## 5. Repo Layout (What You Have Locally)
 
-- **`topolograph/`** – Cloned [Vadims06/topolograph](https://github.com/Vadims06/topolograph): TextFSM templates, docs, demo LSDB. The **running app** (PHP/Smarty + backend) is not in this repo; use [topolograph.com](https://topolograph.com) or [topolograph-docker](https://github.com/Vadims06/topolograph-docker) to run the full stack.
+- **`topolograph/`** – Cloned [Vadims06/topolograph](https://github.com/Vadims06/topolograph): TextFSM templates, docs, demo LSDB. In this repository, the **running app** is provided by the repo-root Docker stack (`docker-compose.yml`) and the canonical validation flow is `bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh`.
 - **`ospf-database.txt`** – Your Cisco OSPF Router LSA output (34 nodes, 104 P2P links).
 - **`parse_ospf_lsdb.py`** – Parser + location clustering + YAML export.
 - **`router_id_to_hostname.csv`** – Template for Router ID → hostname (fill and use with `-m`).
