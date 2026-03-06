@@ -17,9 +17,13 @@ DOCKER_DIR="$SCRIPT_DIR/topolograph-docker"
 BASE_URL="${BASE_URL:-http://localhost:8081}"
 
 # Defaults
-DEFAULT_OSPF="$INPUT_DIR/ospf-database-2.txt"
-DEFAULT_HOST="$INPUT_DIR/Load-hosts.txt"
-# Fall back to host-file.txt if Load-hosts.txt doesn't exist yet
+DEFAULT_OSPF="$INPUT_DIR/ospf-database-54-unk-test.txt"
+[[ ! -f "$DEFAULT_OSPF" ]] && DEFAULT_OSPF="$INPUT_DIR/ospf-database-3.txt"
+[[ ! -f "$DEFAULT_OSPF" ]] && DEFAULT_OSPF="$INPUT_DIR/ospf-database-2.txt"
+[[ ! -f "$DEFAULT_OSPF" ]] && DEFAULT_OSPF="$INPUT_DIR/ospf-database.txt"
+DEFAULT_HOST="$INPUT_DIR/Load-hosts.csv"
+[[ ! -f "$DEFAULT_HOST" ]] && DEFAULT_HOST="$INPUT_DIR/Load-hosts.txt"
+[[ ! -f "$DEFAULT_HOST" ]] && DEFAULT_HOST="$INPUT_DIR/Load-hosts-3b.txt"
 [[ ! -f "$DEFAULT_HOST" ]] && DEFAULT_HOST="$INPUT_DIR/host-file.txt"
 
 # ── Colours ───────────────────────────────────────────────────────────────────

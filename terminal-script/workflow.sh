@@ -39,22 +39,45 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASE_URL="${BASE_URL:-http://localhost:8081}"
 AUTH_USER="${AUTH_USER:-ospf@topolograph.com}"
 AUTH_PASS="${AUTH_PASS:-ospf}"
-# OSPF file: prefer ospf-database-3.txt (54 routers, current default),
-#            fall back to ospf-database-2.txt (34 routers), then blank (no upload)
+resolve_default_ospf_file() {
+  local candidates=(
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-54-unk-test.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' ""
+}
+
+resolve_default_host_file() {
+  local candidates=(
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-3b.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/host-file.txt"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+}
+
 if [[ -z "${OSPF_FILE:-}" ]]; then
-  if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" ]]; then
-    OSPF_FILE="$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt"
-  elif [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" ]]; then
-    OSPF_FILE="$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt"
-  else
-    OSPF_FILE=""
-  fi
+  OSPF_FILE="$(resolve_default_ospf_file)"
 fi
-# Host file: prefer Load-hosts.txt (canonical), fall back to host-file.txt
-if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt" ]]; then
-  HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt}"
-else
-  HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/host-file.txt}"
+if [[ -z "${HOST_FILE:-}" ]]; then
+  HOST_FILE="$(resolve_default_host_file)"
 fi
 GRAPH_TIME="${GRAPH_TIME:-}"
 COUNTRIES_FILTER="${COUNTRIES_FILTER:-}"

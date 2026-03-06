@@ -165,9 +165,11 @@
         <a href="/ospf-host-to-dns-mapping-netbox-import" class="btn btn-outline-info btn-lg btn-block">Netbox sync</a>
     </div>
     <div class="btn-group p-2 bd-highlight" role="group">
-        <a href="/ospf-host-to-dns-mapping-import" class="btn btn-info btn-lg btn-block">CSV Import hosts</a>
+        <label for="hostCsvImportPicker" class="btn btn-info btn-lg btn-block mb-0">CSV Import hosts</label>
+        <input type="file" id="hostCsvImportPicker" accept=".csv,.txt" style="display:none;" onchange="import_hostname_csv_file(this)">
     </div>
 </div>
+<div id="hostCsvImportStatus" class="px-2 pb-2" style="min-height:24px;"></div>
 
 <table class="table table-sm table-borderless">
 <thead>
@@ -181,7 +183,7 @@
         <tr>
 
             <td>{{ host_attr['ip'] }}</td>
-            <td><input type="text" id="comment_{{ host_attr['ip'] }}" value="{{ host_attr['hostname'] }}" oninput="save_hostname('{{ host_attr['ip'] }}', '{{ host_attr['graph_id'] }}')"></td>
+            <td><input type="text" id="comment_{{ host_attr['ip'] }}" data-ip="{{ host_attr['ip'] }}" data-graph-id="{{ host_attr['graph_id'] }}" value="{{ host_attr['hostname'] }}" oninput="save_hostname(this.dataset.ip, this.dataset.graphId)"></td>
 
         </tr>
     {% endfor %}
