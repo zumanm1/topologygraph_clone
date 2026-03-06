@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<blockquote class="blockquote text-center">
+    <h2 class="display-2">Hostnames of routers</h2>
+    <footer class="blockquote-footer">Docker's version of a site has DNS server as an option (set DNS IP in docker-compose.override.yml). Although, not all OSPF RID could be placed in DNS, so here there is an option to change IP address node's label on the graph to it's hostname.</footer>
+</blockquote>
+{% if prev_saved_graphs_datetime %}
+
+<form name="Choose graph time and groupset" action="" method="post">
+    <p>Choose one out of {{prev_saved_graphs_datetime|length}} saved graphs</p>
+        <div class="d-flex flex-row bd-highlight mb-3">
+            <div class="p-2 bd-highlight">
+                <select name="graph_time" id="select_graph_time_id">
+                    {% for dates in prev_saved_graphs_datetime %}
+                    <option value="{{dates}}"{{'selected="selected"' if dates==choosen_graph_time}}> {{dates}} </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="p-2 d-inline-flex bd-highlight ml-4">
+                <input type="submit" value="Load hosts" class="btn btn-primary">
+            </div>
+        </div>
+</form>
+<blockquote class="blockquote text-center">
+    <h6 class="display-4">Copy of hostnames</h6>
+    <footer class="blockquote-footer">Set hostnames once, then get fresh copy of OSPF topology and copy/migrate hostnames of network nodes from the graph where you set all hostnames properly to the newest uploaded graph.</footer>
+</blockquote>
+<form name="copy host to group mapping" action="" method="post">
+            <table class="table table-sm table-borderless">
+                          <thead>
+                <tr>
+                    <th>Hosts from graph</th>
+                    <th>Action</th>
+                    <th>to hosts</th>
+                </tr>
+                          </thead>
+                          <tbody>
+                <tr>
+                 <td><select name="src_graph_time">
+                    {% for dates in prev_saved_graphs_datetime %}
+                        <option value="{{dates}}"{{'selected="selected"' if dates==choosen_src_graph_time}}>
+                        {{dates}}</option>
+                    {% endfor %}
+                </select></td>
+
+                    <td>
+                                                <input type="submit" name="submit_migrate" value="Migrate" class="btn btn-primary">
+                    </td>
+                    <td>
+                        <select name="dst_graph_time">
+                    {% for dates in prev_saved_graphs_datetime %}
+                        <option value="{{dates}}"{{'selected="selected"' if dates==choosen_dst_graph_time}}>
+                        {{dates}}</option>
+                    {% endfor %}
+                        </select>
+                    </td>
+
+                    <td>
+                </tr>
+                          </tbody>
+            </table>
+    </form>
+<hr>
+{% endif %}
+{% if not prev_saved_graphs_datetime %}
+<div id="hostToDnsEmptyState">
+<p>There is no any previously uploaded graphs</p>
+</div>
+<div id="hostToDnsFallback" style="display:none;">
+<form name="Choose graph time and groupset" action="" method="post">
+    <p id="hostToDnsFallbackCount"></p>
+        <div class="d-flex flex-row bd-highlight mb-3">
+            <div class="p-2 bd-highlight">
+                <select name="graph_time" id="select_graph_time_id"></select>
+            </div>
+            <div class="p-2 d-inline-flex bd-highlight ml-4">
+                <input type="submit" value="Load hosts" class="btn btn-primary">
+            </div>
+        </div>
+</form>
+<blockquote class="blockquote text-center">
+    <h6 class="display-4">Copy of hostnames</h6>
+    <footer class="blockquote-footer">Set hostnames once, then get fresh copy of OSPF topology and copy/migrate hostnames of network nodes from the graph where you set all hostnames properly to the newest uploaded graph.</footer>
+</blockquote>
+<form name="copy host to group mapping" action="" method="post">
+            <table class="table table-sm table-borderless">
+                          <thead>
+                <tr>
+                    <th>Hosts from graph</th>
+                    <th>Action</th>
+                    <th>to hosts</th>
+                </tr>
+                          </thead>
+                          <tbody>
+                <tr>
+                 <td><select name="src_graph_time" id="hostToDnsSrcGraph"></select></td>
+                    <td>
+                                                <input type="submit" name="submit_migrate" value="Migrate" class="btn btn-primary">
+                    </td>
+                    <td>
+                        <select name="dst_graph_time" id="hostToDnsDstGraph"></select>
+                    </td>
+                    <td>
+                </tr>
+                          </tbody>
+            </table>
+    </form>
+</div>
+<hr>
+<script>
+(function() {
+  function fillSelect(select, dates) {
+    select.innerHTML = '';
+    dates.forEach(function(date) {
+      var option = document.createElement('option');
+      option.value = date;
+      option.textContent = date;
+      select.appendChild(option);
+    });
+  }
+
+  fetch('/upload-ospf-isis-lsdb', { credentials: 'same-origin' })
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error('Failed to load graphs');
+      }
+      return response.text();
+    })
+    .then(function(html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(html, 'text/html');
+      var dates = Array.from(doc.querySelectorAll('option'))
+        .map(function(option) {
+          return (option.value || '').trim();
+        })
+        .filter(function(value) {
+          return !!value;
+        });
+      dates = Array.from(new Set(dates));
+      if (!dates.length) {
+        return;
+      }
+      var loadSelect = document.getElementById('select_graph_time_id');
+      var srcSelect = document.getElementById('hostToDnsSrcGraph');
+      var dstSelect = document.getElementById('hostToDnsDstGraph');
+      var countText = document.getElementById('hostToDnsFallbackCount');
+      fillSelect(loadSelect, dates);
+      fillSelect(srcSelect, dates);
+      fillSelect(dstSelect, dates);
+      countText.textContent = 'Choose one out of ' + dates.length + ' saved graphs';
+      document.getElementById('hostToDnsEmptyState').style.display = 'none';
+      document.getElementById('hostToDnsFallback').style.display = 'block';
+    })
+    .catch(function() {});
+})();
+</script>
+{% endif %}
+{% if real_graph_hosts_w_attr %}
+<div class="btn-toolbar d-flex bd-highlight" role="toolbar" aria-label="Toolbar with button groups">
+    <div class="btn-group p-2 flex-grow-1 bd-highlight" role="group">
+        <input type="submit" id="update_hostname_on_graph" name="update_hostname_on_graph" value="Update hostnames on the graph" class="btn btn-secondary btn-lg btn-block" onclick="update_hostname_on_graph()">
+    </div>
+    <div class="btn-group p-2 bd-highlight" role="group">
+        <a href="/ospf-host-to-dns-mapping-netbox-import" class="btn btn-outline-info btn-lg btn-block">Netbox sync</a>
+    </div>
+    <div class="btn-group p-2 bd-highlight" role="group">
+        <a href="/ospf-host-to-dns-mapping-import" class="btn btn-info btn-lg btn-block">CSV Import hosts</a>
+    </div>
+</div>
+
+<table class="table table-sm table-borderless">
+<thead>
+    <tr>
+    <th>Host</th>
+    <th>Hostname</th>
+    </tr>
+</thead>
+<tbody>
+    {% for host_attr in real_graph_hosts_w_attr %}
+        <tr>
+
+            <td>{{ host_attr['ip'] }}</td>
+            <td><input type="text" id="comment_{{ host_attr['ip'] }}" value="{{ host_attr['hostname'] }}" oninput="save_hostname('{{ host_attr['ip'] }}', '{{ host_attr['graph_id'] }}')"></td>
+
+        </tr>
+    {% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,614 @@
+[08-step] Project root: /Users/macbook/Documents/OSPF-DATABASE-TEST
+[08-step] Rebuilding all-Docker stack
+ Container pipeline  Stopping
+ Container flask-create-creds  Stopping
+ Container flask-create-creds  Stopped
+ Container flask-create-creds  Removing
+ Container flask-create-creds  Removed
+ Container pipeline  Stopped
+ Container pipeline  Removing
+ Container pipeline  Removed
+ Container webserver  Stopping
+ Container webserver  Stopped
+ Container webserver  Removing
+ Container webserver  Removed
+ Container flask  Stopping
+ Container mcp-server  Stopping
+ Container mcp-server  Stopped
+ Container mcp-server  Removing
+ Container mcp-server  Removed
+ Container flask  Stopped
+ Container flask  Removing
+ Container flask  Removed
+ Container mongodb  Stopping
+ Container mongodb  Stopped
+ Container mongodb  Removing
+ Container mongodb  Removed
+ Network ospf_backend  Removing
+ Network ospf-database-test_frontend  Removing
+ Network ospf-database-test_frontend  Resource is still in use
+ Network ospf_backend  Removed
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.09kB done
+#1 DONE 0.0s
+
+#2 [flask internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.85kB 0.0s done
+#2 DONE 0.0s
+
+#3 [webserver internal] load build definition from Dockerfile
+#3 transferring dockerfile: 1.66kB 0.0s done
+#3 DONE 0.0s
+
+#4 [pipeline internal] load build definition from Dockerfile
+#4 transferring dockerfile: 1.99kB done
+#4 DONE 0.0s
+
+#5 [flask internal] load metadata for docker.io/vadims06/topolograph:latest
+#5 DONE 0.1s
+
+#6 [webserver internal] load metadata for docker.io/library/nginx:latest
+#6 ...
+
+#7 [flask internal] load .dockerignore
+#7 transferring context: 2B done
+#7 DONE 0.0s
+
+#8 [flask internal] load build context
+#8 transferring context: 287B done
+#8 DONE 0.0s
+
+#9 [flask 1/3] FROM docker.io/vadims06/topolograph:latest@sha256:f302b34ab3a94aae1061ed518dc340ac9e068e36fad2f278c061f2fddc42712e
+#9 resolve docker.io/vadims06/topolograph:latest@sha256:f302b34ab3a94aae1061ed518dc340ac9e068e36fad2f278c061f2fddc42712e 0.0s done
+#9 DONE 0.1s
+
+#10 [flask 2/3] COPY topolograph-docker/init/topolograph.js      /home/flask/flask/static/js/topolograph.js
+#10 CACHED
+
+#11 [flask 3/3] COPY 06-STEP-BY-STEP/docker-patches/base.html      /home/flask/flask/templates/base.html
+#11 CACHED
+
+#12 [flask] exporting to image
+#12 exporting layers 0.0s done
+#12 exporting manifest sha256:0156cbba0a5354e0ea141461ff7cbdc2bac850268c2cafad8e50e1cdc7d5b156 done
+#12 exporting config sha256:c2b33c455b4c393de97dba44face0e0ba040f44e99b18cd1d27b653a05b390e0 done
+#12 exporting attestation manifest sha256:20329f274c906a08f5c2465b00c591242257157810a2869d1e4d980650225e85 0.0s done
+#12 exporting manifest list sha256:1278e31060de46cc80c7585220a0c0fb2f0bb19ae24a6a196839c87a6900150f
+#12 exporting manifest list sha256:1278e31060de46cc80c7585220a0c0fb2f0bb19ae24a6a196839c87a6900150f 0.0s done
+#12 naming to docker.io/library/ospf-flask-patched:latest done
+#12 unpacking to docker.io/library/ospf-flask-patched:latest 0.1s done
+#12 DONE 0.3s
+
+#13 [pipeline internal] load metadata for docker.io/library/python:3.11-slim
+#13 ...
+
+#14 [flask] resolving provenance for metadata file
+#14 DONE 0.0s
+
+#13 [pipeline internal] load metadata for docker.io/library/python:3.11-slim
+#13 ...
+
+#6 [webserver internal] load metadata for docker.io/library/nginx:latest
+#6 DONE 2.1s
+
+#13 [pipeline internal] load metadata for docker.io/library/python:3.11-slim
+#13 DONE 2.1s
+
+#7 [pipeline internal] load .dockerignore
+#7 CACHED
+
+#15 [webserver internal] load .dockerignore
+#15 transferring context: 2B done
+#15 DONE 0.0s
+
+#16 [pipeline 1/4] FROM docker.io/library/python:3.11-slim@sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47
+#16 resolve docker.io/library/python:3.11-slim@sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47 0.0s done
+#16 DONE 0.0s
+
+#17 [pipeline 2/4] RUN apt-get update && apt-get install -y --no-install-recommends         bash         curl         jq         gawk         git         ca-certificates     && rm -rf /var/lib/apt/lists/*
+#17 CACHED
+
+#18 [pipeline 3/4] RUN pip install --no-cache-dir requests pyyaml
+#18 CACHED
+
+#19 [pipeline 4/4] WORKDIR /app
+#19 CACHED
+
+#20 [webserver 1/5] FROM docker.io/library/nginx:latest@sha256:0236ee02dcbce00b9bd83e0f5fbc51069e7e1161bd59d99885b3ae1734f3392e
+#20 resolve docker.io/library/nginx:latest@sha256:0236ee02dcbce00b9bd83e0f5fbc51069e7e1161bd59d99885b3ae1734f3392e 0.0s done
+#20 DONE 0.0s
+
+#21 [webserver internal] load build context
+#21 transferring context: 112B done
+#21 DONE 0.0s
+
+#22 [webserver 3/5] COPY templates/app.conf.template /etc/nginx/conf.d/app.conf.template
+#22 CACHED
+
+#23 [webserver 2/5] RUN apt-get update &&     apt-get install -y --no-install-recommends gettext-base &&     ln -sf /dev/stdout /var/log/nginx/access.log &&     ln -sf /dev/stderr /var/log/nginx/error.log &&     mkdir -p /run/nginx &&     rm -f /etc/nginx/conf.d/default.conf &&     rm -rf /var/lib/apt/lists/*
+#23 CACHED
+
+#24 [webserver 4/5] COPY start-nginx.sh /start-nginx.sh
+#24 CACHED
+
+#25 [webserver 5/5] RUN chmod +x /start-nginx.sh
+#25 CACHED
+
+#26 [pipeline] exporting to image
+#26 exporting layers done
+#26 exporting manifest sha256:7412d61259c5b32a39b46a5b7c2f0c83d27ae137e4f34aca67ef9b3664b19b84 done
+#26 exporting config sha256:fbce0516d5231cec873d0da59981ad88828e9571f7b402e304d2be420569f952 done
+#26 exporting attestation manifest sha256:ad7f27c9dcf5ad469b0df030ab67a92e1d1a11bebf73816734e36ae948126826
+#26 exporting attestation manifest sha256:ad7f27c9dcf5ad469b0df030ab67a92e1d1a11bebf73816734e36ae948126826 0.0s done
+#26 exporting manifest list sha256:934736951aef19bf973230ff6f17aa4f2ddac4c03c6f9552b848fdcc7fafa8db 0.0s done
+#26 naming to docker.io/library/ospf-pipeline:latest done
+#26 unpacking to docker.io/library/ospf-pipeline:latest 0.0s done
+#26 DONE 0.2s
+
+#27 [webserver] exporting to image
+#27 exporting layers done
+#27 exporting manifest sha256:b3a845cdeec47aec1c0f21bcd10d4a6f9307d87db96cadceb32a995edff05d2a done
+#27 exporting config sha256:9c75dd95b22441d4f81245cba560ff9153ba7f7071ae4f8496b3dd5d7c07f354 done
+#27 exporting attestation manifest sha256:1855a2cc9576276447deb95b362230c722d651d1539d038f289b63849bd6867e 0.0s done
+#27 exporting manifest list sha256:0caf30d95d55747429bf058356ef41160be72a087f816d97e9e7d097b85bc8d7 0.0s done
+#27 naming to docker.io/library/ospf-webserver:latest done
+#27 unpacking to docker.io/library/ospf-webserver:latest 0.0s done
+#27 DONE 0.2s
+
+#28 [pipeline] resolving provenance for metadata file
+#28 DONE 0.1s
+
+#29 [webserver] resolving provenance for metadata file
+#29 DONE 0.0s
+ webserver  Built
+ pipeline  Built
+ flask  Built
+ Network ospf_backend  Creating
+ Network ospf_backend  Created
+ Container mongodb  Creating
+ Container mcp-server  Creating
+ mcp-server The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
+ Container mcp-server  Created
+ Container mongodb  Created
+ Container flask  Creating
+ flask The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
+ Container flask  Created
+ Container webserver  Creating
+ Container flask-create-creds  Creating
+ flask-create-creds The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
+ Container flask-create-creds  Created
+ Container webserver  Created
+ Container pipeline  Creating
+ Container pipeline  Created
+ Container mcp-server  Starting
+ Container mongodb  Starting
+ Container mongodb  Started
+ Container flask  Starting
+ Container mcp-server  Started
+ Container flask  Started
+ Container webserver  Starting
+ Container flask-create-creds  Starting
+ Container webserver  Started
+ Container pipeline  Starting
+ Container flask-create-creds  Started
+ Container pipeline  Started
+ Container mcp-server  Running
+ Container mongodb  Running
+ Container flask  Running
+ Container webserver  Running
+ Container e2e-runner  Running
+[08-step] Running Docker-native 07-equivalent pipeline validation
+
+╔══════════════════════════════════════════════════════════════╗
+║        OSPF Pipeline — Docker Container Runner               ║
+╚══════════════════════════════════════════════════════════════╝
+
+  Container : pipeline
+  OSPF file : /app/INPUT-FOLDER/ospf-database-54-unk-test.txt
+  Host file : /app/INPUT-FOLDER/Load-hosts-54-unk-test.txt
+  Base URL  : http://webserver:8081
+
+  Waiting for Topolograph webserver...
+  ⏳ Still waiting... (2s)
+  ✅ Topolograph responding at http://webserver:8081
+
+  Running: workflow.sh all
+
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Upload OSPF database → Topolograph
+══════════════════════════════════════════════════════════
+[workflow] File: /app/INPUT-FOLDER/ospf-database-54-unk-test.txt
+[workflow] Uploaded. graph_time=06Mar2026_10h44m46s_54_hosts
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Fetch raw graph → IN-OUT-FOLDER
+══════════════════════════════════════════════════════════
+[fetch-from-api] Saving to: /app/IN-OUT-FOLDER/06Mar2026_10h44m46s_54_hosts
+[fetch-from-api]   meta.json saved
+[fetch-from-api]   nodes.json saved (54 nodes)
+[fetch-from-api]   edges.json saved (148 edges)
+[fetch-from-api]   edges.csv saved
+[fetch-from-api] Done. graph_time=06Mar2026_10h44m46s_54_hosts
+[workflow] graph_time confirmed: 06Mar2026_10h44m46s_54_hosts
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Run terminal topology pipeline
+══════════════════════════════════════════════════════════
+[workflow] AS-IS output: /app/OUTPUT/AS-IS/06Mar2026_10h44m46s_54_hosts_AS-IS
+[workflow] Edge source: OSPF file (/app/INPUT-FOLDER/ospf-database-54-unk-test.txt)
+[topology-tool] Done. Files written to: /app/OUTPUT/.tmp_work_06Mar2026_10h44m46s_54_hosts
+  - country-core-summary.json
+  - country-core-summary.yaml
+  - country-mapping.csv
+  - gateway-only-topology.json
+  - gateway-only-topology.yaml
+  - original-topology-with-country.json
+  - original-topology-with-country.yaml
+[workflow] GATEWAY output: /app/OUTPUT/GATEWAY/06Mar2026_10h44m46s_54_hosts_GATEWAY
+[workflow] ENRICHED output: /app/OUTPUT/ENRICHED/06Mar2026_10h44m46s_54_hosts_ENRICHED
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Generate COLLAPSING stage — gateway/core split + collapsed topology
+══════════════════════════════════════════════════════════
+[collapse-config] graph_time   : 06Mar2026_10h44m46s_54_hosts
+[collapse-config] enriched_dir : /app/OUTPUT/ENRICHED/06Mar2026_10h44m46s_54_hosts_ENRICHED
+[collapse-config] asis_dir     : /app/OUTPUT/AS-IS/06Mar2026_10h44m46s_54_hosts_AS-IS
+[collapse-config] output_dir   : /app/OUTPUT/COLLAPSING/06Mar2026_10h44m46s_54_hosts_COLLAPSING
+[collapse-config] Loaded 54 router entries from country-mapping.csv
+[collapse-config] Loaded 54 nodes from AS-IS_nodes.json
+[collapse-config] Loaded 148 edges from AS-IS_edges.json
+[collapse-config] Country split: 11 countries, 54 total, 32 gateways, 22 cores
+[collapse-config] Wrote COLLAPSING_country-collapse-config.json
+[collapse-config] Collapsed topology: 32 gateway nodes, 90 gateway edges (from 54 nodes, 148 edges)
+[collapse-config] Wrote COLLAPSING_collapsed-topology.json
+[collapse-config] Wrote COLLAPSING_collapsed-topology.yaml
+
+╔══════════════════════════════════════════════════╗
+║          COLLAPSING STAGE COMPLETE               ║
+╠══════════════════════════════════════════════════╣
+║  Countries : 11                                  ║
+║  Total     : 54                                  ║
+║  Gateways  : 32                                  ║
+║  Core      : 22                                  ║
+╠══════════════════════════════════════════════════╣
+║    DJB    total=2  gw=2  core=0                 ║
+║    DRC    total=4  gw=4  core=0                 ║
+║    FRA    total=3  gw=2  core=1                 ║
+║    GBR    total=3  gw=2  core=1                 ║
+║    KEN    total=2  gw=2  core=0                 ║
+║    LES    total=3  gw=3  core=0                 ║
+║    MOZ    total=4  gw=4  core=0                 ║
+║    POR    total=3  gw=2  core=1                 ║
+║    TAN    total=2  gw=2  core=0                 ║
+║    UNK    total=20  gw=4  core=16               ║
+║    ZAF    total=8  gw=5  core=3                 ║
+╚══════════════════════════════════════════════════╝
+
+[workflow] COLLAPSING output: /app/OUTPUT/COLLAPSING/06Mar2026_10h44m46s_54_hosts_COLLAPSING
+
+══════════════════════════════════════════════════════════
+[workflow] STEP: Push country colours → Topolograph UI
+══════════════════════════════════════════════════════════
+[push-to-ui] Loading country mapping: /app/OUTPUT/ENRICHED/06Mar2026_10h44m46s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
+[push-to-ui] 54 routers mapped to countries
+[push-to-ui] Countries: DJB:2 | DRC:4 | FRA:3 | GBR:3 | KEN:2 | LES:3 | MOZ:4 | POR:3 | TAN:2 | UNK:20 | ZAF:8
+[push-to-ui] Fetching nodes for graph_time=06Mar2026_10h44m46s_54_hosts …
+[push-to-ui] 54 nodes in graph
+
+[push-to-ui] Patched: 54 OK  |  0 FAILED  |  0 skipped
+[push-to-ui] ⚠  UNK nodes (20) — no hostname in host file:
+             • 19.19.19.1  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 19.19.19.2  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 19.19.19.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 19.19.19.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 19.19.19.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.1  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.2  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 20.20.20.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.1  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.2  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 21.21.21.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.1  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.2  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+             • 22.22.22.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
+[push-to-ui] Palette written: /app/OUTPUT/ENRICHED/06Mar2026_10h44m46s_54_hosts_ENRICHED/ENRICHED_country-palette.json
+[push-to-ui] Done — open http://localhost:8081/ and load graph_time=06Mar2026_10h44m46s_54_hosts
+             The Country Filter panel will appear automatically in the UI.
+[workflow] UI push complete.
+
+╔══════════════════════════════════════════════════════════════╗
+║               WORKFLOW COMPLETE                              ║
+╠══════════════════════════════════════════════════════════════╣
+║  graph_time : 06Mar2026_10h44m46s_54_hosts                   ║
+╠══════════════════════════════════════════════════════════════╣
+║  OUTPUT FOLDERS:                                             ║
+║  AS-IS    → OUTPUT/AS-IS/06Mar2026_10h44m46s_54_hosts_AS-IS/  ║
+║  GATEWAY  → OUTPUT/GATEWAY/06Mar2026_10h44m46s_54_hosts_GATEWAY/║
+║  ENRICHED   → OUTPUT/ENRICHED/06Mar2026_10h44m46s_54_hosts_ENRICHED/║
+║  COLLAPSING → OUTPUT/COLLAPSING/06Mar2026_10h44m46s_54_hosts_COLLAPSING/║
+╠══════════════════════════════════════════════════════════════╣
+║  NEXT STEPS:                                                 ║
+║  1. Open http://localhost:8081/                               ║
+║  2. Select the graph from the dropdown                       ║
+║  3. Use the 🌍 Country Filter panel (top-right)              ║
+╚══════════════════════════════════════════════════════════════╝
+
+  ✅ Pipeline complete. Output files in:
+     /app/IN-OUT-FOLDER/
+     /app/OUTPUT/
+
+[08-step] Resolved graph_time: 06Mar2026_10h44m46s_54_hosts
+[08-step] Running Docker-native 06-equivalent deep validation
+
+╔══════════════════════════════════════════════════════════════╗
+║      OSPF E2E Playwright Suite — Docker Container Runner      ║
+╚══════════════════════════════════════════════════════════════╝
+
+  Container  : e2e-runner
+  Base URL   : http://webserver:8081
+  Graph time : 06Mar2026_10h44m46s_54_hosts
+
+  Waiting for Topolograph webserver...
+  ✅ Topolograph responding at http://webserver:8081
+
+  ✅ Playwright Chromium already installed at /playwright-browsers
+
+
+  Running: run-full-e2e-v2.sh (114 checks)
+
+╔══════════════════════════════════════════════════════════════════════╗
+║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               ║
+╠══════════════════════════════════════════════════════════════════════╣
+║   Date        : 2026-03-06 10:44:49
+║   Graph time  : 06Mar2026_10h44m46s_54_hosts
+║   OSPF file   : ospf-database-3.txt (54 routers, 20 UNK)
+║   Host file   : Load-hosts.txt (34 entries — 20 UNK unmapped)
+║   Headless    : true
+║   Run pipeline: false
+║   Project     : /app
+╚══════════════════════════════════════════════════════════════════════╝
+
+━━━ PHASE 0: Pre-Flight Checks ━━━
+
+  ✅ PASS: Webserver responding at http://webserver:8081
+  ✅ PASS: Input file: ospf-database-2.txt (1947 lines)
+  ✅ PASS: Input file: ospf-database-3.txt (2768 lines)
+  ✅ PASS: Load-hosts.txt exists (34 router entries)
+  ✅ PASS: Load-hosts.txt has exactly 34 entries (20 UNK routers unmapped)
+  ✅ PASS: host-mapping-e2e.csv exists (54 router mappings)
+  ✅ PASS: host-mapping-e2e.csv covers 54 routers (≥54)
+  ✅ PASS: Node.js v18.20.8
+  ✅ PASS: Playwright found
+  ✅ PASS: 54-host COLLAPSING artefact found: 06Mar2026_10h44m46s_54_hosts_COLLAPSING
+UNK: total=20 gw=4 core=16
+  ✅ PASS: UNK present in COLLAPSING config with routers
+  ✅ PASS: IN-OUT-FOLDER/06Mar2026_10h44m46s_54_hosts exists (54 nodes)
+
+  PHASE 0: ALL PRE-FLIGHT CHECKS PASSED ✅
+
+━━━ PHASE 1: JSON Artefact Integrity (54-router topology) ━━━
+  Graph time: 06Mar2026_10h44m46s_54_hosts
+
+  [detected] hosts=54 gw=32 countries=11 cores=22
+  [1a] IN-OUT-FOLDER
+  ✅ PASS: IN-OUT files loaded
+  ✅ PASS: nodes: 54 == 54
+  ✅ PASS: edges: 148 >= 100
+  ✅ PASS: edges.csv present
+  [1b] AS-IS
+  ✅ PASS: AS-IS nodes: 54 == 54
+  ✅ PASS: AS-IS edges: 148 >= 100
+  [1c] GATEWAY
+  ✅ PASS: GATEWAY nodes: 32 == 32
+  ✅ PASS: GATEWAY edges: 25
+  ✅ PASS: ZAF gateways: 5 == 5
+  ✅ PASS: UNK gateways: 4 >= 4 (hub routers)
+  [1d] ENRICHED
+  ✅ PASS: ENRICHED countries: 11 >= 11 (DJB, DRC, FRA, GBR, KEN, LES, MOZ, POR, TAN, UNK, ZAF)
+  ✅ PASS: UNK present in ENRICHED country mapping
+  ✅ PASS: ENRICHED topology JSON exists
+  [1e] COLLAPSING
+       11 ctry | 54 rtr | 32 gw | 22 core
+  ✅ PASS: 11 countries (>=11)
+  ✅ PASS: 54 routers == 54
+  ✅ PASS: 32 gateways == 32
+  ✅ PASS: 22 core nodes == 22
+  ✅ PASS: collapsed topo: 32 nodes == 32
+  ✅ PASS: ZAF core nodes: 3 == 3
+  ✅ PASS: UNK total: 20 == 20
+  ✅ PASS: UNK gateways: 4 == 4 (hub routers)
+  ✅ PASS: UNK core: 16 == 16 (leaf routers)
+       UNK: 20 routers (4 gw hubs + 16 core leaves) — cross-country OSPF adjacencies
+  [1f] CURRENT
+  ✅ PASS: CURRENT gateway topology exists
+  ✅ PASS: CURRENT country-core summary exists
+
+  PHASE 1 RESULT: 24 passed, 0 failed
+
+━━━ PHASE 1 COMPLETE ━━━
+
+━━━ PHASE 2: PIPELINE RUN SKIPPED (add --run-pipeline-db3 to trigger) ━━━
+
+━━━ PHASE 3: Playwright E2E (12 phases, 90+ checks) ━━━
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  06-STEP-BY-STEP — DEEP END-TO-END VALIDATION (12 phases, 90+ checks)  ║
+║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
+║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+  ℹ  Graph time : 06Mar2026_10h44m46s_54_hosts
+  ℹ  Base URL   : http://webserver:8081
+  ℹ  Headless   : true
+  ℹ  Screenshots: /app/06-STEP-BY-STEP/screenshots
+  ℹ  OSPF file  : ospf-database-3.txt (54 routers, 20 UNK)
+  ℹ  Host file  : Load-hosts.txt (34 entries — 20 UNK routers unmapped)
+
+━━━ AUTH ━━━
+  ✅ PASS [AUTH]: Logged in as ospf@topolograph.com
+  ℹ  Screenshot → 01-login-success.png
+
+━━━ LOAD — 54-Router Graph (ospf-database-3.txt + Load-hosts.txt) ━━━
+  ✅ PASS [LOAD]: Graph loaded — 54 vis.js nodes (54 expected)
+  ℹ  Screenshot → 02-graph-loaded-54.png
+
+━━━ P1: AS-IS View (54 routers, 20 UNK) ━━━
+  ✅ PASS [P1-ASIS]: AS-IS visible nodes: 54 (≥50 expected for 54-router graph)
+  ✅ PASS [P1-ASIS]: AS-IS visible edges: 74
+  ℹ  UNK nodes in graph: 20
+  ✅ PASS [P1-ASIS]: UNK nodes present: 20 (≥20 expected — unmapped routers)
+  ✅ PASS [P1-ASIS]: Toolbar button #btnUnkHighlight present
+  ✅ PASS [P1-ASIS]: Toolbar button #btnHostnameUpload present
+  ✅ PASS [P1-ASIS]: Toolbar button #btnCostMatrix present
+  ✅ PASS [P1-ASIS]: Toolbar button #btnWhatIf present
+  ℹ  Screenshot → 03-asis-54.png
+
+━━━ P2: ENRICHED View (11 countries, UNK grey nodes) ━━━
+  ✅ PASS [P2-ENRICH]: ENRICHED visible nodes: 54 (≥50)
+  ✅ PASS [P2-ENRICH]: Country Filter panel present
+  ✅ PASS [P2-ENRICH]: 34 nodes with named country (≥34 expected)
+  ✅ PASS [P2-ENRICH]: UNK nodes visible in ENRICHED: 20 (grey, unmapped)
+  ✅ PASS [P2-ENRICH]: 11 distinct countries (≥11 expected: 10 + UNK)
+  ℹ  Screenshot → 04-enriched-54.png
+
+━━━ P3: GATEWAY View (32 gw + UNK hubs visible, 22 cores hidden) ━━━
+  ✅ PASS [P3-GW]: GATEWAY visible nodes: 48 (≥32 gateways including UNK hubs)
+  ⚠  WARN [P3-GW]: Core nodes hidden: 6 — expected ≥22
+  ✅ PASS [P3-GW]: UNK hub gateways visible: 20 (≥4 hubs with cross-country adjacencies)
+  ℹ  Screenshot → 05-gateway-54.png
+
+━━━ P4: CURRENT View ━━━
+  ✅ PASS [P4-CURR]: CURRENT mode loaded — 48 visible nodes
+  ℹ  Screenshot → 06-current-54.png
+
+━━━ P5: COLLAPSING Mode (deeper: UNK non-interactive, ZAF badge, Collapse All) ━━━
+  ✅ PASS [P5-COL]: COLLAPSING panel rendered
+  ℹ  Screenshot → 07-collapsing-panel-54.png
+  ✅ PASS [P5-COL]: UNK section present in COLLAPSING panel
+  ✅ PASS [P5-COL]: UNK row is non-interactive (no collapse button — correct for unmapped group)
+  ℹ  Screenshot (clipped) → 07b-collapsing-unk-row.png
+  ✅ PASS [P5-COL]: collapseCountry("ZAF") executed
+  ✅ PASS [P5-COL]: Badge "▲ N hidden" found on 5 gateway node(s)
+  ✅ PASS [P5-COL]: Σcost aggregation badge on 5 node(s)
+  ✅ PASS [P5-COL]: Persistent Path Overlay: 25 cross-country edges visible
+  ℹ  Screenshot → 08-zaf-collapsed-54.png
+  ℹ  Screenshot (clipped) → 09-zaf-badge-zoom-54.png
+  ✅ PASS [P5-COL]: Collapse All → 22 nodes hidden (≥22 expected: ZAF:3 + FRA:1 + GBR:1 + POR:1 + UNK:16)
+  ✅ PASS [P5-COL]: Expand All executed
+
+━━━ P6: Sprint 3 — UNK Highlight ━━━
+  ✅ PASS [P6-UNK]: _toggleUnkHighlight() → active=true
+  ℹ  Screenshot → 10-unk-highlight-54.png
+  ✅ PASS [P6-UNK]: All UNK nodes remain visible during highlight
+  ✅ PASS [P6-UNK]: UNK highlight toggled off
+  ✅ PASS [P6-UNK]: UNK button present in GATEWAY mode (cross-mode)
+
+━━━ P7: Sprint 3 — Hostname Upload (54-router CSV, UNK preserved) ━━━
+  ✅ PASS [P7-HOST]: Hostname Upload panel rendered
+  ℹ  Screenshot (clipped) → 11-hostname-upload-54.png
+  ✅ PASS [P7-HOST]: Panel shows graph context stats
+  ✅ PASS [P7-HOST]: Drag-drop zone present
+  ℹ  Using host-mapping-e2e.csv (55 lines — covers 54 routers)
+  ✅ PASS [P7-HOST]: host-mapping-e2e.csv covers 54 routers (≥54 expected)
+  ✅ PASS [P7-HOST]: _applyHostnameMapping() applied 54-router CSV successfully
+  ℹ  Screenshot → 12-hostname-applied-54.png
+  ℹ  UNK count after CSV apply: 20
+  ✅ PASS [P7-HOST]: UNK preserved after CSV apply: 20 nodes (correct — not in host file)
+  ✅ PASS [P7-HOST]: Manual node reclassify (nodes.update) works
+
+━━━ P8: Cost Matrix — Deep Validation ━━━
+  ✅ PASS [P8-MAT]: Cost Matrix panel rendered (#ospfCostMatrixPanel)
+  ℹ  Screenshot (clipped) → 13-cost-matrix-54.png
+  ✅ PASS [P8-MAT]: Matrix rows: 11 (≥11 expected: 10 countries + UNK)
+  ✅ PASS [P8-MAT]: UNK country row present in Cost Matrix
+  ⚠  WARN [P8-MAT]: UNK has no non-zero cost cells — UNK hubs may not be routing correctly
+  ✅ PASS [P8-MAT]: 33 non-zero Dijkstra cost cells (≥30 expected)
+  ✅ PASS [P8-MAT]: View-mode badge present in panel header
+  ✅ PASS [P8-MAT]: Dimensions label (N×N) present in panel
+  ✅ PASS [P8-MAT]: Cost range gradient legend present
+  ✅ PASS [P8-MAT]: Excel export button found: "⬇ Excel"
+  ✅ PASS [P8-MAT]: Refresh button found: "↺"
+  ✅ PASS [P8-MAT]: _exportMatrixToExcel function exists
+  ✅ PASS [P8-MAT]: _refreshCostMatrix function exists
+  ✅ PASS [P8-MAT]: Off-diagonal cell found and clickable
+  ℹ  Testing ↺ Refresh button rebuilds panel (verifying _refreshCostMatrix fix)...
+  ✅ PASS [P8-MAT]: ↺ Refresh: panel REBUILT (not closed) — bug fix verified ✓
+  ✅ PASS [P8-MAT]: After ↺ Refresh: 11 rows (matrix rebuilt correctly)
+  ℹ  Screenshot → 14-cost-matrix-refreshed.png
+  ✅ PASS [P8-MAT]: Cost Matrix renders in GATEWAY mode (cross-mode feature)
+  ℹ  Screenshot → 15-cost-matrix-gateway-54.png
+
+━━━ P9: What-If Analysis — Deep Validation ━━━
+  ✅ PASS [P9-WI]: What-If panel rendered (#ospfWhatIfPanel)
+  ℹ  Screenshot (clipped) → 16-whatif-54.png
+  ✅ PASS [P9-WI]: Edge picker has 74 edges (≥70 for 54-router graph)
+  ✅ PASS [P9-WI]: View-mode badge + "Works across" cross-mode message present
+  ✅ PASS [P9-WI]: CSV Export button found: "⬇ Export Report"
+  ✅ PASS [P9-WI]: _applyWhatIf function exists
+  ✅ PASS [P9-WI]: _exportWhatIfReport function exists
+  ✅ PASS [P9-WI]: _runWhatIfAnalysis function exists
+  ✅ PASS [P9-WI]: Current cost auto-filled: 100 (picker change → #wiOldCost)
+  ✅ PASS [P9-WI]: Analysis ran — result: "Edge cost change100 → 1 ▼99Affected country pairs2 / 110Risk Score2% L..."
+  ℹ  Screenshot (clipped) → 17-whatif-analysis-result.png
+  ✅ PASS [P9-WI]: "Edge cost change" summary card present
+  ✅ PASS [P9-WI]: Affected country pairs: 2 / 110
+  ✅ PASS [P9-WI]: Risk classification: LOW
+  ✅ PASS [P9-WI]: Δ (Delta) column present in affected paths table
+  ✅ PASS [P9-WI]: Before → After cost change shown in affected paths
+  ✅ PASS [P9-WI]: Apply Change button enabled after analysis
+  ℹ  Edge to apply: 13.13.13.1_to_22.22.22.1, cost: 100 → 1
+  ℹ  Screenshot (clipped) → 18-whatif-applied.png
+  ✅ PASS [P9-WI]: Edge cost updated in vis.js DataSet: 13.13.13.1_to_22.22.22.1 → cost=1
+  ✅ PASS [P9-WI]: Confirmation "✅ Cost change applied" shown after Apply
+  ✅ PASS [P9-WI]: Apply button disabled after apply (prevents double-apply)
+  ✅ PASS [P9-WI]: _exportWhatIfReport callable with lastResult (CSV export ready)
+  ✅ PASS [P9-WI]: What-If available in COLLAPSING state (cross-mode)
+  ℹ  Screenshot → 19-whatif-collapsing-54.png
+
+━━━ P10: Integration — Apply Change → Cost Matrix Auto-Refresh ━━━
+  ℹ  Testing: Apply Cost Change while Cost Matrix open → matrix survives + updates
+  ✅ PASS [P10-INT]: Cost Matrix opened for integration test
+  ℹ  Baseline cost: DJB→ZAF = 64
+  ✅ PASS [P10-INT]: Recorded baseline cost: DJB→ZAF = 64
+  ✅ PASS [P10-INT]: Both Cost Matrix AND What-If panels open simultaneously
+  ℹ  P10 analysis: 1 affected pairs
+  ✅ PASS [P10-INT]: Analysis shows 1 affected paths (routing will change)
+  ℹ  Screenshot → 20-matrix-post-apply.png
+  ✅ PASS [P10-INT]: Cost Matrix panel SURVIVED Apply Change (auto-refresh worked ✓)
+  ✅ PASS [P10-INT]: Cost Matrix data UPDATED after Apply Change (Dijkstra recomputed)
+  ℹ  Matrix cost DJB→ZAF unchanged: 64 (edge may not be on this path)
+  ℹ  Screenshot → 21-integration-complete.png
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║   06-STEP-BY-STEP — FINAL SUMMARY                                       ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║  PASSED : 78                                                          ║
+║  FAILED : 0                                                           ║
+║  WARNED : 2                                                           ║
+║  TOTAL  : 80                                                          ║
+║  STATUS : ALL 06-STEP-BY-STEP CHECKS PASSED ✅                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+━━━ Screenshots: /app/06-STEP-BY-STEP/screenshots/ ━━━
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  TOTAL PASSED : 114                                                    ║
+║  TOTAL FAILED : 0                                                      ║
+║  WARNINGS     : 2                                                      ║
+║  STATUS: ALL 06-STEP-BY-STEP CHECKS PASSED ✅                        ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  Full report : /app/06-STEP-BY-STEP/validation-report.txt
+  Screenshots : /app/06-STEP-BY-STEP/screenshots/
+  Graph time  : 06Mar2026_10h44m46s_54_hosts
+
+  ✅ E2E suite complete.
+
+[08-step] All-Docker validation complete
+[08-step] graph_time=06Mar2026_10h44m46s_54_hosts

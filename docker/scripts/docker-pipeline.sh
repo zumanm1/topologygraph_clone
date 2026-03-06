@@ -11,7 +11,7 @@
 #
 # USAGE — from HOST:
 #   docker compose exec pipeline bash docker/scripts/docker-pipeline.sh
-#   docker compose exec pipeline bash docker/scripts/docker-pipeline.sh --ospf-file ospf-database-3b.txt
+#   docker compose exec pipeline bash docker/scripts/docker-pipeline.sh --ospf-file=ospf-database-54-unk-test.txt --host-file=Load-hosts-54-unk-test.txt
 #   docker compose exec pipeline bash docker/scripts/docker-pipeline.sh --dry-run
 #   docker compose exec pipeline bash docker/scripts/docker-pipeline.sh --no-push
 #
@@ -30,8 +30,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="/app"   # bind-mount inside container
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-OSPF_FILE="${PROJECT_ROOT}/INPUT-FOLDER/ospf-database-3.txt"
-HOST_FILE="${PROJECT_ROOT}/INPUT-FOLDER/Load-hosts.txt"
+OSPF_FILE="${PROJECT_ROOT}/INPUT-FOLDER/ospf-database-54-unk-test.txt"
+HOST_FILE="${PROJECT_ROOT}/INPUT-FOLDER/Load-hosts-54-unk-test.txt"
 BASE_URL="${BASE_URL:-http://webserver:8081}"
 API_USER="${API_USER:-ospf@topolograph.com}"
 API_PASS="${API_PASS:-ospf}"

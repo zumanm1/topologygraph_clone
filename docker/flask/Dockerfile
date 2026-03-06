@@ -38,4 +38,7 @@ COPY topolograph-docker/init/topolograph.js \
 COPY 06-STEP-BY-STEP/docker-patches/base.html \
      /home/flask/flask/templates/base.html
 
+COPY docker/flask/host_to_dns_name_mapping.html \
+     /home/flask/flask/templates/host_to_dns_name_mapping.html
+
 # No CMD override — use the upstream entrypoint (Gunicorn)
