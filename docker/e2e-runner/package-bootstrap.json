@@ -1,0 +1,8 @@
+{
+  "name": "e2e-runner-bootstrap",
+  "version": "1.0.0",
+  "description": "Bootstrap package for Playwright pre-installation in Docker",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}
