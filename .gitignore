@@ -28,3 +28,19 @@ topolograph/
 
 # Large binary archives
 ARCHIVE-MISC/
+
+# Runtime pipeline output (gitignore generated data; keep .gitkeep markers)
+IN-OUT-FOLDER/*/
+OUTPUT/AS-IS/*/
+OUTPUT/GATEWAY/*/
+OUTPUT/ENRICHED/*/
+OUTPUT/COLLAPSING/*/
+OUTPUT/CURRENT/
+OUTPUT/DB2/
+OUTPUT/ARCHIVE_OLD/
+
+# Bash quirks from terminal tests
+EXIT=
+echo
+tests/EXIT=
+tests/echo

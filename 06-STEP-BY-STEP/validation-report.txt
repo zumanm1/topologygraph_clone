@@ -1,35 +1,35 @@
 ╔══════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║   Date        : 2026-03-05 18:26:44
-║   Graph time  : 05Mar2026_11h35m45s_54_hosts
+║   Date        : 2026-03-06 06:41:50
+║   Graph time  : 06Mar2026_06h29m38s_54_hosts
 ║   OSPF file   : ospf-database-3.txt (54 routers, 20 UNK)
 ║   Host file   : Load-hosts.txt (34 entries — 20 UNK unmapped)
 ║   Headless    : true
 ║   Run pipeline: false
-║   Project     : /Users/macbook/Documents/OSPF-DATABASE-TEST
+║   Project     : /app
 ╚══════════════════════════════════════════════════════════════════════╝
 
 ━━━ PHASE 0: Pre-Flight Checks ━━━
 
-  ✅ PASS: Webserver responding at http://localhost:8081
-  ✅ PASS: Input file: ospf-database-2.txt (    1947 lines)
-  ✅ PASS: Input file: ospf-database-3.txt (    2768 lines)
+  ✅ PASS: Webserver responding at http://webserver:8081
+  ✅ PASS: Input file: ospf-database-2.txt (1947 lines)
+  ✅ PASS: Input file: ospf-database-3.txt (2768 lines)
   ✅ PASS: Load-hosts.txt exists (34 router entries)
   ✅ PASS: Load-hosts.txt has exactly 34 entries (20 UNK routers unmapped)
   ✅ PASS: host-mapping-e2e.csv exists (54 router mappings)
   ✅ PASS: host-mapping-e2e.csv covers 54 routers (≥54)
-  ✅ PASS: Node.js v22.22.0
+  ✅ PASS: Node.js v18.20.8
   ✅ PASS: Playwright found
-  ✅ PASS: 54-host COLLAPSING artefact found: 05Mar2026_11h35m45s_54_hosts_COLLAPSING
+  ✅ PASS: 54-host COLLAPSING artefact found: 06Mar2026_06h29m38s_54_hosts_COLLAPSING
 UNK: total=20 gw=4 core=16
   ✅ PASS: UNK present in COLLAPSING config with routers
-  ✅ PASS: IN-OUT-FOLDER/05Mar2026_11h35m45s_54_hosts exists (54 nodes)
+  ✅ PASS: IN-OUT-FOLDER/06Mar2026_06h29m38s_54_hosts exists (54 nodes)
 
   PHASE 0: ALL PRE-FLIGHT CHECKS PASSED ✅
 
 ━━━ PHASE 1: JSON Artefact Integrity (54-router topology) ━━━
-  Graph time: 05Mar2026_11h35m45s_54_hosts
+  Graph time: 06Mar2026_06h29m38s_54_hosts
 
   [detected] hosts=54 gw=32 countries=11 cores=22
   [1a] IN-OUT-FOLDER
@@ -78,10 +78,10 @@ UNK: total=20 gw=4 core=16
 ║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
 ║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time : 05Mar2026_11h35m45s_54_hosts
-  ℹ  Base URL   : http://localhost:8081
+  ℹ  Graph time : 06Mar2026_06h29m38s_54_hosts
+  ℹ  Base URL   : http://webserver:8081
   ℹ  Headless   : true
-  ℹ  Screenshots: /Users/macbook/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/screenshots
+  ℹ  Screenshots: /app/06-STEP-BY-STEP/screenshots
   ℹ  OSPF file  : ospf-database-3.txt (54 routers, 20 UNK)
   ℹ  Host file  : Load-hosts.txt (34 entries — 20 UNK routers unmapped)
 
@@ -230,7 +230,7 @@ UNK: total=20 gw=4 core=16
 ║  STATUS : ALL 06-STEP-BY-STEP CHECKS PASSED ✅                          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 
-━━━ Screenshots: /Users/macbook/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/screenshots/ ━━━
+━━━ Screenshots: /app/06-STEP-BY-STEP/screenshots/ ━━━
 
 ╔══════════════════════════════════════════════════════════════════════╗
 ║  TOTAL PASSED : 114                                                    ║
@@ -239,6 +239,6 @@ UNK: total=20 gw=4 core=16
 ║  STATUS: ALL 06-STEP-BY-STEP CHECKS PASSED ✅                        ║
 ╚══════════════════════════════════════════════════════════════════════╝
 
-  Full report : /Users/macbook/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/validation-report.txt
-  Screenshots : /Users/macbook/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/screenshots/
-  Graph time  : 05Mar2026_11h35m45s_54_hosts
+  Full report : /app/06-STEP-BY-STEP/validation-report.txt
+  Screenshots : /app/06-STEP-BY-STEP/screenshots/
+  Graph time  : 06Mar2026_06h29m38s_54_hosts

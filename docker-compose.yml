@@ -1,0 +1,237 @@
+# =============================================================================
+# docker-compose.yml  (project root)
+# OSPF Country Topology — Full Self-Contained Stack
+# =============================================================================
+#
+# CORE SERVICES (5 total — 4 existing + 1 NEW)
+# ─────────────────────────────────────────────
+#   mongodb         — MongoDB 4.2 database          (EXISTING, unchanged)
+#   flask           — Patched Topolograph Flask app  (EXISTING, patched with Sprint 3)
+#   mcp-server      — AI/LLM MCP server              (EXISTING, unchanged)
+#   webserver       — Nginx reverse proxy (8081)     (EXISTING, unchanged)
+#   pipeline        — bash + Python pipeline runner  (NEW — the single new container)
+#
+# TEST-ONLY SERVICE (profile: test)
+# ──────────────────────────────────
+#   e2e-runner      — Playwright 1.58.2 E2E test runner (114-check suite)
+#                     Only starts with: docker compose --profile test up -d e2e-runner
+#
+# QUICK START (normal operation)
+# ───────────────────────────────
+#   cp .env.example .env          # edit passwords if needed
+#   docker compose build          # build flask, webserver, pipeline
+#   docker compose up -d          # start all 5 CORE services
+#   docker compose exec pipeline bash docker/scripts/docker-pipeline.sh
+#
+# RUN E2E TESTS
+# ─────────────
+#   docker compose --profile test build e2e-runner
+#   docker compose --profile test up -d e2e-runner
+#   docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh
+#
+# VOLUMES
+# ───────
+#   mongodbdata   — persistent MongoDB storage
+#   nginxdata     — nginx log storage
+#   Project root is bind-mounted into pipeline (/app) and e2e-runner (/app)
+#   so all output files (IN-OUT-FOLDER/, OUTPUT/) land on the host.
+#
+# NETWORKING
+# ──────────
+#   frontend network: webserver, flask, mcp-server, pipeline, e2e-runner
+#   backend network:  flask, mongodb
+#   Inside the network:  flask → "flask:5000"
+#                        webserver → "webserver:${TOPOLOGRAPH_PORT}"
+#
+# ENVIRONMENT VARIABLES
+# ─────────────────────
+#   Copy .env.example → .env and adjust as needed.
+#   Required: MONGODB_PASSWORD, TOPOLOGRAPH_WEB_API_PASSWORD
+#
+# =============================================================================
+
+services:
+
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:4.2
+    container_name: mongodb
+    restart: unless-stopped
+    command: mongod --auth
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
+      MONGODB_DATA_DIR: /data/db
+      MONDODB_LOG_DIR: /dev/null
+    volumes:
+      - mongodbdata:/data/db
+    networks:
+      - backend
+
+  # ── Flask (patched) ────────────────────────────────────────────────────────
+  flask:
+    build:
+      context: .
+      dockerfile: docker/flask/Dockerfile
+    image: ospf-flask-patched:latest
+    container_name: flask
+    restart: unless-stopped
+    environment:
+      APP_ENV: "prod"
+      APP_DEBUG: "False"
+      APP_PORT: 5000
+      MONGODB_DATABASE: ${MONGODB_DATABASE}
+      MONGODB_USERNAME: ${MONGODB_USERNAME}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD}
+      MONGODB_HOSTNAME: ${MONGODB_HOSTNAME}
+      NAPALM_USERNAME: ${NAPALM_USERNAME:-}
+      NAPALM_PASSWORD: ${NAPALM_PASSWORD:-}
+      NAPALM_PORT: ${NAPALM_PORT:-22}
+      DNS: ${DNS:-8.8.8.8}
+      NETBOX_URL: ${NETBOX_URL:-http://localhost:8000}
+      NETBOX_RO_TOKEN: ${NETBOX_RO_TOKEN:-}
+      TOPOLOGRAPH_WEB_API_USERNAME_EMAIL: ${TOPOLOGRAPH_WEB_API_USERNAME_EMAIL}
+      TOPOLOGRAPH_WEB_API_PASSWORD: ${TOPOLOGRAPH_WEB_API_PASSWORD}
+      TOPOLOGRAPH_WEB_API_AUTHORISED_NETWORKS: ${TOPOLOGRAPH_WEB_API_AUTHORISED_NETWORKS}
+      SWAGGER_HOST: "localhost:${TOPOLOGRAPH_PORT}"
+    depends_on:
+      - mongodb
+    networks:
+      - frontend
+      - backend
+
+  # ── MCP Server ─────────────────────────────────────────────────────────────
+  mcp-server:
+    image: vadims06/topolograph-mcp-server:v1.0.0
+    container_name: mcp-server
+    restart: unless-stopped
+    environment:
+      TOPOLOGRAPH_API_BASE: "http://flask:5000/api"
+    ports:
+      - "${MCP_PORT:-8000}:8000"
+    networks:
+      - frontend
+
+  # ── Webserver (Nginx) ──────────────────────────────────────────────────────
+  webserver:
+    build:
+      context: docker/webserver
+      dockerfile: Dockerfile
+    image: ospf-webserver:latest
+    container_name: webserver
+    restart: unless-stopped
+    environment:
+      TOPOLOGRAPH_PORT: ${TOPOLOGRAPH_PORT:-8081}
+      MCP_PORT: ${MCP_PORT:-8000}
+    ports:
+      - "${TOPOLOGRAPH_PORT:-8081}:${TOPOLOGRAPH_PORT:-8081}"
+    volumes:
+      - type: volume
+        source: nginxdata
+        target: /var/log/nginx
+    depends_on:
+      - flask
+      - mcp-server
+    networks:
+      - frontend
+
+  # ── Flask credential initialiser (one-shot) ────────────────────────────────
+  flask-create-creds:
+    image: vadims06/topolograph:latest
+    container_name: flask-create-creds
+    restart: "no"
+    environment:
+      TOPOLOGRAPH_PORT: 5000
+      TOPOLOGRAPH_HOST: flask
+      TOPOLOGRAPH_WEB_API_USERNAME_EMAIL: ${TOPOLOGRAPH_WEB_API_USERNAME_EMAIL}
+      TOPOLOGRAPH_WEB_API_PASSWORD: ${TOPOLOGRAPH_WEB_API_PASSWORD}
+      TOPOLOGRAPH_WEB_API_AUTHORISED_NETWORKS: ${TOPOLOGRAPH_WEB_API_AUTHORISED_NETWORKS}
+    command: ["python", "/home/flask/create_credentials_from_env.py"]
+    volumes:
+      - type: bind
+        source: ./topolograph-docker/init/create_credentials_from_env.py
+        target: /home/flask/create_credentials_from_env.py
+    depends_on:
+      - flask
+    networks:
+      - frontend
+
+  # ── Pipeline (bash + Python) ───────────────────────────────────────────────
+  pipeline:
+    build:
+      context: .
+      dockerfile: docker/pipeline/Dockerfile
+    image: ospf-pipeline:latest
+    container_name: pipeline
+    restart: unless-stopped
+    environment:
+      # API endpoint inside the Docker network
+      BASE_URL: "http://webserver:${TOPOLOGRAPH_PORT:-8081}"
+      API_USER: ${TOPOLOGRAPH_WEB_API_USERNAME_EMAIL}
+      API_PASS: ${TOPOLOGRAPH_WEB_API_PASSWORD}
+    volumes:
+      # Bind-mount project root so scripts and output land on the host
+      - type: bind
+        source: .
+        target: /app
+    depends_on:
+      - webserver
+      - flask
+    networks:
+      - frontend
+    # Keep alive for `docker compose exec pipeline bash ...`
+    command: ["sleep", "infinity"]
+
+  # ── E2E Runner (Playwright) ────────────────────────────────────────────────
+  # TEST-ONLY: only starts with --profile test
+  # Usage: docker compose --profile test up -d e2e-runner
+  e2e-runner:
+    profiles:
+      - test
+    build:
+      context: docker/e2e-runner
+      dockerfile: Dockerfile
+    image: ospf-e2e-runner:latest
+    container_name: e2e-runner
+    restart: unless-stopped
+    environment:
+      # Point Playwright at the webserver inside Docker
+      BASE_URL: "http://webserver:${TOPOLOGRAPH_PORT:-8081}"
+      TOPOLOGRAPH_PORT: ${TOPOLOGRAPH_PORT:-8081}
+      PLAYWRIGHT_BROWSERS_PATH: /playwright-browsers
+    volumes:
+      # Bind-mount project root so tests can find all files
+      - type: bind
+        source: .
+        target: /app
+      # Named volume for Chromium — downloaded on first run, cached thereafter
+      - type: volume
+        source: playwright-browsers
+        target: /playwright-browsers
+    depends_on:
+      - webserver
+      - flask
+    networks:
+      - frontend
+    # Keep alive for `docker compose exec e2e-runner bash ...`
+    command: ["sleep", "infinity"]
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    name: ospf_backend
+    driver: bridge
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  mongodbdata:
+    driver: local
+  nginxdata:
+    driver: local
+  playwright-browsers:
+    driver: local
