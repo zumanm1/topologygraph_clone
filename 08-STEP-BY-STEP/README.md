@@ -14,6 +14,7 @@ It exists because:
 - rebuild containers from the repo root
 - run the pipeline **inside** the `pipeline` container
 - run the deep Playwright validation **inside** the `e2e-runner` container
+- validate Bearer-token API access on the modified app before pipeline and E2E phases
 - preserve the same validation intent as `06` and `07`
 
 In practical terms, `08-STEP-BY-STEP` is now the **canonical merged test package**:
@@ -136,6 +137,13 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
 This remains the recommended end-to-end validation entrypoint for a fresh remote-machine deployment.
 
+It now also proves that the modified app on `8081` preserves the original-style
+Topolograph API security path by:
+
+- logging in through the web session
+- creating a Bearer token through `/token_management/create_token`
+- validating `Authorization: Bearer ...` against `/api/graph/`
+
 ---
 
 ## What This Step Validates
@@ -178,6 +186,19 @@ docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
 
 This is the Docker-native equivalent of the old `07-STEP-BY-STEP` pipeline proof, now based on the packaged 54-router UNK-validation fixture pair.
 
+### 2a. Bearer-token API security regression check
+
+Before the pipeline run, `08` now proves that the modified app keeps the
+original Topolograph Bearer-token workflow working on `http://localhost:8081`:
+
+- create a token through the authenticated web session
+- read the created token from MongoDB
+- call `/api/graph/` with `Authorization: Bearer ...`
+
+Expected result:
+
+- Bearer-authenticated `/api/graph/` returns `200`
+
 ### 3. 06-style deep E2E retest in Docker
 
 The full deep validation now runs in:
@@ -219,6 +240,7 @@ The old `07` suite proved the pipeline itself.
 The retained verification points are:
 
 - pre-flight container readiness
+- Bearer-token API security on the modified app
 - full pipeline execution inside Docker
 - creation of the expected output families under `IN-OUT-FOLDER/` and `OUTPUT/`
 - validation of the key topology numbers
@@ -265,6 +287,7 @@ That command now does all of the following in one flow:
 - rebuilds the Docker images
 - starts the 5 core services
 - starts the test-only `e2e-runner`
+- validates Bearer-token API security on `8081`
 - runs the packaged 54-router UNK pipeline
 - runs the deep Docker-native validation against the resulting graph
 - runs a dedicated hostname-mapping page regression check
