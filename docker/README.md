@@ -33,28 +33,30 @@ generating collapsing config, and pushing colours to the Topolograph UI.
 ## Quick Start
 
 ```bash
-# 1. Copy environment config
+# 1. Clone the repository
+gh repo clone zumanm1/topologygraph_clone
+# or: git clone https://github.com/zumanm1/topologygraph_clone.git
+cd topologygraph_clone
+
+# 2. Copy environment config
 cp .env.example .env          # edit passwords if needed
 
-# 2. Build custom images (flask, webserver, pipeline)
+# 3. Build custom images (flask, webserver, pipeline)
 docker compose build
 
-# 3. Start all 5 core services
+# 4. Start all 5 core services
 docker compose up -d
 
-# 4. Verify containers are up
-docker ps
-#  NAMES       STATUS        PORTS
-#  pipeline    Up X seconds
-#  webserver   Up X seconds  0.0.0.0:8081->8081/tcp
-#  flask       Up X seconds  5000/tcp
-#  mongodb     Up X seconds  0.0.0.0:27017->27017/tcp
-#  mcp-server  Up X seconds  0.0.0.0:8000->8000/tcp
+# 5. Verify containers are up
+docker compose ps
 
-# 5. Run the pipeline (uses packaged 54-router UNK test fixtures by default)
-docker compose exec pipeline bash docker/scripts/docker-pipeline.sh
+# 6. Start the Docker test container
+docker compose --profile test up -d e2e-runner
 
-# 6. Open browser
+# 7. Run the canonical all-Docker validation
+bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
+
+# 8. Open browser
 #    http://localhost:8081/
 #    Login: ospf@topolograph.com / ospf
 ```
