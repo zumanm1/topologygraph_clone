@@ -4088,9 +4088,51 @@ function _countryColorFor(code) {
            hover:     { background: bg, border: bdr } };
 }
 
+function _buildCountryAwareNodeLabel(node) {
+  var country = (node.country || node.group || 'UNK').toUpperCase();
+  var routerId = String(node.name || node.router_id || node.id || '').trim();
+  var hostname = String(node.hostname || '').trim();
+
+  if (!hostname && node.label) {
+    hostname = String(node.label).split('\n')[0].trim();
+  }
+
+  var isIpLikeHostname = hostname && /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+  var isRouterIdLike = routerId && /^\d+\.\d+\.\d+\.\d+$/.test(routerId);
+
+  if (!routerId && isIpLikeHostname) {
+    routerId = hostname;
+  }
+  if (!hostname || hostname === routerId || isIpLikeHostname) {
+    hostname = '';
+  }
+
+  if (hostname && routerId) {
+    return hostname + '\n' + routerId + '\n[' + country + ']';
+  }
+  var fallbackId = routerId || hostname;
+  if (fallbackId) {
+    return fallbackId + '\n[' + country + ']';
+  }
+  return '[' + country + ']';
+}
+
+function _normalizeCountryNodeLabels() {
+  if (typeof nodes === 'undefined' || !nodes) return;
+  var updates = [];
+  nodes.get().forEach(function(n) {
+    var normalized = _buildCountryAwareNodeLabel(n);
+    if (normalized && normalized !== n.label) {
+      updates.push({ id: n.id, label: normalized });
+    }
+  });
+  if (updates.length > 0) nodes.update(updates);
+}
+
 // ── 2. Apply country colours to all nodes that have a `country` attribute ─────
 function applyCountryColors() {
   if (typeof nodes === 'undefined' || !nodes) return;
+  _normalizeCountryNodeLabels();
   var allNodes = nodes.get();
   var updates  = [];
   allNodes.forEach(function(n) {
@@ -4659,6 +4701,7 @@ function setViewMode(mode) {
   if (activeBtn) activeBtn.classList.add('active');
 
   if (typeof nodes === 'undefined' || !nodes) return;
+  _normalizeCountryNodeLabels();
 
   if (mode === 'asis') {
     expandAllCountries();
