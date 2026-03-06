@@ -122,6 +122,10 @@ info "Running Docker-native 06-equivalent deep validation"
 docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
   --graph-time="$GRAPH_TIME"
 
+info "Running layout-persistence regression check"
+docker compose exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
+  node /app/tests/validate-layout-persistence.cjs
+
 info "Running hostname-mapping page regression check"
 bash "$PROJECT_ROOT/08-STEP-BY-STEP/scripts/check-hostname-mapping-page.sh"
 

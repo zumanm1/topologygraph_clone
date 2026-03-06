@@ -143,6 +143,7 @@ Topolograph API security path by:
 - logging in through the web session
 - creating a Bearer token through `/token_management/create_token`
 - validating `Authorization: Bearer ...` against `/api/graph/`
+- validating the dedicated layout-persistence service and per-mode saved layout workflow
 
 ---
 
@@ -229,6 +230,22 @@ Command used by the 08 runner:
 bash 08-STEP-BY-STEP/scripts/check-hostname-mapping-page.sh
 ```
 
+### 5. Layout-persistence regression check
+
+After the deep E2E run, `08` now also validates the new saved-layout workflow:
+
+- dedicated blank `layout-db` service starts successfully
+- proxied `/layout-api/health` responds through the webserver
+- the new layout toolbar controls render in the UI
+- a moved node can be saved, reloaded, reset per-node, reset per-layout, and exported
+
+Command used by the 08 runner:
+
+```bash
+docker compose exec -e GRAPH_TIME=<graph_time> e2e-runner \
+  node /app/tests/validate-layout-persistence.cjs
+```
+
 ---
 
 ## What 08 Inherits From 07-STEP-BY-STEP
@@ -265,6 +282,7 @@ The retained verification points are:
 - deep Playwright validation across AS-IS, ENRICHED, GATEWAY, CURRENT, and COLLAPSING
 - `UNK` visibility and behavior validation
 - hostname upload and reclassification checks
+- layout save/load/reset/export validation through the dedicated layout service
 - hostname-mapping page load regression after Docker restart
 - Cost Matrix render and refresh regression checks
 - What-If Analysis render, execution, and apply checks
@@ -290,6 +308,7 @@ That command now does all of the following in one flow:
 - validates Bearer-token API security on `8081`
 - runs the packaged 54-router UNK pipeline
 - runs the deep Docker-native validation against the resulting graph
+- runs the dedicated layout-persistence Playwright smoke test
 - runs a dedicated hostname-mapping page regression check
 
 ---

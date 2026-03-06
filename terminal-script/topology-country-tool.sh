@@ -138,30 +138,28 @@ prepare_host_map() {
   local out="$TMP_DIR/host_map.csv"
   [[ -f "$HOST_FILE" ]] || { echo "Host file not found: $HOST_FILE"; exit 1; }
 
-  # Support:
-  # - TXT: "router_id hostname"
-  # - CSV: device_ip_address,device_name or router_id,hostname
-  if head -n 1 "$HOST_FILE" | awk -F, '{exit !(NF>1)}'; then
-    awk -F, '
-      BEGIN{OFS=","}
-      NR==1{
-        for(i=1;i<=NF;i++){gsub(/\r/,"",$i); h[tolower($i)] = i}
-        if(("device_ip_address" in h) && ("device_name" in h)){ip=h["device_ip_address"]; nm=h["device_name"]}
-        else if(("router_id" in h) && ("hostname" in h)){ip=h["router_id"]; nm=h["hostname"]}
-        else {ip=1; nm=2}
-        next
-      }
-      NF>=2{
-        gsub(/\r/,"")
-        if($ip!="" && $nm!=""){print $ip,$nm}
-      }
-    ' "$HOST_FILE" | sort -t, -k1,1V > "$out"
-  else
-    awk '
-      BEGIN{OFS=","}
-      $0 !~ /^#/ && NF>=2 {print $1,$2}
-    ' "$HOST_FILE" | sort -t, -k1,1V > "$out"
-  fi
+  python3 - "$PROJECT_ROOT" "$HOST_FILE" "$out" <<'PYEOF'
+import csv
+import os
+import sys
+
+project_root, host_file, out_path = sys.argv[1:]
+sys.path.insert(0, os.path.join(project_root, "terminal-script"))
+from country_code_utils import parse_host_file
+
+host_map = parse_host_file(host_file)
+
+def sort_key(value: str):
+    try:
+        return [int(part) for part in value.split('.')]
+    except ValueError:
+        return [value]
+
+with open(out_path, "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f, lineterminator="\n")
+    for rid in sorted(host_map, key=sort_key):
+        writer.writerow([rid, host_map[rid]])
+PYEOF
 }
 
 extract_edges_from_ospf_file() {
@@ -246,52 +244,40 @@ build_enriched_model() {
   [[ -f "$host_map" ]] || { echo "missing host map"; exit 1; }
   [[ -f "$edges" ]] || { echo "missing edges"; exit 1; }
 
-  awk -F, -v HM="$host_map" -v OV="$COUNTRY_OVERRIDE_FILE" '
-    BEGIN{
-      OFS=","
-      while((getline < HM) > 0){
-        rid=$1; host=$2
-        h[rid]=host
-        pref=tolower(substr(host,1,3))
-        if(pref=="") pref="unk"
-        p2c[pref]=toupper(pref)
-      }
-      if((getline < OV) > 0){ close(OV)
-        while((getline < OV) > 0){
-          if($0 ~ /^#/ || NF<2) continue
-          pref=tolower($1); code=toupper($2)
-          if(pref!="" && code!="") p2c[pref]=code
-        }
-      }
-    }
-    {
-      a=$1; b=$2
-      seen[a]=1; seen[b]=1
-      acode=(a in h)? p2c[tolower(substr(h[a],1,3))] : "UNK"
-      bcode=(b in h)? p2c[tolower(substr(h[b],1,3))] : "UNK"
-      if(acode!=bcode){gw[a]=1; gw[b]=1}
-    }
-    END{
-      for(n in seen){
-        host=(n in h)? h[n] : n
-        pref=tolower(substr(host,1,3))
-        code=(pref in p2c)? p2c[pref] : "UNK"
-        print n,host,code,((n in gw)?"true":"false")
-      }
-    }
-  ' "$edges" | sort -t, -k1,1V > "$nodes"
+  python3 - "$PROJECT_ROOT" "$host_map" "$edges" "$COUNTRY_OVERRIDE_FILE" "$nodes" "$edges_enriched" <<'PYEOF'
+import csv
+import os
+import sys
 
-  awk -F, -v N="$nodes" '
-    BEGIN{
-      OFS=","
-      while((getline < N) > 0){c[$1]=$3}
-    }
-    {
-      sc=($1 in c)? c[$1] : "UNK"
-      dc=($2 in c)? c[$2] : "UNK"
-      print $1,$2,$3,sc,dc,(sc!=dc?"true":"false")
-    }
-  ' "$edges" > "$edges_enriched"
+project_root, host_map_csv, edges_csv, override_file, nodes_path, edges_enriched_path = sys.argv[1:]
+sys.path.insert(0, os.path.join(project_root, "terminal-script"))
+from country_code_utils import build_enriched_rows, load_overrides
+
+host_map = {}
+with open(host_map_csv, newline="", encoding="utf-8") as f:
+    for row in csv.reader(f):
+        if len(row) >= 2:
+            host_map[row[0].strip()] = row[1].strip()
+
+edges = []
+with open(edges_csv, newline="", encoding="utf-8") as f:
+    for row in csv.reader(f):
+        if len(row) >= 3:
+            cost_raw = row[2].strip()
+            cost = int(float(cost_raw)) if cost_raw else 0
+            edges.append((row[0].strip(), row[1].strip(), cost))
+
+overrides = load_overrides(override_file)
+node_rows, edge_rows = build_enriched_rows(host_map, edges, overrides)
+
+with open(nodes_path, "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f, lineterminator="\n")
+    writer.writerows(node_rows)
+
+with open(edges_enriched_path, "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f, lineterminator="\n")
+    writer.writerows(edge_rows)
+PYEOF
 }
 
 write_country_mapping() {

@@ -34,6 +34,9 @@ LABEL description="Topolograph Flask with Sprint 3 JS + Analysis navbar"
 COPY docker/flask/topolograph.js \
      /home/flask/flask/static/js/topolograph.js
 
+COPY docker/flask/layout-persistence.js \
+     /home/flask/flask/static/js/layout-persistence.js
+
 # Copy the patched navbar template (Analysis dropdown)
 COPY 06-STEP-BY-STEP/docker-patches/base.html \
      /home/flask/flask/templates/base.html
