@@ -19,7 +19,7 @@
 #
 # SOURCE FILES (BUILD CONTEXT = project root)
 # ────────────────────────────────────────────
-#   topolograph-docker/init/topolograph.js
+#   docker/flask/topolograph.js
 #   06-STEP-BY-STEP/docker-patches/base.html
 #
 # =============================================================================
@@ -31,7 +31,7 @@ LABEL description="Topolograph Flask with Sprint 3 JS + Analysis navbar"
 
 # Copy the patched Sprint 3 JavaScript (Cost Matrix, What-If, Collapsing,
 # UNK filter, _refreshCostMatrix fix)
-COPY topolograph-docker/init/topolograph.js \
+COPY docker/flask/topolograph.js \
      /home/flask/flask/static/js/topolograph.js
 
 # Copy the patched navbar template (Analysis dropdown)

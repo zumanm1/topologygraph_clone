@@ -152,7 +152,7 @@ services:
     command: ["python", "/home/flask/create_credentials_from_env.py"]
     volumes:
       - type: bind
-        source: ./topolograph-docker/init/create_credentials_from_env.py
+        source: ./docker/flask/create_credentials_from_env.py
         target: /home/flask/create_credentials_from_env.py
     depends_on:
       - flask
