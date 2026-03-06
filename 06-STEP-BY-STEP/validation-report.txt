@@ -1,8 +1,8 @@
 ╔══════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║   Date        : 2026-03-06 06:41:50
-║   Graph time  : 06Mar2026_06h29m38s_54_hosts
+║   Date        : 2026-03-06 10:44:49
+║   Graph time  : 06Mar2026_10h44m46s_54_hosts
 ║   OSPF file   : ospf-database-3.txt (54 routers, 20 UNK)
 ║   Host file   : Load-hosts.txt (34 entries — 20 UNK unmapped)
 ║   Headless    : true
@@ -21,15 +21,15 @@
   ✅ PASS: host-mapping-e2e.csv covers 54 routers (≥54)
   ✅ PASS: Node.js v18.20.8
   ✅ PASS: Playwright found
-  ✅ PASS: 54-host COLLAPSING artefact found: 06Mar2026_06h29m38s_54_hosts_COLLAPSING
+  ✅ PASS: 54-host COLLAPSING artefact found: 06Mar2026_10h44m46s_54_hosts_COLLAPSING
 UNK: total=20 gw=4 core=16
   ✅ PASS: UNK present in COLLAPSING config with routers
-  ✅ PASS: IN-OUT-FOLDER/06Mar2026_06h29m38s_54_hosts exists (54 nodes)
+  ✅ PASS: IN-OUT-FOLDER/06Mar2026_10h44m46s_54_hosts exists (54 nodes)
 
   PHASE 0: ALL PRE-FLIGHT CHECKS PASSED ✅
 
 ━━━ PHASE 1: JSON Artefact Integrity (54-router topology) ━━━
-  Graph time: 06Mar2026_06h29m38s_54_hosts
+  Graph time: 06Mar2026_10h44m46s_54_hosts
 
   [detected] hosts=54 gw=32 countries=11 cores=22
   [1a] IN-OUT-FOLDER
@@ -78,7 +78,7 @@ UNK: total=20 gw=4 core=16
 ║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
 ║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time : 06Mar2026_06h29m38s_54_hosts
+  ℹ  Graph time : 06Mar2026_10h44m46s_54_hosts
   ℹ  Base URL   : http://webserver:8081
   ℹ  Headless   : true
   ℹ  Screenshots: /app/06-STEP-BY-STEP/screenshots
@@ -241,4 +241,4 @@ UNK: total=20 gw=4 core=16
 
   Full report : /app/06-STEP-BY-STEP/validation-report.txt
   Screenshots : /app/06-STEP-BY-STEP/screenshots/
-  Graph time  : 06Mar2026_06h29m38s_54_hosts
+  Graph time  : 06Mar2026_10h44m46s_54_hosts

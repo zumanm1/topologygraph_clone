@@ -185,6 +185,26 @@ services:
     # Keep alive for `docker compose exec pipeline bash ...`
     command: ["sleep", "infinity"]
 
+  pipeline-seed:
+    image: ospf-pipeline:latest
+    container_name: pipeline-seed
+    restart: "no"
+    environment:
+      BASE_URL: "http://webserver:${TOPOLOGRAPH_PORT:-8081}"
+      API_USER: ${TOPOLOGRAPH_WEB_API_USERNAME_EMAIL}
+      API_PASS: ${TOPOLOGRAPH_WEB_API_PASSWORD}
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+    depends_on:
+      - webserver
+      - flask
+      - pipeline
+    networks:
+      - frontend
+    command: ["bash", "/app/docker/scripts/docker-seed-default-graph.sh"]
+
   # ── E2E Runner (Playwright) ────────────────────────────────────────────────
   # TEST-ONLY: only starts with --profile test
   # Usage: docker compose --profile test up -d e2e-runner

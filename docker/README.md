@@ -51,7 +51,7 @@ docker ps
 #  mongodb     Up X seconds  0.0.0.0:27017->27017/tcp
 #  mcp-server  Up X seconds  0.0.0.0:8000->8000/tcp
 
-# 5. Run the pipeline
+# 5. Run the pipeline (uses packaged 54-router UNK test fixtures by default)
 docker compose exec pipeline bash docker/scripts/docker-pipeline.sh
 
 # 6. Open browser
@@ -90,8 +90,13 @@ docker/
 ## Running the Pipeline
 
 ```bash
-# Default (ospf-database-3.txt + Load-hosts.txt)
+# Default packaged test fixtures (54 routers + 34 mapped hosts + 20 UNK)
 docker compose exec pipeline bash docker/scripts/docker-pipeline.sh
+
+# Explicit packaged 54-router UNK validation pair
+docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
+  --ospf-file=ospf-database-54-unk-test.txt \
+  --host-file=Load-hosts-54-unk-test.txt
 
 # With different OSPF file
 docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
