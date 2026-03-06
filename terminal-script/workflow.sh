@@ -254,55 +254,30 @@ _run_from_csv() {
   local out_dir="$3"
 
   log "Building enriched model from API CSV …"
-  python3 - "$edges_csv" "$nodes_json" "$HOST_FILE" "$out_dir" <<'PYEOF'
-import sys, json, csv, os
+  python3 - "$PROJECT_ROOT" "$edges_csv" "$nodes_json" "$HOST_FILE" "$out_dir" <<'PYEOF'
+import csv
+import os
+import sys
 
-edges_csv, nodes_json_path, host_file, out_dir = sys.argv[1:]
+project_root, edges_csv, nodes_json_path, host_file, out_dir = sys.argv[1:]
+sys.path.insert(0, os.path.join(project_root, "terminal-script"))
+from country_code_utils import build_enriched_rows, parse_host_file
+
 os.makedirs(out_dir, exist_ok=True)
+host_map = parse_host_file(host_file)
 
-# Load host map
-host_map = {}
-with open(host_file) as f:
-    for line in f:
-        line = line.strip()
-        if not line or line.startswith('#'):
-            continue
-        # Try CSV (comma-separated) then whitespace
-        if ',' in line:
-            parts = line.split(',', 1)
-        else:
-            parts = line.split(None, 1)
-        if len(parts) >= 2:
-            host_map[parts[0].strip()] = parts[1].strip()
-
-# Determine country from hostname prefix (first 3 chars, upper)
-def country_of(rid):
-    h = host_map.get(rid, '')
-    return h[:3].upper() if h else 'UNK'
-
-# Load edges
 edges = []
-with open(edges_csv, newline='') as f:
+with open(edges_csv, newline='', encoding='utf-8') as f:
     for row in csv.reader(f):
         if len(row) >= 3:
-            edges.append({'src': row[0], 'dst': row[1], 'cost': int(float(row[2]))})
+            edges.append((row[0].strip(), row[1].strip(), int(float(row[2]))))
 
-# Determine gateway nodes (cross-country links)
-gw = set()
-for e in edges:
-    if country_of(e['src']) != country_of(e['dst']):
-        gw.add(e['src']); gw.add(e['dst'])
+node_rows, _edge_rows = build_enriched_rows(host_map, edges)
 
-# All routers
-all_rids = sorted({e['src'] for e in edges} | {e['dst'] for e in edges})
-
-# country-mapping.csv
-with open(os.path.join(out_dir, 'country-mapping.csv'), 'w', newline='') as f:
+with open(os.path.join(out_dir, 'country-mapping.csv'), 'w', newline='', encoding='utf-8') as f:
     w = csv.writer(f)
-    w.writerow(['router_id','hostname','country_code','is_gateway'])
-    for rid in all_rids:
-        w.writerow([rid, host_map.get(rid, rid), country_of(rid),
-                    str(rid in gw).lower()])
+    w.writerow(['router_id', 'hostname', 'country_code', 'is_gateway'])
+    w.writerows(node_rows)
 
 print(f"[_run_from_csv] Generated outputs in {out_dir}")
 PYEOF

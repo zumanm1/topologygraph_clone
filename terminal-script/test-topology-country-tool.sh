@@ -88,8 +88,8 @@ test_case_3_filtered_hidden_country_cost() {
 3.3.3.3 ccc-c-r1
 EOF
   "$TOOL" from-file --host-file "$d/hosts.txt" --ospf-file "$d/ospf.txt" --countries "AAA,CCC" --output-dir "$d/out" >/dev/null
-  jq -e '.nodes|length==2' "$d/out/country-core-summary.filtered.json" >/dev/null || fail "filtered country node count incorrect"
-  jq -e '.edges[] | select(.src_country=="AAA" and .dst_country=="CCC" and .effective_avg_cost==30 and .includes_hidden_countries==true)' "$d/out/country-core-summary.filtered.json" >/dev/null || fail "hidden-country effective cost not preserved"
+  jq -e '.nodes|length==2' "$d/out/country-core-summary.filtered.json" >/dev/null || { cat "$d/out/country-mapping.csv"; cat "$d/out/gateway-only-topology.json"; cat "$d/out/country-core-summary.json"; cat "$d/out/country-core-summary.filtered.json"; fail "filtered country node count incorrect"; }
+  jq -e '.edges[] | select(.src_country=="AAA" and .dst_country=="CCC" and .effective_avg_cost==30 and .includes_hidden_countries==true)' "$d/out/country-core-summary.filtered.json" >/dev/null || { cat "$d/out/country-mapping.csv"; cat "$d/out/gateway-only-topology.json"; cat "$d/out/country-core-summary.json"; cat "$d/out/country-core-summary.filtered.json"; fail "hidden-country effective cost not preserved"; }
   pass "case3 filtered effective cost through hidden country"
 }
 
@@ -150,6 +150,21 @@ EOF
   pass "case7 strict-countries passes when all countries exist"
 }
 
+test_case_8_hostname_prefix_country_code() {
+  local d; d="$(mk_case_dir)"
+  write_ospf_triangle "$d/ospf.txt"
+  cat > "$d/hosts.txt" <<'EOF'
+1.1.1.1 drc-gom-r1
+2.2.2.2 zaf-jhb-r1
+3.3.3.3 3.3.3.3
+EOF
+  "$TOOL" from-file --host-file "$d/hosts.txt" --ospf-file "$d/ospf.txt" --output-dir "$d/out" >/dev/null
+  jq -e '.nodes[] | select(.name=="1.1.1.1" and .country=="DRC")' "$d/out/original-topology-with-country.json" >/dev/null || fail "hostname prefix before dash did not map to DRC"
+  jq -e '.nodes[] | select(.name=="2.2.2.2" and .country=="ZAF")' "$d/out/original-topology-with-country.json" >/dev/null || fail "hostname prefix before dash did not map to ZAF"
+  jq -e '.nodes[] | select(.name=="3.3.3.3" and .country=="UNK")' "$d/out/original-topology-with-country.json" >/dev/null || fail "router-id fallback should map to UNK"
+  pass "case8 hostname-prefix country derivation"
+}
+
 main() {
   [[ -x "$TOOL" ]] || fail "tool not executable: $TOOL"
   test_case_1_real_inputs
@@ -159,6 +174,7 @@ main() {
   test_case_5_country_override
   test_case_6_strict_countries_fail
   test_case_7_strict_countries_pass
+  test_case_8_hostname_prefix_country_code
   echo "ALL TESTS PASSED"
 }
 

@@ -70,6 +70,36 @@ services:
     networks:
       - backend
 
+  layout-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${LAYOUT_DB_NAME:-topolograph_layouts}
+      POSTGRES_USER: ${LAYOUT_DB_USER:-layout_user}
+      POSTGRES_PASSWORD: ${LAYOUT_DB_PASSWORD:-layout_password}
+    volumes:
+      - layoutdbdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  layout-api:
+    build:
+      context: .
+      dockerfile: docker/layout-service/Dockerfile
+    image: ospf-layout-api:latest
+    restart: unless-stopped
+    environment:
+      LAYOUT_DB_HOST: layout-db
+      LAYOUT_DB_PORT: 5432
+      LAYOUT_DB_NAME: ${LAYOUT_DB_NAME:-topolograph_layouts}
+      LAYOUT_DB_USER: ${LAYOUT_DB_USER:-layout_user}
+      LAYOUT_DB_PASSWORD: ${LAYOUT_DB_PASSWORD:-layout_password}
+    depends_on:
+      - layout-db
+    networks:
+      - backend
+      - frontend
+
   # ── Flask (patched) ────────────────────────────────────────────────────────
   flask:
     build:
@@ -133,6 +163,7 @@ services:
     depends_on:
       - flask
       - mcp-server
+      - layout-api
     networks:
       - frontend
 
@@ -244,6 +275,8 @@ networks:
 # ── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
   mongodbdata:
+    driver: local
+  layoutdbdata:
     driver: local
   nginxdata:
     driver: local
