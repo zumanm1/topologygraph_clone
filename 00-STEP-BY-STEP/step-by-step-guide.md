@@ -17,7 +17,6 @@
 
 **What you do:**
 ```bash
-cd topolograph-docker
 docker compose down --remove-orphans
 ```
 
@@ -32,7 +31,7 @@ Container webserver  Stopped
 Container flask      Stopped
 Container mcp-server Stopped
 Container mongodb    Stopped
-Network topolograph-docker_frontend  Removed
+Network frontend  Removed
 ```
 
 **Script:** `00-STEP-BY-STEP/scripts/01-stop-app.sh`
@@ -61,14 +60,13 @@ curl -s http://localhost:8081
 
 **What you do:**
 ```bash
-docker compose pull flask mcp-server       # fetch latest images
-docker compose build --no-cache webserver  # rebuild Nginx from Dockerfile
+docker compose build --no-cache flask webserver pipeline  # rebuild patched images from scratch
 ```
 
 **Backend actions:**
-1. Docker Hub is queried for newer image digests
-2. `flask` and `mcp-server` images are updated if newer versions exist
-3. `webserver` (Nginx) is rebuilt from scratch — this bakes in the latest `topolograph.js` bind mount
+1. Docker rebuilds the patched `flask`, `webserver`, and `pipeline` images from the repo
+2. `--no-cache` forces Docker to execute all image layers fresh
+3. The rebuilt images contain the current repo's Docker customisations
 
 **Script:** `00-STEP-BY-STEP/scripts/03-rebuild-app.sh`
 
@@ -105,6 +103,7 @@ curl -u ospf@topolograph.com:ospf http://localhost:8081/api/graph/
 **Expected:**
 ```
 NAME        STATUS     PORTS
+pipeline    Up
 flask       Up         5000/tcp
 webserver   Up         0.0.0.0:8081->8081/tcp
 mongodb     Up         0.0.0.0:27017->27017/tcp
@@ -411,14 +410,13 @@ A table of router IP → hostname mappings stored in Topolograph's MongoDB.
 ./start.sh
 
 # Stop
-cd topolograph-docker && docker compose down
+docker compose down
 
 # Start (after stopping)
-cd topolograph-docker && docker compose up -d
+docker compose up -d
 
 # Rebuild (after code changes)
-docker compose pull flask mcp-server
-docker compose build --no-cache webserver
+docker compose build --no-cache flask webserver pipeline
 docker compose up -d
 
 # Run pipeline directly

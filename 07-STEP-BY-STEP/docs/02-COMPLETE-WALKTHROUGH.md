@@ -377,12 +377,15 @@ test suite. Reference the 06-STEP-BY-STEP documentation for the full
 test architecture. For this session's graph_time:
 
 ```bash
-# Phase 0 (pre-flight) + Phase 1 (JSON integrity) + Phase 3 (Playwright)
-bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh \
+# Start the Docker test container if needed
+docker compose --profile test up -d e2e-runner
+
+# Run Docker-native deep E2E validation for a specific graph_time
+docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
   --graph-time=05Mar2026_18h30m00s_54_hosts
 
-# Or run a fresh pipeline THEN validate:
-bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh --run-pipeline-db3
+# Or run the canonical all-Docker validation flow:
+bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 ```
 
 Expected result: **114/114 checks pass, 0 failures**.
@@ -445,7 +448,7 @@ bash terminal-script/save-load-hosts.sh \
   --from INPUT-FOLDER/Load-hosts-3b.txt
 
 # ─── Run E2E validation ───────────────────────────────────────────
-bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh \
+docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
   --graph-time=<YOUR_GRAPH_TIME>
 
 # ─── Show current canonical host file ────────────────────────────

@@ -187,9 +187,9 @@ docker exec mongodb mongo admin \
 | Name | `pipeline-token` |
 | Created | 2026-03-03 |
 | Expires | 2027-03-03 |
-| Stored in | `.api-token` (project root), `topolograph-docker/.env` → `API_TOKEN=…` |
+| Stored in | `.api-token` (project root), `.env` (project root) → `API_TOKEN=…` |
 
-> **Security note:** `.api-token` and `topolograph-docker/.env` are both listed
+> **Security note:** `.api-token` and `.env` are both listed
 > in `.gitignore` and will **not** be committed to version control.
 
 ---
@@ -236,7 +236,7 @@ curl -H "Authorization: Bearer $BEARER" http://localhost:8081/api/graph/
 
 When the token expires (annually) or is revoked, regenerate it by running
 the Flask test-client script shown in §3 inside the running container, then
-updating `.api-token` and `topolograph-docker/.env` with the new value.
+updating `.api-token` and `.env` with the new value.
 
 Or via the **Topolograph Web UI** (manual steps):
 

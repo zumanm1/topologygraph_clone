@@ -71,7 +71,6 @@ WHEN YOU NEED THIS:
 STEP A1 — Stop the app completely
   Script  : scripts/01-stop-app.sh
   Command :
-    cd topolograph-docker
     docker compose down --remove-orphans
 
   What happens (in order):
@@ -98,8 +97,7 @@ STEP A2 — Confirm it is off
 STEP A3 — Rebuild (only when code has changed)
   Script  : scripts/03-rebuild-app.sh
   Commands:
-    docker compose pull flask mcp-server       # fetch latest from Docker Hub
-    docker compose build --no-cache webserver  # rebuild Nginx from Dockerfile
+    docker compose build --no-cache flask webserver pipeline  # rebuild patched images
 
   What --no-cache does:
     Forces Docker to re-execute every Dockerfile layer from scratch.
@@ -107,7 +105,7 @@ STEP A3 — Rebuild (only when code has changed)
     the latest topolograph.js — meaning your Country Filter changes won't appear.
 
   What gets baked into the webserver image:
-    topolograph-docker/static/js/topolograph.js  → the custom JS with Country Filter
+    docker/flask/Dockerfile + docker/webserver/ + docker/pipeline/  → the patched app stack
 
   SKIP THIS STEP if: doing a plain restart with no code changes.
 
@@ -119,8 +117,8 @@ STEP A4 — Start the app
   Startup order (defined by Docker Compose depends_on):
     1. MongoDB starts first            → persistent store for graphs
     2. Flask (Gunicorn) starts         → REST API connects to MongoDB
-    3. flask-create-creds (one-shot)   → creates ospf@topolograph.com user
-    4. Nginx webserver starts          → proxies / → Flask, serves static files
+    3. Nginx webserver starts          → proxies / → Flask, serves static files
+    4. pipeline container starts       → packaged pipeline runner available on demand
     5. MCP server starts               → port 8000
 
   Wait: ~10–15 seconds for all services to be ready.
@@ -128,6 +126,7 @@ STEP A4 — Start the app
 STEP A5 — Confirm it is running
   Script  : scripts/05-confirm-running.sh
   Checks  :
+    ✅  pipeline    container → Up
     ✅  flask       container → Up
     ✅  webserver   container → Up (port 8081)
     ✅  mongodb     container → Up (port 27017)
@@ -366,15 +365,13 @@ QUICK COMMAND REFERENCE
   ./start.sh
 
   # Stop
-  cd topolograph-docker && docker compose down
+  docker compose down
 
   # Start (after stopping)
-  cd topolograph-docker && docker compose up -d
+  docker compose up -d
 
   # Rebuild (after code changes only)
-  cd topolograph-docker
-  docker compose pull flask mcp-server
-  docker compose build --no-cache webserver
+  docker compose build --no-cache flask webserver pipeline
   docker compose up -d
 
   # Run pipeline directly
