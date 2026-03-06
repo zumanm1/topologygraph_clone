@@ -55,11 +55,10 @@ services:
   # ── MongoDB ────────────────────────────────────────────────────────────────
   mongodb:
     image: mongo:4.2
-    container_name: mongodb
     restart: unless-stopped
     command: mongod --auth
     ports:
-      - "27017:27017"
+      - "127.0.0.1:${MONGODB_PORT:-27018}:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
@@ -78,7 +77,6 @@ services:
       dockerfile: docker/flask/Dockerfile
     image: ospf-flask-patched:latest
     platform: linux/amd64
-    container_name: flask
     restart: unless-stopped
     environment:
       APP_ENV: "prod"
@@ -108,12 +106,11 @@ services:
   mcp-server:
     image: vadims06/topolograph-mcp-server:v1.0.0
     platform: linux/amd64
-    container_name: mcp-server
     restart: unless-stopped
     environment:
       TOPOLOGRAPH_API_BASE: "http://flask:5000/api"
     ports:
-      - "${MCP_PORT:-8000}:8000"
+      - "127.0.0.1:${MCP_PORT:-8001}:8000"
     networks:
       - frontend
 
@@ -123,7 +120,6 @@ services:
       context: docker/webserver
       dockerfile: Dockerfile
     image: ospf-webserver:latest
-    container_name: webserver
     restart: unless-stopped
     environment:
       TOPOLOGRAPH_PORT: ${TOPOLOGRAPH_PORT:-8081}
@@ -144,7 +140,6 @@ services:
   flask-create-creds:
     image: vadims06/topolograph:latest
     platform: linux/amd64
-    container_name: flask-create-creds
     restart: "no"
     environment:
       TOPOLOGRAPH_PORT: 5000
@@ -168,7 +163,6 @@ services:
       context: .
       dockerfile: docker/pipeline/Dockerfile
     image: ospf-pipeline:latest
-    container_name: pipeline
     restart: unless-stopped
     environment:
       # API endpoint inside the Docker network
@@ -190,7 +184,6 @@ services:
 
   pipeline-seed:
     image: ospf-pipeline:latest
-    container_name: pipeline-seed
     restart: "no"
     environment:
       BASE_URL: "http://webserver:${TOPOLOGRAPH_PORT:-8081}"
@@ -218,7 +211,6 @@ services:
       context: docker/e2e-runner
       dockerfile: Dockerfile
     image: ospf-e2e-runner:latest
-    container_name: e2e-runner
     restart: unless-stopped
     environment:
       # Point Playwright at the webserver inside Docker
@@ -247,7 +239,6 @@ networks:
   frontend:
     driver: bridge
   backend:
-    name: ospf_backend
     driver: bridge
 
 # ── Volumes ───────────────────────────────────────────────────────────────────
