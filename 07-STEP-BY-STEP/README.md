@@ -27,6 +27,12 @@ a different network topology.
 bash 07-STEP-BY-STEP/scripts/run-pipeline-3b.sh
 ```
 
+For the current full remote-machine install and Docker-native validation flow, use:
+
+```bash
+bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
+```
+
 That single command:
 1. Verifies pre-flight conditions (5 checks)
 2. Uploads `ospf-database-3b.txt` to Topolograph
