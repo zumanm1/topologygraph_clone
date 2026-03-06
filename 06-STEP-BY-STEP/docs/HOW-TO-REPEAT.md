@@ -30,6 +30,7 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 | Playwright installed | `ls tests/node_modules/playwright` |
 | `ospf-database-3.txt` in INPUT-FOLDER | 54 routers (34 named + 20 UNK) |
 | `Load-hosts.txt` in INPUT-FOLDER | 34 entries (leaves 20 UNK unmapped) |
+| `Load-hosts.csv` or `Load-hosts-3b.txt` in INPUT-FOLDER | standard host-file fixture for hostname-derived country checks |
 | Pipeline run at least once | `ls OUTPUT/COLLAPSING/*_54_hosts_*/` |
 
 ---
@@ -108,7 +109,7 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 - Docker webserver responding
 - `ospf-database-2.txt` and `ospf-database-3.txt` exist
 - `Load-hosts.txt` has exactly 34 entries (20 UNK demo)
-- `host-mapping-e2e.csv` covers ≥54 routers
+- `Load-hosts.csv` or `Load-hosts-3b.txt` provides standard hostname mappings for the browser regression
 - Node.js + Playwright available
 - 54-host COLLAPSING artefacts on disk
 - UNK country present in COLLAPSING config
@@ -136,7 +137,7 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 | P4-CURRENT | Loads without error |
 | P5-COLLAPSING | Panel, UNK non-interactive, ZAF ▲badge, Σcost, Persistent Path Overlay, Collapse All ≥22 |
 | P6-UNK | Toggle on/off, GATEWAY cross-mode |
-| P7-HOST | 54-router CSV, drag-drop zone, UNK preserved ≥20, manual reclassify |
+| P7-HOST | standard host file, derived KEN/DRC/ZAF checks, conflicting static country ignored, UNK preserved ≥20, manual reclassify |
 | P8-MATRIX | 11 rows, UNK row, UNK non-zero costs, Excel btn, ↺ btn, functions, **↺ REBUILDS** (not closes), GATEWAY mode |
 | P9-WHATIF | Edge picker, auto-fill, CSV Export btn, functions, cost change card, affected pairs, Δ column, Apply → vis.js, confirmation, Apply btn disabled, Export callable, COLLAPSING cross-mode |
 | P10-INT | Both panels open, analysis, **Apply → matrix survives + data updates** |
@@ -159,7 +160,7 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 | `09-zaf-badge-zoom-54.png` | ZAF gateway badge closeup |
 | `10-unk-highlight-54.png` | UNK Highlight active |
 | `11-hostname-upload-54.png` | Hostname Upload panel |
-| `12-hostname-applied-54.png` | After 54-router CSV apply |
+| `12-hostname-applied-54.png` | After standard host-file apply with derived country labels |
 | `13-cost-matrix-54.png` | Cost Matrix (11×11) |
 | `14-cost-matrix-refreshed.png` | Matrix after ↺ Refresh (rebuilt) |
 | `15-cost-matrix-gateway-54.png` | Matrix in GATEWAY mode |
@@ -220,7 +221,8 @@ tests/
 INPUT-FOLDER/
 ├── ospf-database-3.txt           ← 54 routers (20 UNK, 4 clusters)
 ├── Load-hosts.txt                ← 34 named routers only
-└── host-mapping-e2e.csv          ← 54-router mapping for P7 test
+├── Load-hosts.csv                ← standard CSV host file (`device_ip_address,device_name`)
+└── Load-hosts-3b.txt             ← standard TXT host file (`router_id hostname`)
 ```
 
 ---

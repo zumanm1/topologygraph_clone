@@ -14,7 +14,7 @@
 # ──────
 # PHASE 0  Pre-Flight (10 checks)
 #   • Docker webserver, input files (db2 + db3), host files
-#   • host-mapping-e2e.csv covers ≥54 routers
+#   • standard host-file fixtures available for hostname-derived country tests
 #   • Node.js + Playwright installed
 #   • 54-host COLLAPSING artefacts exist
 #   • UNK present in COLLAPSING config
@@ -143,16 +143,23 @@ else
   P0_FAIL=$((P0_FAIL+1))
 fi
 
-# 0d. host-mapping-e2e.csv (should cover ≥54 routers)
-E2E_CSV="$PROJECT_ROOT/INPUT-FOLDER/host-mapping-e2e.csv"
-if [ -f "$E2E_CSV" ]; then
-  CSV_ROWS=$(tail -n +2 "$E2E_CSV" | wc -l | tr -d ' ')
-  echo "  ✅ PASS: host-mapping-e2e.csv exists ($CSV_ROWS router mappings)" | tee -a "$REPORT"
-  [ "$CSV_ROWS" -ge 54 ] \
-    && echo "  ✅ PASS: host-mapping-e2e.csv covers $CSV_ROWS routers (≥54)" | tee -a "$REPORT" \
-    || echo "  ⚠  WARN: host-mapping-e2e.csv has $CSV_ROWS entries (expected ≥54)" | tee -a "$REPORT"
+# 0d. Standard host-file fixtures for hostname-derived country tests
+STD_HOST_CSV="$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+STD_HOST_TXT="$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-3b.txt"
+if [ -f "$STD_HOST_CSV" ]; then
+  CSV_ROWS=$(tail -n +2 "$STD_HOST_CSV" | wc -l | tr -d ' ')
+  echo "  ✅ PASS: Load-hosts.csv exists ($CSV_ROWS router mappings)" | tee -a "$REPORT"
+  [ "$CSV_ROWS" -ge 34 ] \
+    && echo "  ✅ PASS: Load-hosts.csv provides $CSV_ROWS hostname mappings (≥34)" | tee -a "$REPORT" \
+    || echo "  ⚠  WARN: Load-hosts.csv has $CSV_ROWS entries (expected ≥34)" | tee -a "$REPORT"
+elif [ -f "$STD_HOST_TXT" ]; then
+  TXT_ROWS=$(grep -v '^[[:space:]]*#' "$STD_HOST_TXT" | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
+  echo "  ✅ PASS: Load-hosts-3b.txt exists ($TXT_ROWS router mappings)" | tee -a "$REPORT"
+  [ "$TXT_ROWS" -ge 34 ] \
+    && echo "  ✅ PASS: Load-hosts-3b.txt provides $TXT_ROWS hostname mappings (≥34)" | tee -a "$REPORT" \
+    || echo "  ⚠  WARN: Load-hosts-3b.txt has $TXT_ROWS entries (expected ≥34)" | tee -a "$REPORT"
 else
-  echo "  ⚠  WARN: host-mapping-e2e.csv not found (P7 test will use fallback)" | tee -a "$REPORT"
+  echo "  ⚠  WARN: No standard host-file fixture found (P7 will use inline fallback)" | tee -a "$REPORT"
 fi
 
 # 0e. Node.js
@@ -311,7 +318,10 @@ print("  [1d] ENRICHED")
 try:
     cm = os.path.join(enrich, 'ENRICHED_country-mapping.csv')
     if not os.path.exists(cm): cm = os.path.join(enrich, 'country-mapping.csv')
+    import csv
     with open(cm) as f: lines = [l.strip() for l in f if l.strip()]
+    with open(cm, newline='') as f:
+        rows = list(csv.DictReader(f))
     # country_code at index 2 (router_id,hostname,country_code,is_gateway)
     col_idx = 2
     if lines and 'router_id' in lines[0]:
@@ -321,6 +331,20 @@ try:
     countries = set(l.split(',')[col_idx].strip() for l in lines[1:] if len(l.split(',')) > col_idx)
     chk(len(countries) >= 11, f"ENRICHED countries: {len(countries)} >= 11 ({', '.join(sorted(countries))})", f"countries: {len(countries)} < 11")
     chk('UNK' in countries, "UNK present in ENRICHED country mapping", "UNK NOT in ENRICHED — push-to-ui.py may not classify unmapped")
+    rows_by_id = {r.get('router_id','').strip(): r for r in rows}
+    for rid, hostname, country in [
+        ('12.12.12.2', 'ken-mob-r2', 'KEN'),
+        ('13.13.13.1', 'drc-moa-r1', 'DRC'),
+        ('18.18.18.4', 'zaf-mtz-r1', 'ZAF')
+    ]:
+        row = rows_by_id.get(rid, {})
+        chk(row.get('hostname','').strip() == hostname and row.get('country_code','').strip().upper() == country,
+            f"{rid}: hostname-derived country {country} from {hostname}",
+            f"{rid}: expected hostname={hostname} country={country}, got {row}")
+    ip_unk = rows_by_id.get('19.19.19.1', {})
+    chk(ip_unk.get('country_code','').strip().upper() == 'UNK',
+        "19.19.19.1 stays UNK when hostname is IP-like / absent",
+        f"19.19.19.1 should be UNK, got {ip_unk}")
     chk(os.path.exists(os.path.join(enrich,'ENRICHED_original-topology-with-country.json'))
         or os.path.exists(os.path.join(enrich,'original-topology-with-country.json')),
         "ENRICHED topology JSON exists", "ENRICHED topology JSON missing")

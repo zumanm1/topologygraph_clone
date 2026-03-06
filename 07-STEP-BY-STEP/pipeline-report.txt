@@ -13,37 +13,34 @@
   [0;32m✅ PASS[0m: Topolograph web UI responding at http://localhost:8081
   [0;32m✅ PASS[0m: Python3 + requests module available
   [0;32m✅ PASS[0m: workflow.sh found
+  [0;32m✅ PASS[0m: pipeline container available for authenticated internal upload path
+  [0;32m✅ PASS[0m: e2e-runner container available for browser upload path
 
   [0;32m✅ PASS[0m: All pre-flight checks passed
 
 ━━━ PHASE 1: Full Pipeline (upload → enrich → collapse → push) ━━━
 
-  ℹ  Command: workflow.sh all --ospf-file ospf-database-3b.txt --host-file Load-hosts-3b.txt
+  ℹ  Command: browser upload via e2e-runner → workflow.sh enrich-existing inside pipeline container
 
-
-══════════════════════════════════════════════════════════
-[workflow] STEP: Upload OSPF database → Topolograph
-══════════════════════════════════════════════════════════
-[workflow] File: /Users/macbook/Documents/OSPF-DATABASE-TEST/INPUT-FOLDER/ospf-database-3b.txt
-[workflow] Uploaded. graph_time=05Mar2026_18h13m11s_54_hosts
+  ℹ  Browser-uploaded graph_time: 06Mar2026_19h27m39s_54_hosts
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Fetch raw graph → IN-OUT-FOLDER
 ══════════════════════════════════════════════════════════
-[fetch-from-api] Saving to: /Users/macbook/Documents/OSPF-DATABASE-TEST/IN-OUT-FOLDER/05Mar2026_18h13m11s_54_hosts
+[fetch-from-api] Saving to: /app/IN-OUT-FOLDER/06Mar2026_19h27m39s_54_hosts
 [fetch-from-api]   meta.json saved
 [fetch-from-api]   nodes.json saved (54 nodes)
 [fetch-from-api]   edges.json saved (148 edges)
 [fetch-from-api]   edges.csv saved
-[fetch-from-api] Done. graph_time=05Mar2026_18h13m11s_54_hosts
-[workflow] graph_time confirmed: 05Mar2026_18h13m11s_54_hosts
+[fetch-from-api] Done. graph_time=06Mar2026_19h27m39s_54_hosts
+[workflow] graph_time confirmed: 06Mar2026_19h27m39s_54_hosts
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Run terminal topology pipeline
 ══════════════════════════════════════════════════════════
-[workflow] AS-IS output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/AS-IS/05Mar2026_18h13m11s_54_hosts_AS-IS
-[workflow] Edge source: OSPF file (/Users/macbook/Documents/OSPF-DATABASE-TEST/INPUT-FOLDER/ospf-database-3b.txt)
-[topology-tool] Done. Files written to: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/.tmp_work_05Mar2026_18h13m11s_54_hosts
+[workflow] AS-IS output: /app/OUTPUT/AS-IS/06Mar2026_19h27m39s_54_hosts_AS-IS
+[workflow] Edge source: OSPF file (/app/INPUT-FOLDER/ospf-database-3.txt)
+[topology-tool] Done. Files written to: /app/OUTPUT/.tmp_work_06Mar2026_19h27m39s_54_hosts
   - country-core-summary.json
   - country-core-summary.yaml
   - country-mapping.csv
@@ -51,16 +48,16 @@
   - gateway-only-topology.yaml
   - original-topology-with-country.json
   - original-topology-with-country.yaml
-[workflow] GATEWAY output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/GATEWAY/05Mar2026_18h13m11s_54_hosts_GATEWAY
-[workflow] ENRICHED output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED
+[workflow] GATEWAY output: /app/OUTPUT/GATEWAY/06Mar2026_19h27m39s_54_hosts_GATEWAY
+[workflow] ENRICHED output: /app/OUTPUT/ENRICHED/06Mar2026_19h27m39s_54_hosts_ENRICHED
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Generate COLLAPSING stage — gateway/core split + collapsed topology
 ══════════════════════════════════════════════════════════
-[collapse-config] graph_time   : 05Mar2026_18h13m11s_54_hosts
-[collapse-config] enriched_dir : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED
-[collapse-config] asis_dir     : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/AS-IS/05Mar2026_18h13m11s_54_hosts_AS-IS
-[collapse-config] output_dir   : /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/COLLAPSING/05Mar2026_18h13m11s_54_hosts_COLLAPSING
+[collapse-config] graph_time   : 06Mar2026_19h27m39s_54_hosts
+[collapse-config] enriched_dir : /app/OUTPUT/ENRICHED/06Mar2026_19h27m39s_54_hosts_ENRICHED
+[collapse-config] asis_dir     : /app/OUTPUT/AS-IS/06Mar2026_19h27m39s_54_hosts_AS-IS
+[collapse-config] output_dir   : /app/OUTPUT/COLLAPSING/06Mar2026_19h27m39s_54_hosts_COLLAPSING
 [collapse-config] Loaded 54 router entries from country-mapping.csv
 [collapse-config] Loaded 54 nodes from AS-IS_nodes.json
 [collapse-config] Loaded 148 edges from AS-IS_edges.json
@@ -91,15 +88,15 @@
 ║    ZAF    total=8  gw=5  core=3                 ║
 ╚══════════════════════════════════════════════════╝
 
-[workflow] COLLAPSING output: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/COLLAPSING/05Mar2026_18h13m11s_54_hosts_COLLAPSING
+[workflow] COLLAPSING output: /app/OUTPUT/COLLAPSING/06Mar2026_19h27m39s_54_hosts_COLLAPSING
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Push country colours → Topolograph UI
 ══════════════════════════════════════════════════════════
-[push-to-ui] Loading country mapping: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
+[push-to-ui] Loading country mapping: /app/OUTPUT/ENRICHED/06Mar2026_19h27m39s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
 [push-to-ui] 54 routers mapped to countries
 [push-to-ui] Countries: DJB:2 | DRC:4 | FRA:3 | GBR:3 | KEN:2 | LES:3 | MOZ:4 | POR:3 | TAN:2 | UNK:20 | ZAF:8
-[push-to-ui] Fetching nodes for graph_time=05Mar2026_18h13m11s_54_hosts …
+[push-to-ui] Fetching nodes for graph_time=06Mar2026_19h27m39s_54_hosts …
 [push-to-ui] 54 nodes in graph
 
 [push-to-ui] Patched: 54 OK  |  0 FAILED  |  0 skipped
@@ -124,21 +121,21 @@
              • 22.22.22.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
              • 22.22.22.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
              • 22.22.22.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
-[push-to-ui] Palette written: /Users/macbook/Documents/OSPF-DATABASE-TEST/OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED/ENRICHED_country-palette.json
-[push-to-ui] Done — open http://localhost:8081/ and load graph_time=05Mar2026_18h13m11s_54_hosts
+[push-to-ui] Palette written: /app/OUTPUT/ENRICHED/06Mar2026_19h27m39s_54_hosts_ENRICHED/ENRICHED_country-palette.json
+[push-to-ui] Done — open http://localhost:8081/ and load graph_time=06Mar2026_19h27m39s_54_hosts
              The Country Filter panel will appear automatically in the UI.
 [workflow] UI push complete.
 
 ╔══════════════════════════════════════════════════════════════╗
 ║               WORKFLOW COMPLETE                              ║
 ╠══════════════════════════════════════════════════════════════╣
-║  graph_time : 05Mar2026_18h13m11s_54_hosts                   ║
+║  graph_time : 06Mar2026_19h27m39s_54_hosts                   ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  OUTPUT FOLDERS:                                             ║
-║  AS-IS    → OUTPUT/AS-IS/05Mar2026_18h13m11s_54_hosts_AS-IS/  ║
-║  GATEWAY  → OUTPUT/GATEWAY/05Mar2026_18h13m11s_54_hosts_GATEWAY/║
-║  ENRICHED   → OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED/║
-║  COLLAPSING → OUTPUT/COLLAPSING/05Mar2026_18h13m11s_54_hosts_COLLAPSING/║
+║  AS-IS    → OUTPUT/AS-IS/06Mar2026_19h27m39s_54_hosts_AS-IS/  ║
+║  GATEWAY  → OUTPUT/GATEWAY/06Mar2026_19h27m39s_54_hosts_GATEWAY/║
+║  ENRICHED   → OUTPUT/ENRICHED/06Mar2026_19h27m39s_54_hosts_ENRICHED/║
+║  COLLAPSING → OUTPUT/COLLAPSING/06Mar2026_19h27m39s_54_hosts_COLLAPSING/║
 ╠══════════════════════════════════════════════════════════════╣
 ║  NEXT STEPS:                                                 ║
 ║  1. Open http://localhost:8081/                               ║
@@ -146,10 +143,10 @@
 ║  3. Use the 🌍 Country Filter panel (top-right)              ║
 ╚══════════════════════════════════════════════════════════════╝
 
-  [0;32m✅ PASS[0m: Pipeline completed in 4s
+  [0;32m✅ PASS[0m: Pipeline completed in 16s
 
 ━━━ PHASE 2: Verify Output Files ━━━
-  ℹ  Latest graph_time: 05Mar2026_18h13m11s_54_hosts
+  ℹ  Latest graph_time: 06Mar2026_19h27m39s_54_hosts
 
   [0;32m✅ PASS[0m: IN-OUT: meta.json
   [0;32m✅ PASS[0m: IN-OUT: nodes.json
@@ -163,6 +160,10 @@
   [0;32m✅ PASS[0m: ENRICHED: original-topology.json
   [0;32m✅ PASS[0m: ENRICHED: 11 countries (expected ≥11)
   [0;32m✅ PASS[0m: ENRICHED: 20 UNK routers (expected ≥20)
+  [0;32m✅ PASS[0m: ENRICHED: 12.12.12.2 => ken-mob-r2 => KEN (hostname-derived)
+  [0;32m✅ PASS[0m: ENRICHED: 13.13.13.1 => drc-moa-r1 => DRC (hostname-derived)
+  [0;32m✅ PASS[0m: ENRICHED: 18.18.18.4 => zaf-mtz-r1 => ZAF (hostname-derived)
+  [0;32m✅ PASS[0m: ENRICHED: 19.19.19.1 => 19.19.19.1 => UNK (hostname-derived)
   [0;32m✅ PASS[0m: GATEWAY: gateway-only-topology.json
   [0;32m✅ PASS[0m: GATEWAY: country-core-summary.json
   [0;32m✅ PASS[0m: COLLAPSING: country-collapse-config.json
@@ -170,28 +171,28 @@
   [0;32m✅ PASS[0m: COLLAPSING: 11 countries, 54 routers, 32 gw, 22 core
 
 ━━━ Files Created ━━━
-  ℹ  IN-OUT-FOLDER/05Mar2026_18h13m11s_54_hosts/ (4 files)
-  ℹ  OUTPUT/AS-IS/05Mar2026_18h13m11s_54_hosts_AS-IS/ (4 files)
-  ℹ  OUTPUT/GATEWAY/05Mar2026_18h13m11s_54_hosts_GATEWAY/ (4 files)
-  ℹ  OUTPUT/ENRICHED/05Mar2026_18h13m11s_54_hosts_ENRICHED/ (4 files)
-  ℹ  OUTPUT/COLLAPSING/05Mar2026_18h13m11s_54_hosts_COLLAPSING/ (3 files)
+  ℹ  IN-OUT-FOLDER/06Mar2026_19h27m39s_54_hosts/ (4 files)
+  ℹ  OUTPUT/AS-IS/06Mar2026_19h27m39s_54_hosts_AS-IS/ (4 files)
+  ℹ  OUTPUT/GATEWAY/06Mar2026_19h27m39s_54_hosts_GATEWAY/ (4 files)
+  ℹ  OUTPUT/ENRICHED/06Mar2026_19h27m39s_54_hosts_ENRICHED/ (4 files)
+  ℹ  OUTPUT/COLLAPSING/06Mar2026_19h27m39s_54_hosts_COLLAPSING/ (3 files)
   ℹ  Total: 19 new files on disk + 54 PATCH calls to Topolograph API
 
 ━━━ Next Steps ━━━
 
   1. Open browser: http://localhost:8081/
   2. Login: ospf@topolograph.com / ospf
-  3. Dropdown → select: 05Mar2026_18h13m11s_54_hosts
+  3. Dropdown → select: 06Mar2026_19h27m39s_54_hosts
   4. Click 'Load dynamic graph'
   5. Use navbar 'Analysis' → Cost Matrix / What-If Analysis
 
   To run E2E validation (from 06-STEP-BY-STEP):
-    bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh --graph-time=05Mar2026_18h13m11s_54_hosts
+    bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh --graph-time=06Mar2026_19h27m39s_54_hosts
 
 ╔══════════════════════════════════════════════════════════════╗
 ║   07-STEP-BY-STEP PIPELINE REPORT                           ║
-║    graph_time : 05Mar2026_18h13m11s_54_hosts                   ║
-║    duration   : 4s                                             ║
+║    graph_time : 06Mar2026_19h27m39s_54_hosts                   ║
+║    duration   : 16s                                            ║
 ║  STATUS : ✅ ALL CHECKS PASSED                               ║
 ╚══════════════════════════════════════════════════════════════╝
 

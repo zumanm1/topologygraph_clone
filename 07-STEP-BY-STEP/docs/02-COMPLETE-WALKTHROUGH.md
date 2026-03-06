@@ -96,6 +96,20 @@ Open `INPUT-FOLDER/Load-hosts-3b.txt` in any text editor. It looks like this:
 | `por-` | POR | green-2 |
 | (not in file) | UNK | grey |
 
+Implementation rule:
+
+- take the hostname from the host file
+- if it is missing or IP-like, classify the router as `UNK`
+- otherwise split on the first `-`
+- take the first three letters of that leading token and uppercase them
+
+Examples:
+
+- `ken-mob-r2` → `KEN`
+- `zaf-mtz-r1` → `ZAF`
+- `drc-gom-r1` → `DRC`
+- `19.19.19.1` → `UNK`
+
 With 34 entries in `Load-hosts-3b.txt` and 54 routers in the OSPF file,
 **20 routers will be classified as UNK** (the 19.x, 20.x, 21.x, 22.x
 IP ranges which have no hostname entry).
@@ -193,8 +207,10 @@ Auto-detects format: TXT (space-separated)
 ```
 For each router in edge list:
   Look up router_id in host map
-  If found:  country = first 3 chars of hostname, UPPERCASE
-  If not found: country = UNK
+  If found and hostname is not IP-like:
+      country = first 3 letters of token before first '-'
+  If not found or hostname is IP-like:
+      country = UNK
   If router has neighbours in >1 country: is_gateway = true
   Else: is_gateway = false (core router)
 ```

@@ -13,6 +13,7 @@ demonstrating that **zero code changes** are needed.
 |------|----------|-------------|
 | `ospf-database-3b.txt` | `INPUT-FOLDER/` | 54-router OSPF LSDB (copy of ospf-database-3.txt) |
 | `Load-hosts-3b.txt` | `INPUT-FOLDER/` | 34 named entries (copy of Load-hosts.txt) |
+| `Load-hosts.csv` | `INPUT-FOLDER/` | Standard CSV host file (`device_ip_address,device_name`) for browser derivation regression |
 
 The `3b` suffix makes it clear this is a variant/copy, distinguishable
 from the canonical `3` files. In a real scenario, `3b.txt` would contain
@@ -37,7 +38,7 @@ That single command:
 1. Verifies pre-flight conditions (5 checks)
 2. Uploads `ospf-database-3b.txt` to Topolograph
 3. Fetches raw graph → `IN-OUT-FOLDER/{graph_time}/`
-4. Enriches topology → `OUTPUT/{AS-IS,GATEWAY,ENRICHED,COLLAPSING}/{graph_time}_*/`
+4. Enriches topology → `OUTPUT/{AS-IS,GATEWAY,ENRICHED,COLLAPSING}/{graph_time}_*/` using hostname-derived country codes
 5. Pushes country colours to Topolograph UI (54 PATCH calls)
 6. Verifies all 19 output files exist (15+ checks)
 
@@ -102,8 +103,9 @@ OUTPUT/COLLAPSING/{graph_time}_COLLAPSING/
 Topolograph via its REST API, receiving back a `graph_time` timestamp.
 It then fetches the raw graph (nodes + edges JSON) into `IN-OUT-FOLDER`.
 Next it calls `topology-country-tool.sh`, which uses `awk` to parse the
-OSPF LSDB, maps router IDs to country codes via the host file (first 3
-chars of hostname), and classifies each router as gateway (cross-country
+OSPF LSDB, maps router IDs to hostnames via the host file, derives country codes
+from the hostname token before the first dash (first 3 letters, uppercased),
+marks IP-like or missing hostnames as `UNK`, and classifies each router as gateway (cross-country
 links) or core (same-country only). The enriched outputs flow into four
 `OUTPUT/` sub-folders, each prefixed with its stage name. Finally,
 `push-to-ui.py` PATCHes each node in Topolograph with its country colour,
@@ -134,3 +136,4 @@ Analysis features (Cost Matrix, What-If Analysis) in the web UI.
 | `05-STEP-BY-STEP/` | ospf-database-2.txt (34 routers) | 5-view modes + Sprint 3 features |
 | `06-STEP-BY-STEP/` | ospf-database-3.txt (54 routers) | Deep validation, 114/114 E2E checks |
 | `07-STEP-BY-STEP/` | ospf-database-3b.txt (54 routers) | New-file pipeline, architecture docs |
+| `09-STEP-BY-STEP/` | standard host files + conflicting 3-col fixture | Focused hostname-derived country-code regression |

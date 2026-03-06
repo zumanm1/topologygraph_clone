@@ -1,8 +1,8 @@
 ╔══════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║   Date        : 2026-03-06 10:44:49
-║   Graph time  : 06Mar2026_10h44m46s_54_hosts
+║   Date        : 2026-03-06 19:40:28
+║   Graph time  : 06Mar2026_19h40m23s_54_hosts
 ║   OSPF file   : ospf-database-3.txt (54 routers, 20 UNK)
 ║   Host file   : Load-hosts.txt (34 entries — 20 UNK unmapped)
 ║   Headless    : true
@@ -17,19 +17,19 @@
   ✅ PASS: Input file: ospf-database-3.txt (2768 lines)
   ✅ PASS: Load-hosts.txt exists (34 router entries)
   ✅ PASS: Load-hosts.txt has exactly 34 entries (20 UNK routers unmapped)
-  ✅ PASS: host-mapping-e2e.csv exists (54 router mappings)
-  ✅ PASS: host-mapping-e2e.csv covers 54 routers (≥54)
+  ✅ PASS: Load-hosts.csv exists (34 router mappings)
+  ✅ PASS: Load-hosts.csv provides 34 hostname mappings (≥34)
   ✅ PASS: Node.js v18.20.8
   ✅ PASS: Playwright found
-  ✅ PASS: 54-host COLLAPSING artefact found: 06Mar2026_10h44m46s_54_hosts_COLLAPSING
+  ✅ PASS: 54-host COLLAPSING artefact found: 06Mar2026_19h40m23s_54_hosts_COLLAPSING
 UNK: total=20 gw=4 core=16
   ✅ PASS: UNK present in COLLAPSING config with routers
-  ✅ PASS: IN-OUT-FOLDER/06Mar2026_10h44m46s_54_hosts exists (54 nodes)
+  ✅ PASS: IN-OUT-FOLDER/06Mar2026_19h40m23s_54_hosts exists (54 nodes)
 
   PHASE 0: ALL PRE-FLIGHT CHECKS PASSED ✅
 
 ━━━ PHASE 1: JSON Artefact Integrity (54-router topology) ━━━
-  Graph time: 06Mar2026_10h44m46s_54_hosts
+  Graph time: 06Mar2026_19h40m23s_54_hosts
 
   [detected] hosts=54 gw=32 countries=11 cores=22
   [1a] IN-OUT-FOLDER
@@ -48,6 +48,10 @@ UNK: total=20 gw=4 core=16
   [1d] ENRICHED
   ✅ PASS: ENRICHED countries: 11 >= 11 (DJB, DRC, FRA, GBR, KEN, LES, MOZ, POR, TAN, UNK, ZAF)
   ✅ PASS: UNK present in ENRICHED country mapping
+  ✅ PASS: 12.12.12.2: hostname-derived country KEN from ken-mob-r2
+  ✅ PASS: 13.13.13.1: hostname-derived country DRC from drc-moa-r1
+  ✅ PASS: 18.18.18.4: hostname-derived country ZAF from zaf-mtz-r1
+  ✅ PASS: 19.19.19.1 stays UNK when hostname is IP-like / absent
   ✅ PASS: ENRICHED topology JSON exists
   [1e] COLLAPSING
        11 ctry | 54 rtr | 32 gw | 22 core
@@ -65,7 +69,7 @@ UNK: total=20 gw=4 core=16
   ✅ PASS: CURRENT gateway topology exists
   ✅ PASS: CURRENT country-core summary exists
 
-  PHASE 1 RESULT: 24 passed, 0 failed
+  PHASE 1 RESULT: 28 passed, 0 failed
 
 ━━━ PHASE 1 COMPLETE ━━━
 
@@ -78,7 +82,7 @@ UNK: total=20 gw=4 core=16
 ║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
 ║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time : 06Mar2026_10h44m46s_54_hosts
+  ℹ  Graph time : 06Mar2026_19h40m23s_54_hosts
   ℹ  Base URL   : http://webserver:8081
   ℹ  Headless   : true
   ℹ  Screenshots: /app/06-STEP-BY-STEP/screenshots
@@ -144,17 +148,25 @@ UNK: total=20 gw=4 core=16
   ✅ PASS [P6-UNK]: UNK highlight toggled off
   ✅ PASS [P6-UNK]: UNK button present in GATEWAY mode (cross-mode)
 
-━━━ P7: Sprint 3 — Hostname Upload (54-router CSV, UNK preserved) ━━━
+━━━ P7: Sprint 3 — Hostname Upload (standard host file, derived countries, UNK preserved) ━━━
   ✅ PASS [P7-HOST]: Hostname Upload panel rendered
   ℹ  Screenshot (clipped) → 11-hostname-upload-54.png
   ✅ PASS [P7-HOST]: Panel shows graph context stats
   ✅ PASS [P7-HOST]: Drag-drop zone present
-  ℹ  Using host-mapping-e2e.csv (55 lines — covers 54 routers)
-  ✅ PASS [P7-HOST]: host-mapping-e2e.csv covers 54 routers (≥54 expected)
-  ✅ PASS [P7-HOST]: _applyHostnameMapping() applied 54-router CSV successfully
+  ℹ  Using Load-hosts.csv (34 mapped routers, standard CSV host file)
+  ✅ PASS [P7-HOST]: Load-hosts.csv provides 34 standard host mappings (≥34 expected)
+  ✅ PASS [P7-HOST]: _applyHostnameMapping() applied standard host file successfully
   ℹ  Screenshot → 12-hostname-applied-54.png
+  ✅ PASS [P7-HOST]: 12.12.12.2 derives KEN from hostname ken-mob-r2
+  ✅ PASS [P7-HOST]: 13.13.13.1 derives DRC from hostname drc-moa-r1
+  ✅ PASS [P7-HOST]: 18.18.18.4 derives ZAF from hostname zaf-mtz-r1
+  ✅ PASS [P7-HOST]: IP-like hostname remains UNK after standard host-file apply
   ℹ  UNK count after CSV apply: 20
-  ✅ PASS [P7-HOST]: UNK preserved after CSV apply: 20 nodes (correct — not in host file)
+  ✅ PASS [P7-HOST]: UNK preserved after host-file apply: 20 nodes (correct — not in host file)
+  ✅ PASS [P7-HOST]: Conflicting 3-column host file applied for override-resistance check
+  ✅ PASS [P7-HOST]: 12.12.12.2 kept hostname-derived country KEN despite conflicting static column
+  ✅ PASS [P7-HOST]: 18.18.18.4 kept hostname-derived country ZAF despite conflicting static column
+  ✅ PASS [P7-HOST]: 19.19.19.1 kept hostname-derived country UNK despite conflicting static column
   ✅ PASS [P7-HOST]: Manual node reclassify (nodes.update) works
 
 ━━━ P8: Cost Matrix — Deep Validation ━━━
@@ -223,17 +235,17 @@ UNK: total=20 gw=4 core=16
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — FINAL SUMMARY                                       ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  PASSED : 78                                                          ║
+║  PASSED : 86                                                          ║
 ║  FAILED : 0                                                           ║
 ║  WARNED : 2                                                           ║
-║  TOTAL  : 80                                                          ║
+║  TOTAL  : 88                                                          ║
 ║  STATUS : ALL 06-STEP-BY-STEP CHECKS PASSED ✅                          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 
 ━━━ Screenshots: /app/06-STEP-BY-STEP/screenshots/ ━━━
 
 ╔══════════════════════════════════════════════════════════════════════╗
-║  TOTAL PASSED : 114                                                    ║
+║  TOTAL PASSED : 126                                                    ║
 ║  TOTAL FAILED : 0                                                      ║
 ║  WARNINGS     : 2                                                      ║
 ║  STATUS: ALL 06-STEP-BY-STEP CHECKS PASSED ✅                        ║
@@ -241,4 +253,4 @@ UNK: total=20 gw=4 core=16
 
   Full report : /app/06-STEP-BY-STEP/validation-report.txt
   Screenshots : /app/06-STEP-BY-STEP/screenshots/
-  Graph time  : 06Mar2026_10h44m46s_54_hosts
+  Graph time  : 06Mar2026_19h40m23s_54_hosts

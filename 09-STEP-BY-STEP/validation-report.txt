@@ -1,0 +1,36 @@
+[09-step] Project root: /Users/macbook/Documents/OSPF-DATABASE-TEST
+[09-step] Graph time: 06Mar2026_18h02m18s_54_hosts
+[09-step] Running terminal hostname-derivation regression
+[PASS] case1 real dataset baseline
+[PASS] case2 csv host-file parsing
+[PASS] case3 filtered effective cost through hidden country
+[PASS] case4 single-country robustness
+[PASS] case5 country override mapping
+[PASS] case6 strict-countries fails on missing country
+[PASS] case7 strict-countries passes when all countries exist
+[PASS] case8 hostname-prefix country derivation
+ALL TESTS PASSED
+[09-step] Running browser hostname-derivation regression
+╔══════════════════════════════════════════════════════════════════╗
+║   Country Derivation — Hostname-Derived Regression             ║
+╚══════════════════════════════════════════════════════════════════╝
+  ℹ  Graph time: 06Mar2026_18h02m18s_54_hosts
+  ✅ PASS [AUTH]: Logged in as ospf@topolograph.com
+  ✅ PASS [LOAD]: Graph loaded with 54 nodes
+  ℹ  Using standard host file: Load-hosts.csv
+  ✅ PASS [STD]: Applied Load-hosts.csv
+  ✅ PASS [STD]: 12.12.12.2 => ken-mob-r2 => KEN
+  ✅ PASS [STD]: 13.13.13.1 => drc-moa-r1 => DRC
+  ✅ PASS [STD]: 18.18.18.4 => zaf-mtz-r1 => ZAF
+  ✅ PASS [STD]: IP-like hostname remains UNK
+  ℹ  Screenshot → 01-standard-host-file-derived-countries.png
+  ✅ PASS [CONFLICT]: Applied conflicting 3-column host file
+  ✅ PASS [CONFLICT]: 12.12.12.2 kept hostname-derived country KEN
+  ✅ PASS [CONFLICT]: 18.18.18.4 kept hostname-derived country ZAF
+  ✅ PASS [CONFLICT]: 19.19.19.1 kept hostname-derived country UNK
+  ℹ  Screenshot → 02-conflicting-country-column-ignored.png
+
+TOTAL PASSED: 11
+TOTAL FAILED: 0
+[09-step] 09-step country-derivation validation complete
+[09-step] Screenshots: /Users/macbook/Documents/OSPF-DATABASE-TEST/09-STEP-BY-STEP/screenshots

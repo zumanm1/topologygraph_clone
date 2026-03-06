@@ -33,7 +33,7 @@ elif [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" ]]; then
 else
   OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt}"
 fi
-COUNTRY_OVERRIDE_FILE="${COUNTRY_OVERRIDE_FILE:-$PROJECT_ROOT/country-prefix-overrides.csv}"
+COUNTRY_OVERRIDE_FILE="${COUNTRY_OVERRIDE_FILE:-}"
 
 BASE_URL="${BASE_URL:-http://localhost:8081}"
 GRAPH_TIME="${GRAPH_TIME:-}"

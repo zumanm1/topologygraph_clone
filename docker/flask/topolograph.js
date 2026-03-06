@@ -4088,6 +4088,40 @@ function _countryColorFor(code) {
            hover:     { background: bg, border: bdr } };
 }
 
+function _looksLikeIpv4(value) {
+  return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(String(value || '').trim());
+}
+
+function _deriveCountryCodeFromHostname(hostname) {
+  var host = String(hostname || '').trim();
+  if (!host || _looksLikeIpv4(host)) return 'UNK';
+
+  var lowered = host.toLowerCase();
+  var prefixToken = lowered.split('-', 1)[0].trim();
+  if (!prefixToken) prefixToken = lowered;
+
+  var letters = prefixToken.match(/[a-z]/g) || [];
+  if (letters.length >= 3) {
+    return letters.slice(0, 3).join('').toUpperCase();
+  }
+
+  var start = lowered.match(/^([a-z]{3})/);
+  if (start) return start[1].toUpperCase();
+
+  var compact = lowered.replace(/[^a-z0-9]/g, '');
+  if (/^[a-z]{3}/.test(compact)) return compact.slice(0, 3).toUpperCase();
+
+  return 'UNK';
+}
+
+function _buildCountryAwareNodeTitle(node) {
+  var hostname = String(node.hostname || node.name || node.router_id || node.id || '').trim();
+  var country = (node.country || node.group || 'UNK').toUpperCase();
+  var gwTag = node.is_gateway === true ? ' 🌐' : '';
+  var unkNote = country === 'UNK' ? "<br/><i style='color:#f90'>⚠ No hostname mapping in host file</i>" : '';
+  return '<b>' + hostname + '</b>' + gwTag + '<br/>Country: <b>' + country + '</b>' + unkNote + '<br/>Gateway: ' + String(node.is_gateway === true);
+}
+
 function _buildCountryAwareNodeLabel(node) {
   var country = (node.country || node.group || 'UNK').toUpperCase();
   var routerId = String(node.name || node.router_id || node.id || '').trim();
@@ -4132,6 +4166,18 @@ function _normalizeCountryNodeLabels() {
 // ── 2. Apply country colours to all nodes that have a `country` attribute ─────
 function applyCountryColors() {
   if (typeof nodes === 'undefined' || !nodes) return;
+  var inferredUpdates = [];
+  nodes.get().forEach(function(n) {
+    var existingCountry = (n.country || '').toUpperCase();
+    if (existingCountry && existingCountry !== 'UNK') return;
+    var hostname = String(n.hostname || '').trim();
+    if (!hostname && n.label) hostname = String(n.label).split('\n')[0].trim();
+    var derived = _deriveCountryCodeFromHostname(hostname);
+    if (derived !== 'UNK') {
+      inferredUpdates.push({ id: n.id, country: derived, group: derived, title: _buildCountryAwareNodeTitle({ hostname: hostname || (n.name || n.id), country: derived, is_gateway: n.is_gateway === true }) });
+    }
+  });
+  if (inferredUpdates.length > 0) nodes.update(inferredUpdates);
   _normalizeCountryNodeLabels();
   var allNodes = nodes.get();
   var updates  = [];
@@ -5939,9 +5985,9 @@ function buildHostnameUploadPanel() {
 
     '<div style="background:#141824;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:#778;">' +
     '<b style="color:#9ba8c0;">Accepted formats:</b><br>' +
-    '<code style="color:#7ec8e3;">router_id, hostname, country</code>&nbsp;&nbsp;(3-col, by exact router IP)<br>' +
-    '<code style="color:#7ec8e3;">hostname_prefix, country</code>&nbsp;&nbsp;&nbsp;&nbsp;(2-col, prefix match e.g. "zaf-" → ZAF)<br>' +
-    '<code style="color:#7ec8e3;">router_id, country</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(2-col, by router IP)<br>' +
+    '<code style="color:#7ec8e3;">router_id, hostname, country</code>&nbsp;&nbsp;(country column ignored; derived from hostname)<br>' +
+    '<code style="color:#7ec8e3;">router_id, hostname</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(standard host CSV; country auto-derived)<br>' +
+    '<code style="color:#7ec8e3;">router_id hostname</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(standard host TXT; country auto-derived)<br>' +
     'First line may be a header row — it is auto-detected.</div>' +
 
     /* Drag-drop upload zone */
@@ -6015,43 +6061,35 @@ function _applyHostnameMapping(csvText, filename) {
   var lines = csvText.trim().split(/\r?\n/).filter(function(l) { return l.trim(); });
   if (!lines.length) { setStatus('No data rows found.', '#e74c3c'); return; }
 
-  // Auto-detect header
-  var startLine = 0;
-  var firstCols = lines[0].split(',').map(function(c) { return c.trim().toLowerCase(); });
-  if (firstCols[0] === 'router_id' || firstCols[0] === 'hostname_prefix' ||
-      firstCols[0] === 'hostname'  || firstCols[0] === 'id') {
-    startLine = 1;
-  }
+  var idToHostname = {};
 
-  var idToCountry  = {};   // exact router_id → country
-  var prefixMap    = [];   // [{prefix, country}] sorted by prefix length desc
+  for (var i = 0; i < lines.length; i++) {
+    var rawLine = lines[i].trim();
+    if (!rawLine || rawLine.startsWith('#')) continue;
 
-  for (var i = startLine; i < lines.length; i++) {
-    var cols = lines[i].split(',').map(function(c) { return c.trim(); });
+    var cols = rawLine.indexOf(',') >= 0
+      ? rawLine.split(',').map(function(c) { return c.trim(); })
+      : rawLine.split(/\s+/, 2).map(function(c) { return c.trim(); });
+
     if (cols.length < 2) continue;
-    if (cols.length === 2) {
-      // Could be id,country or prefix,country
-      var val0 = cols[0], val1 = cols[1].toUpperCase();
-      if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(val0)) {
-        idToCountry[val0] = val1;                  // IP → country
-      } else {
-        prefixMap.push({ prefix: val0.toLowerCase(), country: val1 }); // prefix → country
-      }
-    } else if (cols.length >= 3) {
-      // id, hostname, country
-      var routerId  = cols[0];
-      var country3  = cols[cols.length - 1].toUpperCase();
-      var hostname3 = cols[1];
-      idToCountry[routerId] = country3;
-      // Also map hostname as prefix (fallback)
-      if (hostname3 && !/^\d/.test(hostname3)) {
-        prefixMap.push({ prefix: hostname3.toLowerCase(), country: country3 });
-      }
+
+    var c0 = (cols[0] || '').trim();
+    var c1 = (cols[1] || '').trim();
+    var c2 = (cols[2] || '').trim();
+    var c0l = c0.toLowerCase();
+    var c1l = c1.toLowerCase();
+
+    if (c0l === 'router_id' || c0l === 'device_ip_address' || c0l === 'hostname_prefix' ||
+        c0l === 'hostname' || c0l === 'id' || c1l === 'hostname' || c1l === 'device_name' || c1l === 'country') {
+      continue;
+    }
+
+    if (_looksLikeIpv4(c0) && c1) {
+      idToHostname[c0] = c1;
+    } else if (c2 && _looksLikeIpv4(c1)) {
+      idToHostname[c1] = c2;
     }
   }
-
-  // Sort prefix map by descending length (most specific first)
-  prefixMap.sort(function(a, b) { return b.prefix.length - a.prefix.length; });
 
   // Apply to vis.js nodes
   if (typeof nodes === 'undefined' || !nodes) { setStatus('Graph not loaded.', '#e74c3c'); return; }
@@ -6061,43 +6099,51 @@ function _applyHostnameMapping(csvText, filename) {
   var updates  = [];
 
   allNodes.forEach(function(n) {
-    var nodeId   = n.name || n.label || String(n.id);
-    var nodeLbl  = (n.hostname || n.label || '').toLowerCase();
-    var country  = null;
+    var nodeId   = String(n.name || n.router_id || n.label || n.id || '').trim();
+    var currentHostname = String(n.hostname || '').trim();
+    var hostname = idToHostname[nodeId] || currentHostname;
+    var country  = hostname ? _deriveCountryCodeFromHostname(hostname) : 'UNK';
+    if (!country) country = 'UNK';
 
-    // 1. Exact ID match
-    if (idToCountry[nodeId]) {
-      country = idToCountry[nodeId];
-    } else {
-      // 2. Prefix match on hostname/label
-      for (var p = 0; p < prefixMap.length; p++) {
-        if (nodeLbl.startsWith(prefixMap[p].prefix) || nodeId.toLowerCase().startsWith(prefixMap[p].prefix)) {
-          country = prefixMap[p].country;
-          break;
-        }
+    if (country) {
+      if (country !== 'UNK' || hostname) matched++;
+      var nextLabel = _buildCountryAwareNodeLabel({
+        id: n.id,
+        name: n.name,
+        router_id: n.router_id,
+        hostname: hostname,
+        label: n.label,
+        country: country,
+        group: country
+      });
+      var nextTitle = _buildCountryAwareNodeTitle({
+        id: n.id,
+        name: n.name,
+        router_id: n.router_id,
+        hostname: hostname || n.name || n.id,
+        country: country,
+        is_gateway: n.is_gateway === true
+      });
+      if ((n.country || 'UNK').toUpperCase() !== country ||
+          (hostname && hostname !== currentHostname) ||
+          (n.group || 'UNK').toUpperCase() !== country ||
+          n.label !== nextLabel ||
+          n.title !== nextTitle) {
+        updates.push({ id: n.id, hostname: hostname || currentHostname, country: country, group: country, label: nextLabel, title: nextTitle });
+        updated++;
       }
     }
 
-    if (country) {
-      matched++;
-      if ((n.country || 'UNK').toUpperCase() !== country) {
-        updates.push({ id: n.id, country: country });
-        updated++;
-      }
-    } else {
+    if (country === 'UNK') {
       unkCount++;
-      if ((n.country || 'UNK').toUpperCase() !== 'UNK') {
-        updates.push({ id: n.id, country: 'UNK' });
-        updated++;
-      }
     }
   });
 
   if (updates.length) nodes.update(updates);
 
   // Persist to _hostnameMap for reference
-  _hostnameMap = idToCountry;
-  try { localStorage.setItem('_topolograph_hostname_map', JSON.stringify(idToCountry)); } catch(e2) {}
+  _hostnameMap = idToHostname;
+  try { localStorage.setItem('_topolograph_hostname_map', JSON.stringify(idToHostname)); } catch(e2) {}
 
   // Re-apply country colours
   if (typeof applyCountryColors === 'function') applyCountryColors();
