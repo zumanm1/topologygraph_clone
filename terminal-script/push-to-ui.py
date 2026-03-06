@@ -197,11 +197,11 @@ def main():
         # For unmapped (UNK) nodes the hostname IS the router_id so we label
         # them with the IP plus a "(UNK)" tag so engineers can identify them.
         if is_from_mapping and info["hostname"] != router_id:
-            node_label = f"{info['hostname']}\n{router_id}"
+            node_label = f"{info['hostname']}\n{router_id}\n[{country}]"
         elif not is_from_mapping:
-            node_label = f"{router_id}\n(UNK)"
+            node_label = f"{router_id}\n[UNK]"
         else:
-            node_label = router_id  # fallback: hostname == router_id edge case
+            node_label = f"{router_id}\n[{country}]"  # fallback: hostname == router_id edge case
 
         payload = {
             "country":    country,
