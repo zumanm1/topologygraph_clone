@@ -18,21 +18,42 @@ OUTPUT_DIR="${OUTPUT_DIR:-$PROJECT_ROOT/OUTPUT/CURRENT}"
 TMP_DIR="$OUTPUT_DIR/.tmp"
 mkdir -p "$OUTPUT_DIR" "$TMP_DIR"
 
-# Host file: prefer Load-hosts.txt (canonical), fall back to host-file.txt
-if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt" ]]; then
-  HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt}"
-else
-  HOST_FILE="${HOST_FILE:-$PROJECT_ROOT/INPUT-FOLDER/host-file.txt}"
-fi
-# OSPF file: prefer ospf-database-3.txt (54 routers, current default),
-#            fall back to ospf-database-2.txt (34 routers), then ospf-database.txt
-if [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" ]]; then
-  OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt}"
-elif [[ -f "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" ]]; then
-  OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt}"
-else
-  OSPF_FILE="${OSPF_FILE:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt}"
-fi
+resolve_default_host_file() {
+  local candidates=(
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-3b.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/host-file.txt"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+}
+
+resolve_default_ospf_file() {
+  local candidates=(
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-54-unk-test.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"
+}
+
+HOST_FILE="${HOST_FILE:-$(resolve_default_host_file)}"
+OSPF_FILE="${OSPF_FILE:-$(resolve_default_ospf_file)}"
 COUNTRY_OVERRIDE_FILE="${COUNTRY_OVERRIDE_FILE:-}"
 
 BASE_URL="${BASE_URL:-http://localhost:8081}"

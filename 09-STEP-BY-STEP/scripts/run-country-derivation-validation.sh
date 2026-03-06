@@ -41,5 +41,9 @@ info "Running browser hostname-derivation regression"
 docker compose exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
   node /app/tests/validate-country-derivation.cjs
 
+info "Running browser WebUI upload/import country-derivation regression"
+docker compose exec -T e2e-runner \
+  node /app/tests/validate-webui-country-import.cjs
+
 info "09-step country-derivation validation complete"
 info "Screenshots: $PROJECT_ROOT/09-STEP-BY-STEP/screenshots"

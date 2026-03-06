@@ -384,10 +384,15 @@ function update_hostname_on_graph() {
   copy hostnames of routers from user input to igraph. Host_to_dns_name_mapping pages
   */
   let _select_options = document.getElementById("select_graph_time_id");
-  let choosen_graph_time = _select_options.options[_select_options.selectedIndex].value;
+  let choosen_graph_time = _select_options && _select_options.options[_select_options.selectedIndex]
+    ? _select_options.options[_select_options.selectedIndex].value
+    : '';
+  if (!choosen_graph_time) {
+    return $.Deferred().reject('no_graph_time').promise();
+  }
   // paint a button from yellow to grey
   let update_hostname_on_graph_btn = document.getElementById('update_hostname_on_graph');
-  $.ajax({
+  return $.ajax({
       url: "/update_hostname_on_graph",
       type: "post",
       data: {'choosen_graph_time': choosen_graph_time},
@@ -401,16 +406,105 @@ function update_hostname_on_graph() {
 }
 
 function save_hostname(_ip, _graph_id) {
-  let _hostname = document.getElementById(`comment_${_ip}`).value;
+  let inputEl = document.getElementById(`comment_${_ip}`);
+  let _hostname = arguments.length >= 3 ? String(arguments[2] || '').trim() : (inputEl ? inputEl.value : '');
   let update_hostname_on_graph_btn = document.getElementById('update_hostname_on_graph');
   if (update_hostname_on_graph_btn) {
     update_hostname_on_graph_btn.className = "btn btn-warning btn-lg btn-block";
   }
-  $.ajax({
+  return $.ajax({
       url: "/save_hostname",
       type: "post",
       data: {'ip': _ip, 'hostname': _hostname, 'graph_id': _graph_id}
           })
+}
+
+function _setHostCsvImportStatus(msg, color) {
+  let status = document.getElementById('hostCsvImportStatus');
+  if (status) {
+    status.innerHTML = '<span style="color:' + (color || '#6c757d') + ';">' + msg + '</span>';
+  }
+}
+
+function _parseHostnameImportText(csvText) {
+  let idToHostname = {};
+  let lines = String(csvText || '').trim().split(/\r?\n/).filter(function(line) { return line.trim(); });
+  for (let i = 0; i < lines.length; i++) {
+    let rawLine = lines[i].trim();
+    if (!rawLine || rawLine.startsWith('#')) continue;
+    let cols = rawLine.indexOf(',') >= 0
+      ? rawLine.split(',').map(function(c) { return c.trim(); })
+      : rawLine.split(/\s+/, 2).map(function(c) { return c.trim(); });
+    if (cols.length < 2) continue;
+    let c0 = (cols[0] || '').trim();
+    let c1 = (cols[1] || '').trim();
+    let c2 = (cols[2] || '').trim();
+    let c0l = c0.toLowerCase();
+    let c1l = c1.toLowerCase();
+    if (c0l === 'router_id' || c0l === 'device_ip_address' || c0l === 'hostname_prefix' ||
+        c0l === 'hostname' || c0l === 'id' || c1l === 'hostname' || c1l === 'device_name' || c1l === 'country') {
+      continue;
+    }
+    if (_looksLikeIpv4(c0) && c1) {
+      idToHostname[c0] = c1;
+    } else if (c2 && _looksLikeIpv4(c1)) {
+      idToHostname[c1] = c2;
+    }
+  }
+  return idToHostname;
+}
+
+function import_hostname_csv_file(inputEl) {
+  let file = inputEl && inputEl.files ? inputEl.files[0] : null;
+  if (!file) return;
+  let reader = new FileReader();
+  _setHostCsvImportStatus('Reading ' + file.name + '…', '#6c757d');
+  reader.onload = function(e) {
+    _importHostnameCsvText(e.target.result, file.name);
+  };
+  reader.readAsText(file);
+}
+
+function _importHostnameCsvText(csvText, filename) {
+  let idToHostname = _parseHostnameImportText(csvText);
+  let routerIds = Object.keys(idToHostname);
+  if (!routerIds.length) {
+    _setHostCsvImportStatus('No hostname mappings found in ' + filename + '.', '#dc3545');
+    return;
+  }
+  let requests = [];
+  let matched = 0;
+  let updated = 0;
+  routerIds.forEach(function(routerId) {
+    let inputEl = document.getElementById(`comment_${routerId}`);
+    if (!inputEl) return;
+    matched++;
+    let hostname = String(idToHostname[routerId] || '').trim();
+    let graphId = inputEl.getAttribute('data-graph-id') || '';
+    if (!hostname || !graphId) return;
+    if (String(inputEl.value || '').trim() !== hostname) {
+      inputEl.value = hostname;
+      updated++;
+    }
+    requests.push(save_hostname(routerId, graphId, hostname));
+  });
+  if (!matched) {
+    _setHostCsvImportStatus('No routers from ' + filename + ' matched the selected graph.', '#dc3545');
+    return;
+  }
+  _setHostCsvImportStatus('Saving ' + matched + ' hostname mappings from ' + filename + '…', '#6c757d');
+  let persistence = requests.length ? $.when.apply($, requests) : $.Deferred().resolve().promise();
+  persistence.always(function() {
+    _setHostCsvImportStatus('Saved ' + matched + ' hostname mappings from ' + filename + '. Syncing graph…', '#17a2b8');
+    let syncRequest = update_hostname_on_graph();
+    if (syncRequest && typeof syncRequest.always === 'function') {
+      syncRequest.always(function() {
+        _setHostCsvImportStatus('✅ Imported ' + filename + ': ' + matched + ' matched, ' + updated + ' updated, graph sync requested.', '#28a745');
+      });
+    } else {
+      _setHostCsvImportStatus('✅ Imported ' + filename + ': ' + matched + ' matched, ' + updated + ' updated.', '#28a745');
+    }
+  });
 }
 
 function update_source_net_table(all_auth_source_net_ll) {
@@ -493,11 +587,19 @@ function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic
           init_visjs_graph(response.nodes_attr_dd_in_ll, response.edges_attr_dd_in_ll, graph_physics_scale_settings);
           // ── Country filter: apply colours & build panel after graph settles ──
           setTimeout(function() {
-            if (typeof applyCountryColors === 'function') { applyCountryColors(); }
-            if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
-            if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }       // EN-F4
-            if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
-            if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
+            var finalizeGraphLoad = function(appliedServerSync) {
+              if (!appliedServerSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
+              if (typeof applyCountryColors === 'function') { applyCountryColors(); }
+              if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
+              if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }       // EN-F4
+              if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
+              if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
+            };
+            if (typeof _syncHostnameMappingsFromServer === 'function') {
+              _syncHostnameMappingsFromServer(dynamic_graph_time).then(finalizeGraphLoad, function() { finalizeGraphLoad(false); });
+            } else {
+              finalizeGraphLoad(false);
+            }
           }, 900);
           // mark General View as pressed button
           let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
@@ -4114,6 +4216,49 @@ function _deriveCountryCodeFromHostname(hostname) {
   return 'UNK';
 }
 
+function _buildHostnameCsvFromServerMap(hostMap) {
+  var rows = ['router_id,hostname,country'];
+  Object.keys(hostMap || {}).forEach(function(routerId) {
+    var hostname = String(hostMap[routerId] || '').trim();
+    if (!routerId || !hostname) return;
+    rows.push(routerId + ',' + hostname + ',' + _deriveCountryCodeFromHostname(hostname));
+  });
+  return rows.length > 1 ? rows.join('\n') : '';
+}
+
+function _syncHostnameMappingsFromServer(graphTime) {
+  if (!graphTime || typeof fetch !== 'function') return Promise.resolve(false);
+  return fetch('/ospf-host-to-dns-mapping', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+    },
+    body: 'graph_time=' + encodeURIComponent(graphTime)
+  }).then(function(response) {
+    if (!response.ok) throw new Error('Failed to load saved hostnames for graph ' + graphTime);
+    return response.text();
+  }).then(function(html) {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(html, 'text/html');
+    var hostMap = {};
+    Array.from(doc.querySelectorAll('input[id^="comment_"]')).forEach(function(input) {
+      var hostname = String(input.value || '').trim();
+      var routerId = String(input.id || '').replace(/^comment_/, '').trim();
+      if (!routerId || !hostname) return;
+      hostMap[routerId] = hostname;
+    });
+    var csvText = _buildHostnameCsvFromServerMap(hostMap);
+    if (!csvText) return false;
+    _applyHostnameMapping(csvText, 'saved hostnames for ' + graphTime);
+    console.log('[SP3-A] Synced saved hostname mappings from server for graph ' + graphTime);
+    return true;
+  }).catch(function(err) {
+    console.warn('[SP3-A] Could not sync hostname mappings from server', err);
+    return false;
+  });
+}
+
 function _buildCountryAwareNodeTitle(node) {
   var hostname = String(node.hostname || node.name || node.router_id || node.id || '').trim();
   var country = (node.country || node.group || 'UNK').toUpperCase();
@@ -6158,6 +6303,27 @@ function _applyHostnameMapping(csvText, filename) {
   // Refresh UNK button label
   var unkBtn = document.getElementById('btnUnkHighlight');
   if (unkBtn) unkBtn.textContent = '\u26a0 UNK' + (unkCount > 0 ? ' (' + unkCount + ')' : '');
+}
+
+function _reapplySavedHostnameMapping() {
+  if (typeof nodes === 'undefined' || !nodes) return false;
+  try {
+    var raw = localStorage.getItem('_topolograph_hostname_map');
+    if (!raw) return false;
+    var saved = JSON.parse(raw);
+    if (!saved || typeof saved !== 'object') return false;
+    var lines = [];
+    Object.keys(saved).forEach(function(routerId) {
+      var hostname = String(saved[routerId] || '').trim();
+      if (routerId && hostname) lines.push(routerId + ',' + hostname);
+    });
+    if (!lines.length) return false;
+    _applyHostnameMapping('router_id,hostname\n' + lines.join('\n'), 'saved browser mapping');
+    return true;
+  } catch (err) {
+    console.warn('[SP3-A] Could not reapply saved hostname mapping', err);
+    return false;
+  }
 }
 
 /** Manually reclassify a single node from the upload panel. */

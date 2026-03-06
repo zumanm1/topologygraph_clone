@@ -9,8 +9,17 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 BOLD='\033[1m'; GREEN='\033[0;32m'; CYAN='\033[0;36m'; YELLOW='\033[1;33m'; RESET='\033[0m'
 
-OSPF_FILE="${1:-$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt}"
-HOST_FILE="${2:-$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt}"
+DEFAULT_OSPF="$PROJECT_ROOT/INPUT-FOLDER/ospf-database-54-unk-test.txt"
+[[ ! -f "$DEFAULT_OSPF" ]] && DEFAULT_OSPF="$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt"
+[[ ! -f "$DEFAULT_OSPF" ]] && DEFAULT_OSPF="$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt"
+[[ ! -f "$DEFAULT_OSPF" ]] && DEFAULT_OSPF="$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"
+DEFAULT_HOST="$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+[[ ! -f "$DEFAULT_HOST" ]] && DEFAULT_HOST="$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt"
+[[ ! -f "$DEFAULT_HOST" ]] && DEFAULT_HOST="$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-3b.txt"
+[[ ! -f "$DEFAULT_HOST" ]] && DEFAULT_HOST="$PROJECT_ROOT/INPUT-FOLDER/host-file.txt"
+
+OSPF_FILE="${1:-$DEFAULT_OSPF}"
+HOST_FILE="${2:-$DEFAULT_HOST}"
 BASE_URL="${BASE_URL:-http://localhost:8081}"
 
 echo ""
