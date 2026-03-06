@@ -43,6 +43,101 @@ This makes the Docker app self-contained for basic and deep testing directly aft
 
 ---
 
+## Verified Remote Install And Runbook
+
+The current repository remote for this project is:
+
+- `https://github.com/zumanm1/topologygraph_clone.git`
+
+The GitHub CLI is also available for users who prefer `gh repo clone`.
+
+### Clone on a remote machine
+
+Option A — with `gh`:
+
+```bash
+gh repo clone zumanm1/topologygraph_clone
+cd topologygraph_clone
+```
+
+Option B — with `git`:
+
+```bash
+git clone https://github.com/zumanm1/topologygraph_clone.git
+cd topologygraph_clone
+```
+
+### Prerequisites
+
+Install these on the remote machine:
+
+- `git`
+- Docker Engine
+- Docker Compose plugin
+- optional: GitHub CLI (`gh`)
+
+Example baseline packages for Ubuntu / Debian:
+
+```bash
+sudo apt update
+sudo apt install -y git curl ca-certificates
+```
+
+Then verify:
+
+```bash
+docker --version
+docker compose version
+git --version
+gh --version
+```
+
+### Prepare environment
+
+From the repository root:
+
+```bash
+cp .env.example .env
+```
+
+The defaults are usually enough for a basic remote test deployment.
+
+### Build and start the Docker app
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Verify:
+
+```bash
+docker compose ps
+curl -I http://localhost:8081
+```
+
+In a browser, open:
+
+```text
+http://<REMOTE_IP>:8081
+```
+
+### Start the test container
+
+```bash
+docker compose --profile test up -d e2e-runner
+```
+
+### Run the canonical Docker-native validation
+
+```bash
+bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
+```
+
+This remains the recommended end-to-end validation entrypoint for a fresh remote-machine deployment.
+
+---
+
 ## What This Step Validates
 
 ### 1. Full stack rebuild

@@ -9,9 +9,9 @@
 
   Software          Minimum Version   Purpose
   ──────────────────────────────────────────────────────────────────────────────
-  Docker            20.x              Runs Topolograph (Flask + MongoDB + Nginx + MCP)
-  Docker Compose    v2.x              Orchestrates the 4 containers
-  Git               2.x               Clone both repositories
+  Docker            20.x              Runs the full Dockerized app stack
+  Docker Compose    v2.x              Orchestrates the 5 core containers
+  Git               2.x               Clone this repository
   Python 3          3.8+              Pipeline scripts (push-to-ui.py, generate-collapse-config.py)
   pip               any               Install requests Python library
   Node.js           18+               Playwright E2E tests only
@@ -59,13 +59,32 @@
   sudo apt-get install -y nodejs
 
 ────────────────────────────────────────────────────────────────────────────────
- STEP 4 — Clone Topolograph Docker (Repo 1)
+ STEP 4 — Clone this repository
 ────────────────────────────────────────────────────────────────────────────────
 
-  cd ~
-  git clone https://github.com/Vadims06/topolograph-docker.git
-  cd topolograph-docker
-  cp env.example .env
+  Verified remote:
+
+    https://github.com/zumanm1/topologygraph_clone.git
+
+  Option A — GitHub CLI:
+
+    gh repo clone zumanm1/topologygraph_clone
+    cd topologygraph_clone
+
+  Option B — git:
+
+    git clone https://github.com/zumanm1/topologygraph_clone.git
+    cd topologygraph_clone
+
+  Or keep the historical folder name:
+
+    mkdir -p ~/Documents && cd ~/Documents
+    git clone https://github.com/zumanm1/topologygraph_clone.git OSPF-DATABASE-TEST
+    cd OSPF-DATABASE-TEST
+
+  Copy the environment file:
+
+    cp .env.example .env
 
   Edit .env and set the following values:
 
@@ -79,62 +98,56 @@
     TOPOLOGRAPH_WEB_API_AUTHORISED_NETWORKS=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 
 ────────────────────────────────────────────────────────────────────────────────
- STEP 5 — Start Docker containers
+ STEP 5 — Build and start Docker containers
 ────────────────────────────────────────────────────────────────────────────────
 
-  docker compose pull
+  docker compose build
   docker compose up -d
-  docker ps    # verify: webserver, flask, mongodb, mcp-server all Up
+  docker compose ps
 
   Expected:
-    NAMES        STATUS          PORTS
-    webserver    Up X minutes    0.0.0.0:8081->8081/tcp
-    flask        Up X minutes    5000/tcp
-    mcp-server   Up X minutes    0.0.0.0:8000->8000/tcp
-    mongodb      Up X minutes    0.0.0.0:27017->27017/tcp
+    pipeline     Up X minutes
+    webserver    Up X minutes
+    flask        Up X minutes
+    mcp-server   Up X minutes
+    mongodb      Up X minutes
 
 ────────────────────────────────────────────────────────────────────────────────
- STEP 6 — Clone the pipeline project (Repo 2)
+ STEP 6 — Verify the UI
 ────────────────────────────────────────────────────────────────────────────────
 
-  mkdir -p ~/Documents && cd ~/Documents
-  git clone https://github.com/zumanm1/topologygraph_clone.git OSPF-DATABASE-TEST
-  cd OSPF-DATABASE-TEST
-  git checkout feat/collapsing-stage
-
-────────────────────────────────────────────────────────────────────────────────
- STEP 7 — Apply the custom JS and navbar patch
-────────────────────────────────────────────────────────────────────────────────
-
-  cp topolograph-docker/init/topolograph.js \
-     ~/topolograph-docker/init/topolograph.js
-
-  docker cp 06-STEP-BY-STEP/docker-patches/base.html \
-     flask:/home/flask/flask/templates/base.html
-
-  docker restart flask
-
-────────────────────────────────────────────────────────────────────────────────
- STEP 8 — Install Playwright (tests only)
-────────────────────────────────────────────────────────────────────────────────
-
-  cd tests && npm install && npx playwright install chromium && cd ..
-
-────────────────────────────────────────────────────────────────────────────────
- STEP 9 — Run the pipeline
-────────────────────────────────────────────────────────────────────────────────
-
-  bash terminal-script/workflow.sh all
-
-────────────────────────────────────────────────────────────────────────────────
- STEP 10 — Verify
-────────────────────────────────────────────────────────────────────────────────
+  curl -I http://localhost:8081
 
   Open browser to:  http://<your-server-ip>:8081/
   Login:            ospf@topolograph.com / ospf
 
-  Or run full 114-check validation:
-    bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh
+────────────────────────────────────────────────────────────────────────────────
+ STEP 7 — Start the Docker test container
+────────────────────────────────────────────────────────────────────────────────
+
+  docker compose --profile test up -d e2e-runner
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 8 — Run the canonical 08 validation
+────────────────────────────────────────────────────────────────────────────────
+
+  bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 9 — Optional manual packaged pipeline run
+────────────────────────────────────────────────────────────────────────────────
+
+  docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
+    --ospf-file=ospf-database-54-unk-test.txt \
+    --host-file=Load-hosts-54-unk-test.txt
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 10 — Optional manual deep E2E retest
+────────────────────────────────────────────────────────────────────────────────
+
+  GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
+  docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+    --graph-time="$GRAPH_TIME"
 
 ================================================================================
  RELATED DOCUMENTS

@@ -6,12 +6,12 @@
 
 This guide covers every step required on a freshly provisioned machine:
   Part A  — System Prerequisites (OS packages, Docker, Git, Python, Node.js)
-  Part B  — Clone & Start Topolograph (the Docker web application)
-  Part C  — Clone the Pipeline Project (this repository)
-  Part D  — Wire the Two Repos Together (bind-mount + navbar patch)
-  Part E  — Run Your First Pipeline (ospf-database-3b.txt example)
-  Part F  — Install E2E Test Suite (Playwright)
-  Part G  — Run Full Validation (114-check suite)
+  Part B  — Clone This Repository (verified GitHub remote)
+  Part C  — Prepare Environment & Start the Docker App
+  Part D  — Run the Canonical 08 Docker Validation
+  Part E  — Run the Pipeline Manually (optional)
+  Part F  — Run Deep E2E Manually (optional)
+  Part G  — Day-Two Operations
   Part H  — Day-Two Operations (restart, update, re-run)
   Part I  — Port & Credential Reference
   Part J  — Troubleshooting
@@ -23,22 +23,15 @@ jump directly to Part E onward for day-to-day use.
  ARCHITECTURE AT A GLANCE
 ================================================================================
 
-  Two separate Git repositories work together:
+  This repository is now the primary working copy for the Dockerized stack.
 
-  REPO 1 — Topolograph Docker (the web application)
-    URL  : https://github.com/Vadims06/topolograph-docker.git
-    What : Docker Compose stack (Flask + MongoDB + Nginx + MCP server)
-    Port : http://localhost:8081   (configured via TOPOLOGRAPH_PORT=8081)
-
-  REPO 2 — Pipeline Project (this repository)
+  REPOSITORY — OSPF Country Topology (this repository)
     URL  : https://github.com/zumanm1/topologygraph_clone.git
-    What : OSPF enrichment pipeline + E2E validation + documentation
-    Dir  : ~/Documents/OSPF-DATABASE-TEST/  (or wherever you clone it)
+    What : Docker Compose stack + pipeline + E2E validation + docs
+    Port : http://localhost:8081
 
-  They connect via:
-    1. REST API calls (pipeline → Topolograph Flask)
-    2. One bind-mount: topolograph.js (custom Sprint 3 features)
-    3. One manual file copy: base.html (navbar Analysis dropdown)
+  The recommended validation entrypoint after clone is:
+    bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
 ================================================================================
  PART A — SYSTEM PREREQUISITES
@@ -130,44 +123,65 @@ A6. awk (used by topology-country-tool.sh — already installed on all Unix)
   Verify: awk --version   # any version is fine
 
 ================================================================================
- PART B — CLONE & START TOPOLOGRAPH (Docker Web App)
-================================================================================
+ PART B — CLONE THIS REPOSITORY
+==============================================================================
 
-  This sets up the web application that stores graphs and serves the UI.
-
-------------------------------------------------------------
-B1. Clone the Topolograph Docker repository
-------------------------------------------------------------
-
-  Choose a location for the Docker setup. We recommend your home directory:
-
-    cd ~
-    git clone https://github.com/Vadims06/topolograph-docker.git
-    cd topolograph-docker
-
-  You now have:
-    ~/topolograph-docker/
-    ├── docker-compose.yml       ← defines 4 services
-    ├── env.example              ← template for your .env file
-    ├── install.sh               ← optional automated installer
-    ├── init/
-    │   ├── topolograph.js       ← IMPORTANT: custom JS (see Part D)
-    │   └── create_credentials_from_env.py
-    └── webserver/               ← Nginx reverse proxy config
+  This clones the verified GitHub remote for the full Dockerized project.
 
 ------------------------------------------------------------
-B2. Create and configure the .env file
+B1. Clone with gh or git
+------------------------------------------------------------
+
+  Verified repository remote:
+
+    https://github.com/zumanm1/topologygraph_clone.git
+
+  Option A — GitHub CLI:
+
+    gh repo clone zumanm1/topologygraph_clone
+    cd topologygraph_clone
+
+  Option B — git:
+
+    git clone https://github.com/zumanm1/topologygraph_clone.git
+    cd topologygraph_clone
+
+------------------------------------------------------------
+B2. Alternative clone path under ~/Documents
+------------------------------------------------------------
+
+  If you prefer the historical project path:
+
+    mkdir -p ~/Documents
+    cd ~/Documents
+    git clone https://github.com/zumanm1/topologygraph_clone.git OSPF-DATABASE-TEST
+    cd OSPF-DATABASE-TEST
+
+------------------------------------------------------------
+B3. Verify tools
+------------------------------------------------------------
+
+    docker --version
+    docker compose version
+    git --version
+    gh --version
+
+------------------------------------------------------------
+ PART C — PREPARE ENVIRONMENT & START THE DOCKER APP
+==============================================================================
+
+------------------------------------------------------------
+C1. Create and configure the .env file
 ------------------------------------------------------------
 
   Copy the example and edit it:
 
-    cp env.example .env
+    cp .env.example .env
 
   Open .env in any editor and set these values:
 
     TOPOLOGRAPH_PORT=8081          ← use 8081 to match this project's defaults
     MCP_PORT=8000
-
     MONGODB_DATABASE=admin
     MONGODB_USERNAME=admin
     MONGODB_PASSWORD=myadminpassword   ← change in production
@@ -185,40 +199,41 @@ B2. Create and configure the .env file
     NETBOX_URL=
     NETBOX_RO_TOKEN=
 
-  NOTE: The pipeline scripts in this repo default to:
-    BASE_URL  = http://localhost:8081
-    API_USER  = ospf@topolograph.com
-    API_PASS  = ospf
-  These must match your .env exactly.
+  The defaults are usually enough for a basic remote-machine test deployment.
 
 ------------------------------------------------------------
-B3. Pull Docker images and start the stack
+C2. Build and start the stack
 ------------------------------------------------------------
 
-    docker compose pull        # downloads ~2 GB of images (one-time)
-    docker compose up -d       # starts all 4 services in background
+    docker compose build
+    docker compose up -d
 
   Expected output:
     ✔ Container mongodb     Started
     ✔ Container flask       Started
     ✔ Container mcp-server  Started
     ✔ Container webserver   Started
+    ✔ Container pipeline    Started
 
   Verify all containers are running:
-    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+    docker compose ps
 
   Expected:
-    NAMES        STATUS          PORTS
-    webserver    Up X minutes    0.0.0.0:8081->8081/tcp
-    flask        Up X minutes    5000/tcp
-    mcp-server   Up X minutes    0.0.0.0:8000->8000/tcp
-    mongodb      Up X minutes    0.0.0.0:27017->27017/tcp
+    pipeline     Up X minutes
+    webserver    Up X minutes
+    flask        Up X minutes
+    mcp-server   Up X minutes
+    mongodb      Up X minutes
 
 ------------------------------------------------------------
-B4. Verify Topolograph is accessible
+C3. Verify the UI is accessible
 ------------------------------------------------------------
 
-  Open a browser and go to: http://localhost:8081/
+  Run:
+
+    curl -I http://localhost:8081
+
+  Open a browser and go to: http://<REMOTE_IP>:8081/
 
   You should see the Topolograph landing page.
   Login with: ospf@topolograph.com / ospf
@@ -227,315 +242,145 @@ B4. Verify Topolograph is accessible
     docker compose logs webserver    ← check Nginx logs
     docker compose logs flask        ← check Flask/Gunicorn logs
 
-================================================================================
- PART C — CLONE THE PIPELINE PROJECT (This Repository)
-================================================================================
+==============================================================================
+ PART D — RUN THE CANONICAL 08 DOCKER VALIDATION
+============================================================================== 
 
 ------------------------------------------------------------
-C1. Clone
+D1. Start the test container
 ------------------------------------------------------------
 
-  We recommend cloning into ~/Documents/ to match the default paths:
-
-    mkdir -p ~/Documents
-    cd ~/Documents
-    git clone https://github.com/zumanm1/topologygraph_clone.git \
-              OSPF-DATABASE-TEST
-    cd OSPF-DATABASE-TEST
-
-  Alternatively, clone to any location:
-    git clone https://github.com/zumanm1/topologygraph_clone.git
-    cd topologygraph_clone
-
-  NOTE: If you clone to a path other than ~/Documents/OSPF-DATABASE-TEST/,
-  update BASE_URL and file path references in workflow.sh, or always use
-  absolute paths with --ospf-file and --host-file.
+    docker compose --profile test up -d e2e-runner
 
 ------------------------------------------------------------
-C2. Verify the structure
+D2. Run the one-command Docker-native validation
 ------------------------------------------------------------
 
-  After cloning you should see:
+    bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
-    OSPF-DATABASE-TEST/
-    ├── INPUT-FOLDER/
-    │   ├── ospf-database-2.txt      ← 34-router OSPF LSDB (legacy)
-    │   ├── ospf-database-3.txt      ← 54-router OSPF LSDB (current default)
-    │   ├── ospf-database-3b.txt     ← 54-router copy (for 07-STEP-BY-STEP)
-    │   ├── Load-hosts.txt           ← 34-entry canonical hostname map
-    │   ├── Load-hosts-3b.txt        ← 34-entry hostname copy
-    │   └── collapse-preferences.json
-    │
-    ├── terminal-script/
-    │   ├── workflow.sh              ← MASTER pipeline script
-    │   ├── topology-country-tool.sh ← country enrichment core
-    │   ├── fetch-from-api.sh        ← API graph fetcher
-    │   ├── push-to-ui.py            ← colour push to Topolograph
-    │   ├── generate-collapse-config.py ← COLLAPSING stage
-    │   └── save-load-hosts.sh       ← host file promoter
-    │
-    ├── tests/                       ← Playwright E2E tests
-    ├── 05-STEP-BY-STEP/             ← 34-router validation suite
-    ├── 06-STEP-BY-STEP/             ← 54-router deep validation (114 checks)
-    ├── 07-STEP-BY-STEP/             ← new-file pipeline docs + proof
-    └── topolograph-docker/          ← git-ignored Docker subdir (see Part D)
+  This command:
+    1. rebuilds the Docker images
+    2. starts the stack
+    3. runs the packaged 54-router pipeline
+    4. runs the deep Playwright validation
+    5. runs the hostname-mapping page regression check
+  The script writes its report to:
+    08-STEP-BY-STEP/validation-report.txt
 
-  Check that INPUT-FOLDER files exist:
-    ls INPUT-FOLDER/ospf-database-3.txt     # must exist
-    ls INPUT-FOLDER/Load-hosts.txt          # must exist
+==============================================================================
+ PART E — RUN THE PIPELINE MANUALLY (OPTIONAL)
+==============================================================================
+
+  Use this if you want the packaged pipeline run without the full 08 suite.
 
 ------------------------------------------------------------
-C3. Check out the working branch
+E1. Run the packaged pipeline inside Docker
 ------------------------------------------------------------
 
-  The main work lives on feat/collapsing-stage:
-
-    git branch -a                          # list all branches
-    git checkout feat/collapsing-stage     # switch to working branch
-
-  Verify:
-    git log --oneline -5
-
-  Expected recent commits:
-    feat(07-e2e): 07-STEP-BY-STEP — new input files, architecture docs...
-    feat(navbar): add Analysis dropdown — Cost Matrix + What-If Analysis
-    feat(06-e2e): 06-STEP-BY-STEP deep validation — 114/114 checks pass
-    chore(default): set ospf-database-3.txt (54 routers) as pipeline default
-    feat(unk-pipeline): 54-router graph + UNK country classification...
-
-================================================================================
- PART D — WIRE THE TWO REPOS TOGETHER
-================================================================================
-
-  The Docker app (Repo 1) and pipeline project (Repo 2) must be connected
-  via two steps: the topolograph.js bind-mount and the base.html patch.
+    docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
+      --ospf-file=ospf-database-54-unk-test.txt \
+      --host-file=Load-hosts-54-unk-test.txt
 
 ------------------------------------------------------------
-D1. Place custom topolograph.js via bind-mount
+E2. Resolve the latest graph_time
 ------------------------------------------------------------
 
-  The docker-compose.yml in Repo 1 mounts one file:
-
-    volumes:
-      - type: bind
-        source: ./init/topolograph.js
-        target: /home/flask/flask/static/js/topolograph.js
-
-  This means the file at ~/topolograph-docker/init/topolograph.js
-  is served as the live JavaScript for the web UI.
-
-  The pipeline project keeps its own copy of the customised topolograph.js
-  (with Sprint 3 features: Cost Matrix, What-If Analysis, UNK filter,
-  Hostname Upload, Collapsing, _refreshCostMatrix bug fix) at:
-
-    OSPF-DATABASE-TEST/topolograph-docker/init/topolograph.js
-
-  On a fresh machine, copy this file to the Docker repo:
-
-    cp ~/Documents/OSPF-DATABASE-TEST/topolograph-docker/init/topolograph.js \
-       ~/topolograph-docker/init/topolograph.js
-
-  Then restart the flask container to pick up the new JS:
-
-    docker restart flask
-
-  VERIFY: Open http://localhost:8081/ in browser, load a graph.
-  The toolbar should show: AS-IS | ENRICHED | GATEWAY | CURRENT | COLLAPSING
-  and the country filter panel should appear on the right.
+    GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
+    echo "$GRAPH_TIME"
 
 ------------------------------------------------------------
-D2. Patch base.html (navbar Analysis dropdown)
+E3. Explore the graph in the browser
 ------------------------------------------------------------
 
-  The "Analysis" dropdown in the navbar (Cost Matrix + What-If Analysis)
-  was added by patching base.html inside the running container.
-  This change is NOT in the Docker repo (topolograph-docker is gitignored).
-  The patched file is stored in:
-
-    OSPF-DATABASE-TEST/07-STEP-BY-STEP/docker-patches/base.html
-
-  On a fresh machine, apply the patch:
-
-    docker cp \
-      ~/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/docker-patches/base.html \
-      flask:/home/flask/flask/templates/base.html
-
-    docker restart flask
-
-  VERIFY: After restart, http://localhost:8081/ should show
-  "Analysis ▾" in the top navbar between "OSPF/IS-IS Real-Time Monitoring"
-  and the Links button.
-
-------------------------------------------------------------
-D3. Verify Docker ↔ Pipeline connectivity
-------------------------------------------------------------
-
-    curl -s -u ospf@topolograph.com:ospf \
-         http://localhost:8081/api/graph/ | python3 -c \
-         "import sys,json; gs=json.load(sys.stdin); print(f'{len(gs)} graphs in DB')"
-
-  If this returns "N graphs in DB" (any number ≥ 0), the API is working.
-  If you get an error, check:
-    - Container is running: docker ps | grep flask
-    - Credentials match .env: TOPOLOGRAPH_WEB_API_USERNAME_EMAIL and PASSWORD
-
-================================================================================
- PART E — RUN YOUR FIRST PIPELINE
-================================================================================
-
-  Everything below runs from the OSPF-DATABASE-TEST/ project root.
-
-    cd ~/Documents/OSPF-DATABASE-TEST
-
-------------------------------------------------------------
-E1. Full pipeline with the default file (ospf-database-3.txt, 54 routers)
-------------------------------------------------------------
-
-  The simplest possible run — no flags needed:
-
-    bash terminal-script/workflow.sh all
-
-  The script auto-detects ospf-database-3.txt as the default OSPF file
-  and Load-hosts.txt as the default host file.
-
-  Expected output (abbreviated):
-    [workflow] File: INPUT-FOLDER/ospf-database-3.txt
-    [workflow] Uploaded. graph_time=05Mar2026_HHhMMmSSs_54_hosts
-    [fetch-from-api] nodes.json saved (54 nodes)
-    [fetch-from-api] edges.json saved (148 edges)
-    [topology-tool] Done. Files written to: OUTPUT/.tmp_work_*/
-    [collapse-config] Country split: 11 countries, 54 total, 32 gateways, 22 cores
-    [push-to-ui] Patched: 54 OK  |  0 FAILED  |  0 skipped
-
-  Result: A new graph_time appears in http://localhost:8081/
-  Load it from the dropdown → 54 coloured nodes appear.
-
-------------------------------------------------------------
-E2. Pipeline with new files (ospf-database-3b.txt example)
-------------------------------------------------------------
-
-  This is the 07-STEP-BY-STEP scenario. Explicit flags override the
-  auto-detection. Zero code changes are needed:
-
-    bash terminal-script/workflow.sh all \
-      --ospf-file INPUT-FOLDER/ospf-database-3b.txt \
-      --host-file INPUT-FOLDER/Load-hosts-3b.txt
-
-  OR use the convenience script:
-
-    bash 07-STEP-BY-STEP/scripts/run-pipeline-3b.sh
-
-  The script adds pre-flight checks and output verification on top of
-  the workflow call. Expected final output:
-
-    ╔══════════════════════════════════════════════════════════════╗
-    ║   07-STEP-BY-STEP PIPELINE REPORT                           ║
-    ║    graph_time : 05Mar2026_HHhMMmSSs_54_hosts                ║
-    ║    duration   : ~4s                                          ║
-    ║  STATUS : ALL CHECKS PASSED                                  ║
-    ╚══════════════════════════════════════════════════════════════╝
-
-------------------------------------------------------------
-E3. Files created after any pipeline run
-------------------------------------------------------------
-
-  For graph_time GT = 05Mar2026_HHhMMmSSs_54_hosts:
-
-    IN-OUT-FOLDER/{GT}/
-      meta.json          ← API metadata
-      nodes.json         ← 54 raw nodes
-      edges.json         ← 148 raw edges
-      edges.csv          ← CSV of edges
-
-    OUTPUT/AS-IS/{GT}_AS-IS/
-      AS-IS_nodes.json
-      AS-IS_edges.json
-      AS-IS_meta.json
-      AS-IS_ospf-database.txt
-
-    OUTPUT/ENRICHED/{GT}_ENRICHED/
-      ENRICHED_country-mapping.csv          ← KEY: 54 rows, id/hostname/country/is_gw
-      ENRICHED_country-palette.json
-      ENRICHED_original-topology-with-country.json
-      ENRICHED_original-topology-with-country.yaml
-
-    OUTPUT/GATEWAY/{GT}_GATEWAY/
-      GATEWAY_gateway-only-topology.json    ← 32 gateways
-      GATEWAY_gateway-only-topology.yaml
-      GATEWAY_country-core-summary.json
-      GATEWAY_country-core-summary.yaml
-
-    OUTPUT/COLLAPSING/{GT}_COLLAPSING/
-      COLLAPSING_country-collapse-config.json   ← 11c/54r/32gw/22core
-      COLLAPSING_collapsed-topology.json
-      COLLAPSING_collapsed-topology.yaml
-
-  Total: 19 files on disk + 54 PATCH calls to Topolograph API.
-
-------------------------------------------------------------
-E4. Explore the graph in the browser
-------------------------------------------------------------
-
-  1. Open  : http://localhost:8081/
+  1. Open  : http://<REMOTE_IP>:8081/
   2. Login : ospf@topolograph.com / ospf
   3. Select graph_time from dropdown, click "Load dynamic graph"
   4. Use toolbar: AS-IS → ENRICHED → GATEWAY → COLLAPSING
-  5. Navbar → Analysis → Cost Matrix      (11×11 Dijkstra heat-map)
-  6. Navbar → Analysis → What-If Analysis (edge cost editor + risk score)
+  5. Navbar → Analysis → Cost Matrix
+  6. Navbar → Analysis → What-If Analysis
 
-================================================================================
- PART F — INSTALL E2E TEST SUITE (Playwright)
-================================================================================
-
-  The test suite lives under tests/ and requires Node.js + Playwright.
-
-    cd ~/Documents/OSPF-DATABASE-TEST/tests
-    npm install                          # installs playwright (^1.58.2)
-    npx playwright install chromium     # downloads Chromium browser (~150 MB)
-    cd ..
-
-  Verify:
-    node tests/node_modules/.bin/playwright --version
-    # Expected: Version 1.58.x or higher
-
-================================================================================
- PART G — RUN FULL VALIDATION (114-check suite)
-================================================================================
-
-  The 06-STEP-BY-STEP suite validates all 5 view modes + Sprint 3 features
-  (Cost Matrix, What-If Analysis, Integration test) across 12 Playwright phases.
-
-  PREREQUISITE: At least one 54-host graph must already be in Topolograph.
-  If none exists, run Part E first.
+==============================================================================
+ PART F — RUN DEEP E2E MANUALLY (OPTIONAL)
+==============================================================================
 
 ------------------------------------------------------------
-G1. Quick run (uses latest 54-host graph already in DB)
+F1. Run the Docker-native deep E2E suite
 ------------------------------------------------------------
 
-    bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh
+    docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+      --graph-time="$GRAPH_TIME"
+
+------------------------------------------------------------
+F2. Run the hostname-mapping page regression check
+------------------------------------------------------------
+
+    bash 08-STEP-BY-STEP/scripts/check-hostname-mapping-page.sh
+
+==============================================================================
+ PART G — DAY-TWO OPERATIONS
+==============================================================================
+
+------------------------------------------------------------
+G1. Stop all containers
+------------------------------------------------------------
+
+    docker compose down
+
+------------------------------------------------------------
+G2. Start containers after a reboot
+------------------------------------------------------------
+
+    docker compose up -d
+
+------------------------------------------------------------
+G3. View logs
+------------------------------------------------------------
+
+    docker compose logs --tail=100
+    docker compose logs --tail=100 flask
+    docker compose logs --tail=100 webserver
+    docker compose logs --tail=100 pipeline-seed
+
+------------------------------------------------------------
+G4. Re-run the canonical validation
+------------------------------------------------------------
+
+    docker compose --profile test up -d e2e-runner
+    bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
+
+------------------------------------------------------------
+H1. Quick run (uses the canonical Docker-native validation)
+------------------------------------------------------------
+
+    bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
   Expected final output:
     ╔══════════════════════════════════════════════════════════════════════════╗
     ║  TOTAL PASSED : 114                                                    ║
     ║  TOTAL FAILED : 0                                                      ║
     ║  WARNINGS     : 2                                                      ║
-    ║  STATUS: ALL 06-STEP-BY-STEP CHECKS PASSED                            ║
+    ║  STATUS: ALL 08-STEP-BY-STEP CHECKS PASSED                            ║
     ╚══════════════════════════════════════════════════════════════════════════╝
 
 ------------------------------------------------------------
 G2. Run pipeline THEN validate (combined)
 ------------------------------------------------------------
 
-    bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh --run-pipeline-db3
+    docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
+      --ospf-file=ospf-database-54-unk-test.txt \
+      --host-file=Load-hosts-54-unk-test.txt
+    GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
+    docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+      --graph-time="$GRAPH_TIME"
 
-  This uploads ospf-database-3.txt, runs all enrichment steps, then
-  validates the fresh graph through all 114 checks.
+  This reruns the packaged Docker-native pipeline and then validates the
+  latest resulting graph inside the Docker test container.
 
 ------------------------------------------------------------
 G3. Specify a graph_time explicitly
 ------------------------------------------------------------
 
-    bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh \
+    docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
       --graph-time=05Mar2026_HHhMMmSSs_54_hosts
 
 ------------------------------------------------------------
@@ -574,40 +419,29 @@ G4. View screenshots
 H1. Stop all containers
 ------------------------------------------------------------
 
-    cd ~/topolograph-docker
     docker compose down
 
 ------------------------------------------------------------
 H2. Start containers after a reboot
 ------------------------------------------------------------
 
-    cd ~/topolograph-docker
     docker compose up -d
 
   All containers have "restart: unless-stopped" — they start automatically
   on system boot if Docker Desktop is running.
 
 ------------------------------------------------------------
-H3. Restart just the Flask app (e.g. after editing topolograph.js)
+H3. Restart just the Flask app
 ------------------------------------------------------------
 
     docker restart flask
 
-  Required whenever you update:
-    ~/topolograph-docker/init/topolograph.js  (bind-mounted → live JS)
-    /home/flask/flask/templates/base.html     (after docker cp)
-
 ------------------------------------------------------------
-H4. Update topolograph.js (after pulling pipeline project changes)
+H4. Pull the latest repository changes
 ------------------------------------------------------------
 
     cd ~/Documents/OSPF-DATABASE-TEST
-    git pull origin feat/collapsing-stage
-
-    cp topolograph-docker/init/topolograph.js \
-       ~/topolograph-docker/init/topolograph.js
-
-    docker restart flask
+    git pull origin main
 
 ------------------------------------------------------------
 H5. Re-run pipeline for existing graph (skip upload)
@@ -630,18 +464,9 @@ H6. Promote a new host file to canonical
 H7. Update Docker images (get latest Topolograph version)
 ------------------------------------------------------------
 
-    cd ~/topolograph-docker
     docker compose down
-    docker compose pull
+    docker compose build
     docker compose up -d
-
-  NOTE: After a Docker image update, the base.html patch (Part D2) must
-  be re-applied because the container filesystem is rebuilt:
-
-    docker cp \
-      ~/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/docker-patches/base.html \
-      flask:/home/flask/flask/templates/base.html
-    docker restart flask
 
 ------------------------------------------------------------
 H8. View Flask application logs
@@ -718,24 +543,21 @@ H9. Access MongoDB directly (for debugging)
               --graph-time <graph_time>
 
   PROBLEM: "Analysis dropdown missing from navbar"
-    FIX   : base.html patch not applied. Run:
-            docker cp \
-              ~/Documents/OSPF-DATABASE-TEST/06-STEP-BY-STEP/docker-patches/base.html \
-              flask:/home/flask/flask/templates/base.html
-            docker restart flask
+    FIX   : rebuild and restart the Docker stack so the patched Flask image is used:
+            docker compose build flask
+            docker compose up -d flask webserver
 
   PROBLEM: "Cost Matrix / What-If buttons missing from toolbar"
-    FIX   : topolograph.js is not the custom version. Run:
-            cp ~/Documents/OSPF-DATABASE-TEST/topolograph-docker/init/topolograph.js \
-               ~/topolograph-docker/init/topolograph.js
-            docker restart flask
+    FIX   : rebuild and restart the Docker stack so the patched Flask image is used:
+            docker compose build flask
+            docker compose up -d flask webserver
 
   PROBLEM: "Playwright: browser not found"
     FIX   : cd tests && npx playwright install chromium && cd ..
 
   PROBLEM: "E2E test: 0 nodes loaded"
     FIX   : No 54-host graph in Topolograph. Run:
-            bash terminal-script/workflow.sh all
+            bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
             Then re-run validation.
 
   PROBLEM: "requests module not found" (push-to-ui.py fails)
@@ -759,36 +581,23 @@ H9. Access MongoDB directly (for debugging)
   brew install git python3 node jq          # macOS
   pip3 install requests
 
-  # ── REPO 1: Topolograph Docker ─────────────────────────────────────────────
-  cd ~
-  git clone https://github.com/Vadims06/topolograph-docker.git
-  cd topolograph-docker
-  cp env.example .env
-  # Edit .env: set TOPOLOGRAPH_PORT=8081 and credentials
-  docker compose pull && docker compose up -d
-  cd ~
-
-  # ── REPO 2: Pipeline Project ────────────────────────────────────────────────
+  # ── REPOSITORY CLONE ────────────────────────────────────────────────────────
   mkdir -p ~/Documents && cd ~/Documents
   git clone https://github.com/zumanm1/topologygraph_clone.git OSPF-DATABASE-TEST
   cd OSPF-DATABASE-TEST
-  git checkout feat/collapsing-stage
 
-  # ── WIRE THEM TOGETHER ─────────────────────────────────────────────────────
-  cp topolograph-docker/init/topolograph.js ~/topolograph-docker/init/topolograph.js
-  docker cp 06-STEP-BY-STEP/docker-patches/base.html flask:/home/flask/flask/templates/base.html
-  docker restart flask
+  # ── ENVIRONMENT + STACK ─────────────────────────────────────────────────────
+  cp .env.example .env
+  docker compose --profile test up -d --build
 
-  # ── PLAYWRIGHT TEST SUITE ───────────────────────────────────────────────────
-  cd tests && npm install && npx playwright install chromium && cd ..
+  # ── CANONICAL VALIDATION ────────────────────────────────────────────────────
+  bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
+  # → Open http://<REMOTE_IP>:8081 and inspect the loaded graph
 
-  # ── FIRST PIPELINE RUN ─────────────────────────────────────────────────────
-  bash terminal-script/workflow.sh all
-  # → Open http://localhost:8081, select graph_time, click Load dynamic graph
-
-  # ── FULL E2E VALIDATION ────────────────────────────────────────────────────
-  bash 06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh
-  # → Expected: 114/114 PASSED
+  # ── OPTIONAL MANUAL RETEST ──────────────────────────────────────────────────
+  GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
+  docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+    --graph-time="$GRAPH_TIME"
 
 ================================================================================
  FILE LOCATIONS
