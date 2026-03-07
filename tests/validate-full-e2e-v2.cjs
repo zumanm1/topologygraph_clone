@@ -52,7 +52,9 @@ const BASE_URL   = process.env.BASE_URL   || 'http://localhost:8081';
 const API_USER   = process.env.API_USER   || 'ospf@topolograph.com';
 const API_PASS   = process.env.API_PASS   || 'ospf';
 const HEADLESS   = process.env.HEADLESS !== 'false';
-const SS_DIR     = path.join(__dirname, '..', '06-STEP-BY-STEP', 'screenshots');
+const SS_DIR     = process.env.SCREENSHOT_DIR
+  ? path.resolve(process.env.SCREENSHOT_DIR)
+  : path.join(__dirname, '..', '06-STEP-BY-STEP', 'screenshots');
 
 // Prefer a 54_hosts graph_time; fall back to latest
 function resolveGraphTime() {

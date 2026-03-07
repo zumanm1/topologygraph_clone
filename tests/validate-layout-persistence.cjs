@@ -8,7 +8,9 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:8081';
 const API_USER = process.env.API_USER || 'ospf@topolograph.com';
 const API_PASS = process.env.API_PASS || 'ospf';
 const GRAPH_TIME = (process.env.GRAPH_TIME || process.env.GRAPH_TIMES || '').split(',')[0].trim();
-const SS_DIR = path.join(__dirname, 'screenshots');
+const SS_DIR = process.env.SCREENSHOT_DIR
+  ? path.resolve(process.env.SCREENSHOT_DIR)
+  : path.join(__dirname, 'screenshots');
 
 let PASS = 0;
 let FAIL = 0;

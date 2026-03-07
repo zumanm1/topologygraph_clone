@@ -133,6 +133,11 @@
 
   bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
+  If you want the updated full browser-user validation pack for the current
+  codebase, run instead:
+
+    bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh
+
 ────────────────────────────────────────────────────────────────────────────────
  STEP 9 — Optional manual packaged pipeline run
 ────────────────────────────────────────────────────────────────────────────────
@@ -157,6 +162,7 @@
   07-STEP-BY-STEP/READ2-INTSTAL.txt              (07 folder — full guide)
   07-STEP-BY-STEP/docs/02-COMPLETE-WALKTHROUGH.md (step-by-step walkthrough)
   07-STEP-BY-STEP/docs/03-FOLDER-FILE-REFERENCE.md (all output files explained)
+  10-STEP-BY-STEP/README.md                      (updated full Web UI validation pack)
 
 ================================================================================
  END OF SERVER-INSTALL.txt

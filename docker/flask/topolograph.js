@@ -454,6 +454,23 @@ function _parseHostnameImportText(csvText) {
   return idToHostname;
 }
 
+function _getSavedHostnameMapFromLocalStorage() {
+  try {
+    let raw = localStorage.getItem('_topolograph_hostname_map');
+    if (!raw) return {};
+    let parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function _mergeHostnameMapIntoLocalStorage(hostMap) {
+  let merged = Object.assign({}, _getSavedHostnameMapFromLocalStorage(), hostMap || {});
+  try { localStorage.setItem('_topolograph_hostname_map', JSON.stringify(merged)); } catch (err) {}
+  return merged;
+}
+
 function import_hostname_csv_file(inputEl) {
   let file = inputEl && inputEl.files ? inputEl.files[0] : null;
   if (!file) return;
@@ -492,6 +509,7 @@ function _importHostnameCsvText(csvText, filename) {
     _setHostCsvImportStatus('No routers from ' + filename + ' matched the selected graph.', '#dc3545');
     return;
   }
+  _mergeHostnameMapIntoLocalStorage(idToHostname);
   _setHostCsvImportStatus('Saving ' + matched + ' hostname mappings from ' + filename + '…', '#6c757d');
   let persistence = requests.length ? $.when.apply($, requests) : $.Deferred().resolve().promise();
   persistence.always(function() {
@@ -4248,6 +4266,7 @@ function _syncHostnameMappingsFromServer(graphTime) {
       if (!routerId || !hostname) return;
       hostMap[routerId] = hostname;
     });
+    hostMap = _mergeHostnameMapIntoLocalStorage(hostMap);
     var csvText = _buildHostnameCsvFromServerMap(hostMap);
     if (!csvText) return false;
     _applyHostnameMapping(csvText, 'saved hostnames for ' + graphTime);
@@ -4308,6 +4327,51 @@ function _normalizeCountryNodeLabels() {
   if (updates.length > 0) nodes.update(updates);
 }
 
+function _refreshCountryAwareNodeTitles() {
+  if (typeof nodes === 'undefined' || !nodes) return;
+  var updates = [];
+  nodes.get().forEach(function(n) {
+    var nextTitle = _buildCountryAwareNodeTitle({
+      id: n.id,
+      name: n.name,
+      router_id: n.router_id,
+      hostname: n.hostname || n.name || n.router_id || n.id,
+      country: n.country || n.group || 'UNK',
+      is_gateway: n.is_gateway === true
+    });
+    if (nextTitle !== n.title) {
+      updates.push({ id: n.id, title: nextTitle });
+    }
+  });
+  if (updates.length > 0) nodes.update(updates);
+}
+
+function _inferGatewayRolesFromCountryAdjacency() {
+  if (typeof nodes === 'undefined' || !nodes || typeof edges === 'undefined' || !edges) return;
+  var allNodes = nodes.get();
+  var byId = {};
+  allNodes.forEach(function(n) { byId[n.id] = n; });
+  var gatewayIds = {};
+  edges.get().forEach(function(e) {
+    var src = byId[e.from];
+    var dst = byId[e.to];
+    if (!src || !dst) return;
+    var srcCountry = String(src.country || src.group || 'UNK').toUpperCase();
+    var dstCountry = String(dst.country || dst.group || 'UNK').toUpperCase();
+    if (!srcCountry || !dstCountry || srcCountry === dstCountry) return;
+    gatewayIds[src.id] = true;
+    gatewayIds[dst.id] = true;
+  });
+  var updates = [];
+  allNodes.forEach(function(n) {
+    var inferredGateway = !!gatewayIds[n.id];
+    if (!!n.is_gateway !== inferredGateway) {
+      updates.push({ id: n.id, is_gateway: inferredGateway });
+    }
+  });
+  if (updates.length > 0) nodes.update(updates);
+}
+
 // ── 2. Apply country colours to all nodes that have a `country` attribute ─────
 function applyCountryColors() {
   if (typeof nodes === 'undefined' || !nodes) return;
@@ -4323,7 +4387,9 @@ function applyCountryColors() {
     }
   });
   if (inferredUpdates.length > 0) nodes.update(inferredUpdates);
+  _inferGatewayRolesFromCountryAdjacency();
   _normalizeCountryNodeLabels();
+  _refreshCountryAwareNodeTitles();
   var allNodes = nodes.get();
   var updates  = [];
   allNodes.forEach(function(n) {
@@ -4358,31 +4424,43 @@ function filterNodesByCountry(mode, selected) {
     var hidden = false;
     if (mode === 'exclude')   { hidden = selected.has(code); }
     if (mode === 'show_only') { hidden = !selected.has(code); }
-    updates.push({ id: n.id, hidden: hidden });
+    updates.push({ id: n.id, _filterHidden: hidden });
   });
   nodes.update(updates);
-  // Also hide edges whose both endpoints are hidden
   _syncEdgeVisibility();
 }
 
+function _nodeHiddenByRules(node) {
+  return !!(node && (node._modeHidden || node._filterHidden || node._collapseHidden));
+}
+
 function _syncEdgeVisibility() {
+  if (typeof nodes !== 'undefined' && nodes) {
+    var nodeUpdates = [];
+    nodes.get().forEach(function(n) {
+      var hidden = _nodeHiddenByRules(n);
+      if (!!n.hidden !== hidden) {
+        nodeUpdates.push({ id: n.id, hidden: hidden });
+      }
+    });
+    if (nodeUpdates.length) nodes.update(nodeUpdates);
+  }
   if (typeof edges === 'undefined' || !edges) return;
   var hiddenNodes = new Set();
-  nodes.get().forEach(function(n) { if (n.hidden) hiddenNodes.add(n.id); });
+  nodes.get().forEach(function(n) { if (_nodeHiddenByRules(n)) hiddenNodes.add(n.id); });
   var edgeUpdates = [];
   edges.get().forEach(function(e) {
-    var h = hiddenNodes.has(e.from) || hiddenNodes.has(e.to);
-    edgeUpdates.push({ id: e.id, hidden: h });
+    var h = !!e._collapseHidden || hiddenNodes.has(e.from) || hiddenNodes.has(e.to);
+    if (!!e.hidden !== h) edgeUpdates.push({ id: e.id, hidden: h });
   });
-  edges.update(edgeUpdates);
+  if (edgeUpdates.length) edges.update(edgeUpdates);
 }
 
 function resetCountryFilter() {
   if (typeof nodes === 'undefined' || !nodes) return;
-  var updates = nodes.get().map(function(n) { return { id: n.id, hidden: false }; });
+  var updates = nodes.get().map(function(n) { return { id: n.id, _filterHidden: false }; });
   nodes.update(updates);
-  var edgeUpd = edges ? edges.get().map(function(e) { return { id: e.id, hidden: false }; }) : [];
-  if (edgeUpd.length) edges.update(edgeUpd);
+  _syncEdgeVisibility();
 }
 
 // ── 5. Build and inject the Country Filter panel ──────────────────────────────
@@ -4773,13 +4851,14 @@ function collapseCountry(code) {
   }
 
   // Hide core nodes
-  nodes.update(cores.map(function(n) { return { id: n.id, hidden: true }; }));
+  nodes.update(cores.map(function(n) { return { id: n.id, _collapseHidden: true }; }));
 
   // Hide INTRA-country edges only (cross-country edges remain visible
   // per IP Fabric Persistent Path Overlay — their costs stay readable)
   if (edgeIds.length) {
-    edges.update(edgeIds.map(function(id) { return { id: id, hidden: true }; }));
+    edges.update(edgeIds.map(function(id) { return { id: id, _collapseHidden: true }; }));
   }
+  _syncEdgeVisibility();
 
   // Visual badge on gateway nodes — includes ∑cost for Cost Aggregation
   _markGatewayCollapsed(code, true, cores.length, intraCost);
@@ -4808,16 +4887,17 @@ function expandCountry(code) {
   // Restore core nodes
   if (hidden.nodeIds.size) {
     var nodeUpd = [];
-    hidden.nodeIds.forEach(function(id) { nodeUpd.push({ id: id, hidden: false }); });
+    hidden.nodeIds.forEach(function(id) { nodeUpd.push({ id: id, _collapseHidden: false }); });
     nodes.update(nodeUpd);
   }
 
   // Restore edges
   if (hidden.edgeIds.size) {
     var edgeUpd = [];
-    hidden.edgeIds.forEach(function(id) { edgeUpd.push({ id: id, hidden: false }); });
+    hidden.edgeIds.forEach(function(id) { edgeUpd.push({ id: id, _collapseHidden: false }); });
     edges.update(edgeUpd);
   }
+  _syncEdgeVisibility();
 
   // Remove gateway badge
   _markGatewayCollapsed(code, false, 0);
@@ -4893,6 +4973,12 @@ function setViewMode(mode) {
 
   if (typeof nodes === 'undefined' || !nodes) return;
   _normalizeCountryNodeLabels();
+  var setModeHidden = function(predicate) {
+    nodes.update(nodes.get().map(function(n) {
+      return { id: n.id, _modeHidden: !!predicate(n) };
+    }));
+    _syncEdgeVisibility();
+  };
 
   if (mode === 'asis') {
     expandAllCountries();
@@ -4904,7 +4990,8 @@ function setViewMode(mode) {
         hover:     { background: '#dddddd', border: '#aaaaaa' } } };
     });
     nodes.update(greyUpd);
-    _hideCfPanel();
+    setModeHidden(function() { return false; });
+    _showCfPanel();
     _hideCpPanel();
 
   } else if (mode === 'gateway') {
@@ -4912,13 +4999,11 @@ function setViewMode(mode) {
     resetCountryFilter();
     applyCountryColors();
     // Hide non-gateway nodes, but KEEP UNK nodes visible so operators can classify them
-    var gwUpd = nodes.get().map(function(n) {
+    setModeHidden(function(n) {
       var isUnk = (n.country || '').toUpperCase() === 'UNK';
-      return { id: n.id, hidden: n.is_gateway !== true && !isUnk };
+      return n.is_gateway !== true && !isUnk;
     });
-    nodes.update(gwUpd);
-    _syncEdgeVisibility();
-    _hideCfPanel();
+    _showCfPanel();
     _hideCpPanel();
     // GW-F2: always apply cost-based edge colouring in GATEWAY mode
     if (typeof _applyGatewayCostStyle === 'function') { _applyGatewayCostStyle(); }
@@ -4927,6 +5012,7 @@ function setViewMode(mode) {
     expandAllCountries();
     resetCountryFilter();
     applyCountryColors();
+    setModeHidden(function() { return false; });
     _hideCpPanel();
     _showCfPanel();
 
@@ -4934,7 +5020,8 @@ function setViewMode(mode) {
     expandAllCountries();
     resetCountryFilter();
     applyCountryColors();
-    _hideCfPanel();
+    setModeHidden(function() { return false; });
+    _showCfPanel();
     // Build or show the Country Groups panel
     if (!_cpPanelBuilt) {
       buildCollapsePanel();

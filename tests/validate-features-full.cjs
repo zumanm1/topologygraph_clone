@@ -65,7 +65,9 @@ const API_PASS   = process.env.API_PASS   || 'ospf';
 const HEADLESS   = process.env.HEADLESS   !== 'false';
 const SCREENSHOTS = process.env.SCREENSHOTS !== 'false';
 
-const SS_DIR = path.join(__dirname, '..', '03-STEP-BY-STEP', 'screenshots');
+const SS_DIR = process.env.SCREENSHOT_DIR
+  ? path.resolve(process.env.SCREENSHOT_DIR)
+  : path.join(__dirname, '..', '03-STEP-BY-STEP', 'screenshots');
 if (SCREENSHOTS) fs.mkdirSync(SS_DIR, { recursive: true });
 
 let _shotNum = 0;

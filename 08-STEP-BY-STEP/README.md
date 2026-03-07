@@ -147,6 +147,17 @@ Topolograph API security path by:
 - validating `Authorization: Bearer ...` against `/api/graph/`
 - validating the dedicated layout-persistence service and per-mode saved layout workflow
 
+If you want the **updated full Web UI user-journey suite** for the current codebase,
+run:
+
+```bash
+bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh
+```
+
+That suite complements `08` by focusing on browser upload, browser hostname import,
+all four view modes, feature-surface checks, layout/export controls, screenshots,
+and the Step 10 validation report.
+
 ---
 
 ## What This Step Validates

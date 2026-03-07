@@ -8,7 +8,9 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:8081';
 const API_USER = process.env.API_USER || 'ospf@topolograph.com';
 const API_PASS = process.env.API_PASS || 'ospf';
 const HEADLESS = process.env.HEADLESS !== 'false';
-const SS_DIR = path.join(__dirname, '..', '09-STEP-BY-STEP', 'screenshots');
+const SS_DIR = process.env.SCREENSHOT_DIR
+  ? path.resolve(process.env.SCREENSHOT_DIR)
+  : path.join(__dirname, '..', '09-STEP-BY-STEP', 'screenshots');
 const OSPF_FILE = path.join(__dirname, '..', 'INPUT-FOLDER', 'ospf-database-54-unk-test.txt');
 const HOST_FILE = path.join(__dirname, '..', 'INPUT-FOLDER', 'Load-hosts.csv');
 

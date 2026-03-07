@@ -33,6 +33,9 @@ jump directly to Part E onward for day-to-day use.
   The recommended validation entrypoint after clone is:
     bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
+  The recommended updated full Web UI user-journey suite is:
+    bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh
+
 ================================================================================
  PART A — SYSTEM PREREQUISITES
 ================================================================================
@@ -258,7 +261,7 @@ D2. Run the one-command Docker-native validation
 
     bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
-  This command:
+  This 08 command:
     1. rebuilds the Docker images
     2. starts the stack
     3. runs the packaged 54-router pipeline
@@ -267,9 +270,16 @@ D2. Run the one-command Docker-native validation
   The script writes its report to:
     08-STEP-BY-STEP/validation-report.txt
 
+  For the updated browser-user journey on the current codebase, run:
+
+    bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh
+
+  That Step 10 command writes its report to:
+    10-STEP-BY-STEP/validation-report.txt
+
 ==============================================================================
  PART E — RUN THE PIPELINE MANUALLY (OPTIONAL)
-==============================================================================
+===============================================================================
 
   Use this if you want the packaged pipeline run without the full 08 suite.
 
