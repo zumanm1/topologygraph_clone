@@ -73,8 +73,10 @@ bash 05-STEP-BY-STEP/scripts/run-full-e2e-validation.sh \
 ## Running Just the Playwright Test
 
 ```bash
-cd tests
-GRAPH_TIMES=04Mar2026_12h25m56s_34_hosts node validate-full-e2e.cjs
+docker compose --profile test up -d e2e-runner
+docker compose exec -T e2e-runner env \
+  GRAPH_TIMES=04Mar2026_12h25m56s_34_hosts \
+  node /app/tests/validate-full-e2e.cjs
 ```
 
 ---
@@ -84,9 +86,10 @@ GRAPH_TIMES=04Mar2026_12h25m56s_34_hosts node validate-full-e2e.cjs
 If no artefacts exist on disk, run the full pipeline first:
 
 ```bash
-bash terminal-script/workflow.sh all \
-  --ospf-file INPUT-FOLDER/ospf-database-2.txt \
-  --host-file INPUT-FOLDER/Load-hosts.txt
+docker compose exec pipeline bash /app/terminal-script/workflow.sh all \
+  --ospf-file /app/INPUT-FOLDER/ospf-database-2.txt \
+  --host-file /app/INPUT-FOLDER/Load-hosts.txt \
+  --base-url http://webserver:8081
 ```
 
 This will:

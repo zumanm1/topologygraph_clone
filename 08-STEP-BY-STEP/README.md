@@ -223,7 +223,7 @@ Command:
 
 ```bash
 docker compose --profile test up -d e2e-runner
-docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
   --graph-time=06Mar2026_10h12m29s_54_hosts
 ```
 

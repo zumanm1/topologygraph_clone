@@ -8,6 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 REPORT="$PROJECT_ROOT/08-STEP-BY-STEP/validation-report.txt"
+COMPOSE_CMD=(docker compose --project-directory "$PROJECT_ROOT" -f "$PROJECT_ROOT/docker-compose.yml")
 
 resolve_default_host_file() {
   local candidates=(
@@ -49,33 +50,41 @@ set +a
 HOST_BASE_URL="http://localhost:${TOPOLOGRAPH_PORT:-8081}"
 INTERNAL_BASE_URL="http://webserver:${TOPOLOGRAPH_PORT:-8081}"
 
+wait_for_docker_app() {
+  local max_wait=60
+  local waited=0
+  local code="000"
+  while [[ "$waited" -lt "$max_wait" ]]; do
+    code=$("${COMPOSE_CMD[@]}" exec -T e2e-runner env BASE_URL="$INTERNAL_BASE_URL" sh -lc 'curl -s -o /tmp/08-ready.html -w "%{http_code}" "$BASE_URL/" || echo "000"' 2>/dev/null || echo "000")
+    if [[ "$code" == "200" ]]; then
+      return 0
+    fi
+    sleep 2
+    waited=$((waited + 2))
+  done
+  return 1
+}
+
 info "Project root: $PROJECT_ROOT"
 info "Rebuilding all-Docker stack"
 
-docker compose down
+"${COMPOSE_CMD[@]}" down
 
-docker compose build
+"${COMPOSE_CMD[@]}" build
 
-docker compose up -d
+"${COMPOSE_CMD[@]}" up -d
 
-docker compose --profile test up -d e2e-runner
+"${COMPOSE_CMD[@]}" --profile test up -d e2e-runner
 
 info "Validating bearer-token API security"
 TOKEN_NAME="08-step-bearer-$(date +%s)"
 
-for _ in $(seq 1 30); do
-  if curl -sf -o /dev/null "$HOST_BASE_URL/"; then
-    break
-  fi
-  sleep 1
-done
-
-if ! curl -sf -o /dev/null "$HOST_BASE_URL/"; then
-  echo "[08-step] ERROR: modified app did not become ready at $HOST_BASE_URL"
+if ! wait_for_docker_app; then
+  echo "[08-step] ERROR: modified app did not become ready at $INTERNAL_BASE_URL"
   exit 1
 fi
 
-BEARER_TOKEN="$(docker compose exec -T pipeline python3 - <<PYEOF
+BEARER_TOKEN="$("${COMPOSE_CMD[@]}" exec -T pipeline python3 - <<PYEOF
 import re
 import requests
 
@@ -115,7 +124,7 @@ if [[ -z "$BEARER_TOKEN" ]]; then
   exit 1
 fi
 
-CURL_STATUS="$(curl -s -o /tmp/08-step-bearer-graph.json -w "%{http_code}" -H "Authorization: Bearer $BEARER_TOKEN" "$HOST_BASE_URL/api/graph/")"
+CURL_STATUS="$("${COMPOSE_CMD[@]}" exec -T e2e-runner env BASE_URL="$INTERNAL_BASE_URL" BEARER_TOKEN="$BEARER_TOKEN" sh -lc 'curl -s -o /tmp/08-step-bearer-graph.json -w "%{http_code}" -H "Authorization: Bearer $BEARER_TOKEN" "$BASE_URL/api/graph/"')"
 
 if [[ "$CURL_STATUS" != "200" ]]; then
   echo "[08-step] ERROR: bearer-authenticated /api/graph/ returned HTTP $CURL_STATUS"
@@ -125,7 +134,7 @@ fi
 info "Bearer-token /api/graph/ validation: PASS"
 
 info "Running Docker-native 07-equivalent pipeline validation"
-GRAPH_TIME="$(docker compose exec -T \
+GRAPH_TIME="$("${COMPOSE_CMD[@]}" exec -T \
   -e OSPF_FILE="$OSPF_FILE" \
   -e API_USER="$TOPOLOGRAPH_WEB_API_USERNAME_EMAIL" \
   -e API_PASS="$TOPOLOGRAPH_WEB_API_PASSWORD" \
@@ -184,7 +193,7 @@ NODE
 
 GRAPH_TIME="$(printf '%s\n' "$GRAPH_TIME" | tail -1 | tr -d '\r')"
 
-docker compose exec pipeline bash /app/terminal-script/workflow.sh enrich-existing \
+"${COMPOSE_CMD[@]}" exec pipeline bash /app/terminal-script/workflow.sh enrich-existing \
   --graph-time "$GRAPH_TIME" \
   --ospf-file "/app/INPUT-FOLDER/$OSPF_FILE" \
   --host-file "/app/INPUT-FOLDER/$HOST_FILE" \
@@ -199,15 +208,15 @@ fi
 
 info "Resolved graph_time: $GRAPH_TIME"
 info "Running Docker-native 06-equivalent deep validation"
-docker compose exec e2e-runner bash /app/docker/scripts/docker-e2e.sh \
+"${COMPOSE_CMD[@]}" exec e2e-runner bash /app/docker/scripts/docker-e2e.sh \
   --graph-time="$GRAPH_TIME"
 
 info "Running hostname-derived country-code regression check"
-docker compose exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
+"${COMPOSE_CMD[@]}" exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
   node /app/tests/validate-country-derivation.cjs
 
 info "Running layout-persistence regression check"
-docker compose exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
+"${COMPOSE_CMD[@]}" exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
   node /app/tests/validate-layout-persistence.cjs
 
 info "Running hostname-mapping page regression check"

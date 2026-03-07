@@ -151,7 +151,7 @@
 ────────────────────────────────────────────────────────────────────────────────
 
   GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
-  docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+  docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
     --graph-time="$GRAPH_TIME"
 
 ================================================================================

@@ -49,6 +49,21 @@ REPORT="$PROJECT_ROOT/06-STEP-BY-STEP/validation-report.txt"
 SS_DIR="$PROJECT_ROOT/06-STEP-BY-STEP/screenshots"
 PLAYWRIGHT_SCRIPT="$PROJECT_ROOT/tests/validate-full-e2e-v2.cjs"
 WORKFLOW="$PROJECT_ROOT/terminal-script/workflow.sh"
+COMPOSE_CMD=(docker compose --project-directory "$PROJECT_ROOT" -f "$PROJECT_ROOT/docker-compose.yml")
+
+if [[ "${INSIDE_DOCKER_VALIDATION:-0}" != "1" ]]; then
+  API_USER_DEFAULT="${API_USER:-${TOPOLOGRAPH_WEB_API_USERNAME_EMAIL:-ospf@topolograph.com}}"
+  API_PASS_DEFAULT="${API_PASS:-${TOPOLOGRAPH_WEB_API_PASSWORD:-ospf}}"
+  DOCKER_BASE_URL="http://webserver:${TOPOLOGRAPH_PORT:-8081}"
+  "${COMPOSE_CMD[@]}" up -d flask webserver pipeline >/dev/null
+  "${COMPOSE_CMD[@]}" --profile test up -d e2e-runner >/dev/null
+  exec "${COMPOSE_CMD[@]}" exec -T e2e-runner env \
+    INSIDE_DOCKER_VALIDATION=1 \
+    BASE_URL="$DOCKER_BASE_URL" \
+    API_USER="$API_USER_DEFAULT" \
+    API_PASS="$API_PASS_DEFAULT" \
+    bash /app/06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh "$@"
+fi
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
 HEADLESS="${HEADLESS:-true}"

@@ -317,7 +317,7 @@ E3. Explore the graph in the browser
 F1. Run the Docker-native deep E2E suite
 ------------------------------------------------------------
 
-    docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+    docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
       --graph-time="$GRAPH_TIME"
 
 ------------------------------------------------------------
@@ -380,7 +380,7 @@ G2. Run pipeline THEN validate (combined)
       --ospf-file=ospf-database-54-unk-test.txt \
       --host-file=Load-hosts-54-unk-test.txt
     GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
-    docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+    docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
       --graph-time="$GRAPH_TIME"
 
   This reruns the packaged Docker-native pipeline and then validates the
@@ -390,7 +390,7 @@ G2. Run pipeline THEN validate (combined)
 G3. Specify a graph_time explicitly
 ------------------------------------------------------------
 
-    docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+    docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
       --graph-time=05Mar2026_HHhMMmSSs_54_hosts
 
 ------------------------------------------------------------
@@ -457,9 +457,10 @@ H4. Pull the latest repository changes
 H5. Re-run pipeline for existing graph (skip upload)
 ------------------------------------------------------------
 
-    bash terminal-script/workflow.sh enrich-existing \
+    docker compose exec -T pipeline bash /app/terminal-script/workflow.sh enrich-existing \
       --graph-time 05Mar2026_HHhMMmSSs_54_hosts \
-      --host-file  INPUT-FOLDER/Load-hosts.txt
+      --host-file  /app/INPUT-FOLDER/Load-hosts.txt \
+      --base-url   http://webserver:8081
 
 ------------------------------------------------------------
 H6. Promote a new host file to canonical
@@ -514,10 +515,11 @@ H9. Access MongoDB directly (for debugging)
     API_PASS  = ospf
 
   To override for a different environment:
-    BASE_URL=http://192.168.1.100:8081 \
-    API_USER=myuser \
-    API_PASS=mypassword \
-    bash terminal-script/workflow.sh all --ospf-file INPUT-FOLDER/ospf-database-3.txt
+    docker compose exec -T pipeline env \
+      BASE_URL=http://192.168.1.100:8081 \
+      API_USER=myuser \
+      API_PASS=mypassword \
+      bash /app/terminal-script/workflow.sh all --ospf-file /app/INPUT-FOLDER/ospf-database-3.txt
 
 ================================================================================
  PART J — TROUBLESHOOTING
@@ -543,14 +545,17 @@ H9. Access MongoDB directly (for debugging)
 
   PROBLEM: "Uploaded. graph_time=" (empty graph_time)
     FIX   : The upload API returned no graph_time. Check:
-            curl -v -u ospf@topolograph.com:ospf \
-              http://localhost:8081/api/graphs  ← test API directly
+            docker compose exec -T e2e-runner curl -v -u ospf@topolograph.com:ospf \
+              http://webserver:8081/api/graphs  ← test API directly
             Verify OSPF file is valid Cisco LSDB format
 
   PROBLEM: "Country colours missing" (all nodes grey after pipeline)
     FIX   : push-to-ui.py may have failed. Re-run manually:
-            python3 terminal-script/push-to-ui.py \
-              --graph-time <graph_time>
+            docker compose exec -T pipeline python3 /app/terminal-script/push-to-ui.py \
+              --graph-time <graph_time> \
+              --base-url http://webserver:8081 \
+              --user ospf@topolograph.com \
+              --pass ospf
 
   PROBLEM: "Analysis dropdown missing from navbar"
     FIX   : rebuild and restart the Docker stack so the patched Flask image is used:
@@ -563,7 +568,8 @@ H9. Access MongoDB directly (for debugging)
             docker compose up -d flask webserver
 
   PROBLEM: "Playwright: browser not found"
-    FIX   : cd tests && npx playwright install chromium && cd ..
+    FIX   : docker compose --profile test up -d e2e-runner
+            docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh --graph-time="$GRAPH_TIME"
 
   PROBLEM: "E2E test: 0 nodes loaded"
     FIX   : No 54-host graph in Topolograph. Run:
@@ -606,7 +612,7 @@ H9. Access MongoDB directly (for debugging)
 
   # ── OPTIONAL MANUAL RETEST ──────────────────────────────────────────────────
   GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
-  docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+  docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
     --graph-time="$GRAPH_TIME"
 
 ================================================================================

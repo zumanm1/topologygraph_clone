@@ -13,8 +13,8 @@ from urllib.parse import urlparse
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8081")
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-USER = os.environ.get("USER", "ospf@topolograph.com")
-PASS = os.environ.get("PASS", "ospf")
+USER = os.environ.get("API_USER") or os.environ.get("TOPOLOGRAPH_WEB_API_USERNAME_EMAIL") or os.environ.get("USER", "ospf@topolograph.com")
+PASS = os.environ.get("API_PASS") or os.environ.get("TOPOLOGRAPH_WEB_API_PASSWORD") or os.environ.get("PASS", "ospf")
 BOOTSTRAP_SECRET = os.environ.get("TOPOLOGRAPH_BOOTSTRAP_SECRET", PASS)
 LSDB_PATH = Path(os.environ.get("LSDB_FILE", PROJECT_ROOT / "INPUT-FOLDER" / "ospf-database.txt"))
 TIMEOUT = int(os.environ.get("TIMEOUT", "120"))

@@ -163,10 +163,10 @@ docker compose --profile test build e2e-runner
 docker compose --profile test up -d e2e-runner
 
 # Run the full 114-check Playwright suite
-docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh
+docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh
 
 # With a specific graph_time
-docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
   --graph-time=06Mar2026_06h29m38s_54_hosts
 ```
 
