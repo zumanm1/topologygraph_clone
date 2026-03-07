@@ -612,31 +612,59 @@ function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic
           let graph_physics_scale_settings = JSON.parse(response.graph_physics_scale_settings_dd_json);
           init_visjs_graph(response.nodes_attr_dd_in_ll, response.edges_attr_dd_in_ll, graph_physics_scale_settings);
           // ── Country filter: apply colours & build panel after graph settles ──
-          setTimeout(function() {
-            var finalizeGraphLoad = function(appliedHostnameSync) {
-              if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
-              if (typeof applyCountryColors === 'function') { applyCountryColors(); }
-              if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
-              if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }       // EN-F4
-              if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
-              if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
-            };
-            var syncHostnameMappingsAfterCountryHydration = function() {
-              if (typeof _syncHostnameMappingsFromServer === 'function') {
-                _syncHostnameMappingsFromServer(dynamic_graph_time).then(finalizeGraphLoad, function() { finalizeGraphLoad(false); });
-              } else {
-                finalizeGraphLoad(false);
+          var finalizeGraphLoad = function(appliedHostnameSync, appliedCountrySync) {
+            if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
+            if (typeof applyCountryColors === 'function') { applyCountryColors(); }
+            if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
+            if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }       // EN-F4
+            if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
+            if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
+            if (typeof _countryHydrationLooksReady === 'function' && _countryHydrationLooksReady()) {
+              if (typeof _markCountryHydrationReady === 'function') {
+                _markCountryHydrationReady(dynamic_graph_time, {
+                  source: 'upload_ospf_lsdb',
+                  countrySync: !!appliedCountrySync,
+                  hostnameSync: !!appliedHostnameSync
+                });
               }
-            };
-            var afterCountrySync = function() {
-              syncHostnameMappingsAfterCountryHydration();
-            };
-            if (typeof _syncCountryMetadataFromServer === 'function') {
-              _syncCountryMetadataFromServer(dynamic_graph_time).then(afterCountrySync, afterCountrySync);
-            } else {
-              afterCountrySync(false);
+            } else if (typeof _markCountryHydrationPending === 'function') {
+              _markCountryHydrationPending(dynamic_graph_time, {
+                source: 'upload_ospf_lsdb',
+                countrySync: !!appliedCountrySync,
+                hostnameSync: !!appliedHostnameSync,
+                waitingForClassifiedData: true
+              });
             }
-          }, 900);
+          };
+          var syncHostnameMappingsAfterCountryHydration = function(appliedCountrySync) {
+            if (typeof _syncHostnameMappingsFromServer === 'function') {
+              _syncHostnameMappingsFromServer(dynamic_graph_time).then(function(appliedHostnameSync) {
+                finalizeGraphLoad(appliedHostnameSync, appliedCountrySync);
+              }, function() {
+                finalizeGraphLoad(false, appliedCountrySync);
+              });
+            } else {
+              finalizeGraphLoad(false, appliedCountrySync);
+            }
+          };
+          var afterCountrySync = function(appliedCountrySync) {
+            if (appliedCountrySync || typeof _recoverCountryMetadataFromPeerGraphs !== 'function') {
+              syncHostnameMappingsAfterCountryHydration(appliedCountrySync);
+              return;
+            }
+            _recoverCountryMetadataFromPeerGraphs(dynamic_graph_time).then(function(appliedPeerRecovery) {
+              syncHostnameMappingsAfterCountryHydration(!!appliedPeerRecovery);
+            }, function() {
+              syncHostnameMappingsAfterCountryHydration(false);
+            });
+          };
+          if (typeof _syncCountryMetadataFromServer === 'function') {
+            _syncCountryMetadataFromServer(dynamic_graph_time).then(afterCountrySync, function() {
+              afterCountrySync(false);
+            });
+          } else {
+            afterCountrySync(false);
+          }
           // mark General View as pressed button
           let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
           // we mark button pressed if only button has not been marked as pressed
@@ -3543,6 +3571,9 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
     network = new vis.Network(container, data, options);
     // ── COLLAPSING: wire double-click expand/collapse handler ─────────────────
     if (typeof _wireCollapseDoubleClick === 'function') { _wireCollapseDoubleClick(); }
+    if (typeof _markCountryHydrationPending === 'function') {
+      _markCountryHydrationPending(typeof _getGraphTime === 'function' ? _getGraphTime() : '');
+    }
     var _postLoadCountryHydration = function(attempt) {
       if (typeof nodes === 'undefined' || !nodes || typeof _syncCountryMetadataFromServer !== 'function') return;
       var allNodes = nodes.get();
@@ -3550,7 +3581,15 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
       var countries = Array.from(new Set(allNodes.map(function(n) {
         return String(n.country || '').toUpperCase();
       }).filter(function(v) { return !!v; })));
-      if (countries.length > 1 || (countries.length === 1 && countries[0] !== 'UNK')) return;
+      if (countries.length > 1 || (countries.length === 1 && countries[0] !== 'UNK')) {
+        if (typeof _markCountryHydrationReady === 'function') {
+          _markCountryHydrationReady(typeof _getGraphTime === 'function' ? _getGraphTime() : '', {
+            alreadyHydrated: true,
+            source: 'init_visjs_graph'
+          });
+        }
+        return;
+      }
       var currentGraphTime = typeof _getGraphTime === 'function' ? _getGraphTime() : '';
       if (!currentGraphTime) return;
       var finalizePostLoadCountryHydration = function(appliedHostnameSync) {
@@ -3560,6 +3599,20 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
         if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }
         if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
         if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
+        if (typeof _countryHydrationLooksReady === 'function' && _countryHydrationLooksReady()) {
+          if (typeof _markCountryHydrationReady === 'function') {
+            _markCountryHydrationReady(currentGraphTime, {
+              source: 'post_load_recovery',
+              hostnameSync: !!appliedHostnameSync
+            });
+          }
+        } else if (typeof _markCountryHydrationPending === 'function') {
+          _markCountryHydrationPending(currentGraphTime, {
+            source: 'post_load_recovery',
+            hostnameSync: !!appliedHostnameSync,
+            waitingForClassifiedData: true
+          });
+        }
       };
       _syncCountryMetadataFromServer(currentGraphTime).then(function(appliedServerSync) {
         if (appliedServerSync) {
@@ -3568,6 +3621,22 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
           } else {
             finalizePostLoadCountryHydration(false);
           }
+          return;
+        }
+        if (typeof _recoverCountryMetadataFromPeerGraphs === 'function') {
+          _recoverCountryMetadataFromPeerGraphs(currentGraphTime).then(function(appliedPeerRecovery) {
+            if (appliedPeerRecovery) {
+              finalizePostLoadCountryHydration(false);
+              return;
+            }
+            if ((attempt || 0) < 2) {
+              setTimeout(function() { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
+            }
+          }, function() {
+            if ((attempt || 0) < 2) {
+              setTimeout(function() { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
+            }
+          });
           return;
         }
         if ((attempt || 0) < 2) {
@@ -4294,10 +4363,211 @@ function _buildHostnameCsvFromServerMap(hostMap) {
   var rows = ['router_id,hostname,country'];
   Object.keys(hostMap || {}).forEach(function(routerId) {
     var hostname = String(hostMap[routerId] || '').trim();
-    if (!routerId || !hostname) return;
+    if (!routerId || !hostname || _looksLikeIpv4(hostname)) return;
     rows.push(routerId + ',' + hostname + ',' + _deriveCountryCodeFromHostname(hostname));
   });
   return rows.length > 1 ? rows.join('\n') : '';
+}
+
+function _getCountryMetadataIdentityCandidates(item) {
+  var candidates = [];
+  var seen = {};
+  var addCandidate = function(value) {
+    var next = String(value || '').split('\n')[0].trim();
+    if (!next || /^\[.*\]$/.test(next) || next.indexOf('▲') !== -1 || next.indexOf('∑cost') !== -1 || seen[next]) return;
+    seen[next] = true;
+    candidates.push(next);
+  };
+  if (!item || typeof item !== 'object') return candidates;
+  addCandidate(item.name);
+  addCandidate(item.router_id);
+  addCandidate(item.id);
+  addCandidate(item.hostname);
+  String(item.label || '').split('\n').forEach(addCandidate);
+  return candidates;
+}
+
+function _summarizeCountryMetadataServerNodes(serverNodes) {
+  var summary = {
+    nodeCount: 0,
+    classifiedCount: 0,
+    hostnameCount: 0,
+    gatewayCount: 0
+  };
+  if (!Array.isArray(serverNodes)) return summary;
+  summary.nodeCount = serverNodes.length;
+  serverNodes.forEach(function(serverNode) {
+    var country = String(serverNode.country || serverNode.group || '').toUpperCase().trim();
+    var hostname = String(serverNode.hostname || '').trim();
+    if (country && country !== 'UNK') summary.classifiedCount += 1;
+    if (hostname && !_looksLikeIpv4(hostname)) summary.hostnameCount += 1;
+    if (serverNode.is_gateway === true) summary.gatewayCount += 1;
+  });
+  return summary;
+}
+
+function _buildCountryMetadataServerNodeLookup(serverNodes) {
+  var byRouterId = {};
+  (serverNodes || []).forEach(function(serverNode) {
+    _getCountryMetadataIdentityCandidates(serverNode).forEach(function(routerId) {
+      byRouterId[routerId] = serverNode;
+    });
+  });
+  return byRouterId;
+}
+
+function _applyCountryMetadataFromServerNodes(serverNodes, sourceGraphTime, requireExactMatch) {
+  if (!Array.isArray(serverNodes) || serverNodes.length === 0 || typeof nodes === 'undefined' || !nodes) {
+    return { applied: false, matchedCount: 0, nodeCount: 0, updateCount: 0 };
+  }
+  var summary = _summarizeCountryMetadataServerNodes(serverNodes);
+  if (summary.classifiedCount === 0 && summary.hostnameCount === 0 && summary.gatewayCount === 0) {
+    return { applied: false, matchedCount: 0, nodeCount: 0, updateCount: 0 };
+  }
+  var liveNodes = nodes.get();
+  var nodeCount = liveNodes.length;
+  if (!nodeCount) {
+    return { applied: false, matchedCount: 0, nodeCount: 0, updateCount: 0 };
+  }
+  if (requireExactMatch === true && serverNodes.length !== nodeCount) {
+    return { applied: false, matchedCount: 0, nodeCount: nodeCount, updateCount: 0 };
+  }
+  var byRouterId = _buildCountryMetadataServerNodeLookup(serverNodes);
+  var updates = [];
+  var matchedCount = 0;
+  liveNodes.forEach(function(node) {
+    var serverNode = null;
+    _getCountryMetadataIdentityCandidates(node).some(function(routerId) {
+      if (!routerId || !byRouterId[routerId]) return false;
+      serverNode = byRouterId[routerId];
+      return true;
+    });
+    if (!serverNode) return;
+    matchedCount += 1;
+    var nextCountry = String(serverNode.country || serverNode.group || node.country || node.group || 'UNK').toUpperCase();
+    var nextGroup = String(serverNode.group || serverNode.country || node.group || nextCountry || 'UNK').toUpperCase();
+    var nextHostname = String(serverNode.hostname || node.hostname || '').trim();
+    var nextGateway = serverNode.is_gateway === true;
+    var nextLabel = serverNode.label || _buildCountryAwareNodeLabel({
+      id: node.id,
+      name: node.name,
+      router_id: node.router_id,
+      hostname: nextHostname,
+      label: node.label,
+      country: nextCountry,
+      group: nextGroup
+    });
+    var nextTitle = serverNode.title || _buildCountryAwareNodeTitle({
+      id: node.id,
+      name: node.name,
+      router_id: node.router_id,
+      hostname: nextHostname || node.name || node.router_id || node.id,
+      country: nextCountry,
+      group: nextGroup,
+      is_gateway: nextGateway
+    });
+    var update = { id: node.id };
+    var changed = false;
+    if ((node.country || 'UNK').toUpperCase() !== nextCountry) { update.country = nextCountry; changed = true; }
+    if ((node.group || 'UNK').toUpperCase() !== nextGroup) { update.group = nextGroup; changed = true; }
+    if ((node.hostname || '') !== nextHostname) { update.hostname = nextHostname; changed = true; }
+    if (!!node.is_gateway !== nextGateway) { update.is_gateway = nextGateway; changed = true; }
+    if (node.label !== nextLabel) { update.label = nextLabel; changed = true; }
+    if (node.title !== nextTitle) { update.title = nextTitle; changed = true; }
+    if (serverNode.color && JSON.stringify(node.color || null) !== JSON.stringify(serverNode.color)) { update.color = serverNode.color; changed = true; }
+    if (changed) updates.push(update);
+  });
+  if (requireExactMatch === true && matchedCount !== nodeCount) {
+    return { applied: false, matchedCount: matchedCount, nodeCount: nodeCount, updateCount: 0 };
+  }
+  if (updates.length) nodes.update(updates);
+  console.log('[EN-F0] Synced country metadata from server for graph ' + sourceGraphTime + ' (' + updates.length + ' nodes, ' + matchedCount + ' matched)');
+  return {
+    applied: updates.length > 0,
+    matchedCount: matchedCount,
+    nodeCount: nodeCount,
+    updateCount: updates.length
+  };
+}
+
+function _fetchCountryMetadataServerNodes(graphTime) {
+  if (!graphTime || typeof fetch !== 'function') return Promise.resolve([]);
+  return fetch('/__security/session-diagram/' + encodeURIComponent(graphTime) + '/nodes', {
+    credentials: 'same-origin'
+  }).then(function(response) {
+    if (!response.ok) throw new Error('Failed to load node metadata for graph ' + graphTime);
+    return response.json();
+  }).then(function(serverNodes) {
+    return Array.isArray(serverNodes) ? serverNodes : [];
+  }).catch(function() {
+    return [];
+  });
+}
+
+function _fetchSavedGraphTimesForMetadataRecovery() {
+  if (typeof fetch !== 'function') return Promise.resolve([]);
+  return fetch('/upload-ospf-isis-lsdb', {
+    credentials: 'same-origin'
+  }).then(function(response) {
+    if (!response.ok) throw new Error('Failed to load saved graph list');
+    return response.text();
+  }).then(function(html) {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(html, 'text/html');
+    var graphTimes = Array.from(doc.querySelectorAll('option')).map(function(option) {
+      return String(option.value || '').trim();
+    }).filter(function(value) {
+      return !!value;
+    });
+    return Array.from(new Set(graphTimes));
+  }).catch(function() {
+    return [];
+  });
+}
+
+function _recoverCountryMetadataFromPeerGraphs(currentGraphTime) {
+  if (!currentGraphTime || typeof nodes === 'undefined' || !nodes) return Promise.resolve(false);
+  var liveNodes = nodes.get();
+  if (!liveNodes.length) return Promise.resolve(false);
+  var dayPrefix = String(currentGraphTime || '').split('_')[0] || '';
+  var hostCountMatch = String(currentGraphTime || '').match(/_(\d+)_hosts$/i);
+  var hostCountSuffix = hostCountMatch ? hostCountMatch[1] : '';
+  return _fetchSavedGraphTimesForMetadataRecovery().then(function(graphTimes) {
+    var candidates = (graphTimes || []).filter(function(graphTime) {
+      return graphTime && graphTime !== currentGraphTime;
+    });
+    candidates.sort(function(a, b) {
+      var scoreFor = function(value) {
+        var score = 0;
+        if (hostCountSuffix && new RegExp('_' + hostCountSuffix + '_hosts$', 'i').test(String(value || ''))) score += 2;
+        if (dayPrefix && String(value || '').indexOf(dayPrefix + '_') === 0) score += 1;
+        return score;
+      };
+      var scoreDiff = scoreFor(b) - scoreFor(a);
+      if (scoreDiff !== 0) return scoreDiff;
+      return String(b || '').localeCompare(String(a || ''));
+    });
+    var index = 0;
+    var tryNext = function() {
+      if (index >= candidates.length || index >= 12) return Promise.resolve(false);
+      var candidateGraphTime = candidates[index++];
+      return _fetchCountryMetadataServerNodes(candidateGraphTime).then(function(serverNodes) {
+        var summary = _summarizeCountryMetadataServerNodes(serverNodes);
+        if (!summary.nodeCount || summary.nodeCount !== liveNodes.length) return tryNext();
+        if (summary.classifiedCount === 0 && summary.hostnameCount === 0 && summary.gatewayCount === 0) return tryNext();
+        var applied = _applyCountryMetadataFromServerNodes(serverNodes, candidateGraphTime, true);
+        if (applied && applied.applied) {
+          console.log('[EN-F0] Recovered country metadata for graph ' + currentGraphTime + ' from peer graph ' + candidateGraphTime);
+          return true;
+        }
+        return tryNext();
+      });
+    };
+    return tryNext();
+  }).catch(function(err) {
+    console.warn('[EN-F0] Could not recover country metadata from peer graphs', err);
+    return false;
+  });
 }
 
 function _syncHostnameMappingsFromServer(graphTime) {
@@ -4319,7 +4589,7 @@ function _syncHostnameMappingsFromServer(graphTime) {
     Array.from(doc.querySelectorAll('input[id^="comment_"]')).forEach(function(input) {
       var hostname = String(input.value || '').trim();
       var routerId = String(input.id || '').replace(/^comment_/, '').trim();
-      if (!routerId || !hostname) return;
+      if (!routerId || !hostname || _looksLikeIpv4(hostname)) return;
       hostMap[routerId] = hostname;
     });
     hostMap = _mergeHostnameMapIntoLocalStorage(hostMap);
@@ -4336,61 +4606,9 @@ function _syncHostnameMappingsFromServer(graphTime) {
 
 function _syncCountryMetadataFromServer(graphTime) {
   if (!graphTime || typeof fetch !== 'function' || typeof nodes === 'undefined' || !nodes) return Promise.resolve(false);
-  return fetch('/__security/session-diagram/' + encodeURIComponent(graphTime) + '/nodes', {
-    credentials: 'same-origin'
-  }).then(function(response) {
-    if (!response.ok) throw new Error('Failed to load node metadata for graph ' + graphTime);
-    return response.json();
-  }).then(function(serverNodes) {
-    if (!Array.isArray(serverNodes) || serverNodes.length === 0) return false;
-    var byRouterId = {};
-    serverNodes.forEach(function(serverNode) {
-      var routerId = String(serverNode.name || serverNode.router_id || serverNode.id || '').trim();
-      if (!routerId) return;
-      byRouterId[routerId] = serverNode;
-    });
-    var updates = [];
-    nodes.get().forEach(function(node) {
-      var routerId = String(node.name || node.router_id || node.id || '').split('\n')[0].trim();
-      if (!routerId) return;
-      var serverNode = byRouterId[routerId];
-      if (!serverNode) return;
-      var nextCountry = String(serverNode.country || serverNode.group || node.country || node.group || 'UNK').toUpperCase();
-      var nextGroup = String(serverNode.group || serverNode.country || node.group || nextCountry || 'UNK').toUpperCase();
-      var nextHostname = String(serverNode.hostname || node.hostname || '').trim();
-      var nextGateway = serverNode.is_gateway === true;
-      var nextLabel = serverNode.label || _buildCountryAwareNodeLabel({
-        id: node.id,
-        name: node.name,
-        router_id: node.router_id,
-        hostname: nextHostname,
-        label: node.label,
-        country: nextCountry,
-        group: nextGroup
-      });
-      var nextTitle = serverNode.title || _buildCountryAwareNodeTitle({
-        id: node.id,
-        name: node.name,
-        router_id: node.router_id,
-        hostname: nextHostname || node.name || node.router_id || node.id,
-        country: nextCountry,
-        group: nextGroup,
-        is_gateway: nextGateway
-      });
-      var update = { id: node.id };
-      var changed = false;
-      if ((node.country || 'UNK').toUpperCase() !== nextCountry) { update.country = nextCountry; changed = true; }
-      if ((node.group || 'UNK').toUpperCase() !== nextGroup) { update.group = nextGroup; changed = true; }
-      if ((node.hostname || '') !== nextHostname) { update.hostname = nextHostname; changed = true; }
-      if (!!node.is_gateway !== nextGateway) { update.is_gateway = nextGateway; changed = true; }
-      if (node.label !== nextLabel) { update.label = nextLabel; changed = true; }
-      if (node.title !== nextTitle) { update.title = nextTitle; changed = true; }
-      if (serverNode.color && JSON.stringify(node.color || null) !== JSON.stringify(serverNode.color)) { update.color = serverNode.color; changed = true; }
-      if (changed) updates.push(update);
-    });
-    if (updates.length) nodes.update(updates);
-    console.log('[EN-F0] Synced country metadata from server for graph ' + graphTime + ' (' + updates.length + ' nodes)');
-    return updates.length > 0;
+  return _fetchCountryMetadataServerNodes(graphTime).then(function(serverNodes) {
+    var applied = _applyCountryMetadataFromServerNodes(serverNodes, graphTime, false);
+    return !!(applied && applied.applied);
   }).catch(function(err) {
     console.warn('[EN-F0] Could not sync country metadata from server', err);
     return false;
@@ -4492,20 +4710,24 @@ function _inferGatewayRolesFromCountryAdjacency() {
 }
 
 // ── 2. Apply country colours to all nodes that have a `country` attribute ─────
-function applyCountryColors() {
+function applyCountryColors(options) {
   if (typeof nodes === 'undefined' || !nodes) return;
-  var inferredUpdates = [];
-  nodes.get().forEach(function(n) {
-    var existingCountry = (n.country || '').toUpperCase();
-    if (existingCountry && existingCountry !== 'UNK') return;
-    var hostname = String(n.hostname || '').trim();
-    if (!hostname && n.label) hostname = String(n.label).split('\n')[0].trim();
-    var derived = _deriveCountryCodeFromHostname(hostname);
-    if (derived !== 'UNK') {
-      inferredUpdates.push({ id: n.id, country: derived, group: derived, title: _buildCountryAwareNodeTitle({ hostname: hostname || (n.name || n.id), country: derived, is_gateway: n.is_gateway === true }) });
-    }
-  });
-  if (inferredUpdates.length > 0) nodes.update(inferredUpdates);
+  var settings = options && typeof options === 'object' ? options : {};
+  var allowCountryInference = settings.allowCountryInference === true;
+  if (allowCountryInference) {
+    var inferredUpdates = [];
+    nodes.get().forEach(function(n) {
+      var existingCountry = (n.country || '').toUpperCase();
+      if (existingCountry && existingCountry !== 'UNK') return;
+      var hostname = String(n.hostname || '').trim();
+      if (!hostname && n.label) hostname = String(n.label).split('\n')[0].trim();
+      var derived = _deriveCountryCodeFromHostname(hostname);
+      if (derived !== 'UNK') {
+        inferredUpdates.push({ id: n.id, country: derived, group: derived, title: _buildCountryAwareNodeTitle({ hostname: hostname || (n.name || n.id), country: derived, is_gateway: n.is_gateway === true }) });
+      }
+    });
+    if (inferredUpdates.length > 0) nodes.update(inferredUpdates);
+  }
   _inferGatewayRolesFromCountryAdjacency();
   _normalizeCountryNodeLabels();
   _refreshCountryAwareNodeTitles();
@@ -5521,6 +5743,15 @@ var _asymmetricOn    = false;
 var _matrixVisible   = false;
 var _inspectorWired  = false;
 var _LS_KEY          = 'topolograph_collapse_v1';
+var _countryHydrationState = {
+  status: 'idle',
+  graphTime: '',
+  nodeCount: 0,
+  classifiedCount: 0,
+  countryCount: 0,
+  updatedAt: 0,
+  error: ''
+};
 
 // ── Helper: resolve current graph_time for localStorage keying ────────────────
 function _getGraphTime() {
@@ -5531,6 +5762,54 @@ function _getGraphTime() {
   var sel = document.getElementById('dynamic_graph_time') || document.getElementById('graph_time') || document.querySelector('select');
   if (sel && sel.value) return String(sel.value);
   return 'default';
+}
+
+function _countryHydrationSummary() {
+  if (typeof nodes === 'undefined' || !nodes) {
+    return { nodeCount: 0, classifiedCount: 0, countryCount: 0 };
+  }
+  var allNodes = nodes.get();
+  var classifiedCount = 0;
+  var countries = new Set();
+  allNodes.forEach(function(n) {
+    var code = String(n.country || 'UNK').toUpperCase();
+    countries.add(code);
+    if (code && code !== 'UNK') classifiedCount += 1;
+  });
+  return {
+    nodeCount: allNodes.length,
+    classifiedCount: classifiedCount,
+    countryCount: countries.size
+  };
+}
+
+function _countryHydrationLooksReady() {
+  var summary = _countryHydrationSummary();
+  return summary.classifiedCount > 0 || summary.countryCount > 1;
+}
+
+function _publishCountryHydrationState(status, graphTime, extra) {
+  var summary = _countryHydrationSummary();
+  _countryHydrationState = Object.assign({
+    status: status || 'idle',
+    graphTime: graphTime || _getGraphTime(),
+    nodeCount: summary.nodeCount,
+    classifiedCount: summary.classifiedCount,
+    countryCount: summary.countryCount,
+    updatedAt: Date.now(),
+    error: ''
+  }, extra || {});
+  if (typeof window !== 'undefined') {
+    window.__topolographCountryHydration = Object.assign({}, _countryHydrationState);
+  }
+}
+
+function _markCountryHydrationPending(graphTime, extra) {
+  _publishCountryHydrationState('pending', graphTime, extra);
+}
+
+function _markCountryHydrationReady(graphTime, extra) {
+  _publishCountryHydrationState('ready', graphTime, extra);
 }
 
 // ── Helper: get readable label for a node id ──────────────────────────────────

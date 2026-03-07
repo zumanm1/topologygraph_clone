@@ -42,6 +42,38 @@ wait_for_docker_app() {
   return 1
 }
 
+resolve_default_host_file() {
+  local candidates=(
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-54-unk-test.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-3b.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/host-file.txt"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [ -f "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' ""
+}
+
+enrich_uploaded_graph() {
+  local graph_time="$1"
+  local host_file="$2"
+  [ -n "$graph_time" ] || return 1
+  [ -n "$host_file" ] || return 1
+  [ -f "$host_file" ] || return 1
+  "${COMPOSE_CMD[@]}" exec -T pipeline bash /app/terminal-script/workflow.sh enrich-existing \
+    --graph-time "$graph_time" \
+    --host-file "/app/INPUT-FOLDER/$(basename "$host_file")" \
+    --base-url "$DOCKER_BASE" \
+    --user "$USER" \
+    --pass "$PASS"
+}
+
 echo "=== Topolograph validation ==="
 echo ""
 
@@ -110,6 +142,21 @@ else
   else
     echo "   FAIL – Upload or validation failed"
     FAIL=1
+  fi
+  HOST_MAP_FILE="$(resolve_default_host_file)"
+  if [ -n "$GRAPH_TIME" ] && [ -n "$HOST_MAP_FILE" ]; then
+    echo "   Enriching graph with $(basename "$HOST_MAP_FILE")"
+    ENRICH_LOG="$(mktemp)"
+    if enrich_uploaded_graph "$GRAPH_TIME" "$HOST_MAP_FILE" >"$ENRICH_LOG" 2>&1; then
+      echo "   OK – Graph enriched with hostname mapping"
+    else
+      cat "$ENRICH_LOG"
+      echo "   FAIL – Graph enrichment failed"
+      FAIL=1
+    fi
+    rm -f "$ENRICH_LOG"
+  elif [ -n "$GRAPH_TIME" ]; then
+    echo "   WARN – No host mapping file found; smoke test will use raw graph"
   fi
 fi
 

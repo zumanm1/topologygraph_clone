@@ -25,6 +25,21 @@
     return typeof _viewMode !== 'undefined' && _viewMode ? _viewMode : 'enriched';
   }
 
+  function currentContext() {
+    return {
+      graphId: currentGraphId(),
+      graphTime: currentGraphTime(),
+      viewMode: currentViewMode()
+    };
+  }
+
+  function sameContext(a, b) {
+    return !!a && !!b &&
+      String(a.graphId || '') === String(b.graphId || '') &&
+      String(a.graphTime || '') === String(b.graphTime || '') &&
+      String(a.viewMode || '') === String(b.viewMode || '');
+  }
+
   function canPersist() {
     return typeof network !== 'undefined' && network && typeof nodes !== 'undefined' && nodes && currentGraphId() && currentGraphTime();
   }
@@ -88,7 +103,10 @@
 
   function applyLayoutSnapshot(data) {
     if (!data || !data.positions || typeof nodes === 'undefined' || !nodes) return false;
-    const updates = Object.keys(data.positions).map(function (id) {
+    const existingIds = new Set((typeof nodes.getIds === 'function' ? nodes.getIds() : []).map(function (id) { return String(id); }));
+    const updates = Object.keys(data.positions).filter(function (id) {
+      return existingIds.has(String(id));
+    }).map(function (id) {
       const raw = data.positions[id] || {};
       const numericId = Number(id);
       return {
@@ -118,7 +136,7 @@
       } else if (typeof network.redraw === 'function') {
         network.redraw();
       }
-      if (data.selected_node_id && typeof network.selectNodes === 'function') {
+      if (data.selected_node_id && existingIds.has(String(data.selected_node_id)) && typeof network.selectNodes === 'function') {
         const numericId = Number(data.selected_node_id);
         network.selectNodes([Number.isNaN(numericId) ? data.selected_node_id : numericId]);
       }
@@ -128,9 +146,20 @@
 
   async function loadLayout(showNotification) {
     if (!canPersist()) return false;
+    const requestedContext = currentContext();
     const data = await fetchLayoutSnapshot();
+    if (!sameContext(requestedContext, currentContext())) {
+      return false;
+    }
     if (!data.found) {
       if (showNotification) notify('No saved layout for this topology mode', true);
+      return false;
+    }
+    if (!sameContext(requestedContext, {
+      graphId: data.graph_id,
+      graphTime: data.graph_time,
+      viewMode: data.view_mode
+    })) {
       return false;
     }
     const applied = applyLayoutSnapshot(data);
