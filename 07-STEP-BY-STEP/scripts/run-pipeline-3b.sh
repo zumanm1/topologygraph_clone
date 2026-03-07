@@ -181,10 +181,15 @@ const API_PASS = 'ospf';
     if (input) { input.style.display = 'block'; input.removeAttribute('hidden'); }
   });
   await page.locator('#inputOSPFFileID').setInputFiles(OSPF_FILE);
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: 'networkidle', timeout: 30000 }),
-    page.locator('input[name="upload_files_btn"]').click(),
-  ]);
+  await page.locator('input[name="upload_files_btn"]').click();
+  await page.waitForFunction(
+    (previous) => {
+      const options = Array.from(document.querySelectorAll('#dynamic_graph_time option')).map((o) => o.value);
+      return options.length > 0 && options.join('|') !== previous;
+    },
+    before.join('|'),
+    { timeout: 120000 }
+  );
 
   const after = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
   const created = after.filter(v => !before.includes(v));

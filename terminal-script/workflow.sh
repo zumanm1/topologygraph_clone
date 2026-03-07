@@ -153,9 +153,10 @@ import requests
 base = "${BASE_URL}"
 auth = ("${AUTH_USER}", "${AUTH_PASS}")
 ospf_path = "${OSPF_FILE}"
+bootstrap_secret = "${TOPOLOGRAPH_BOOTSTRAP_SECRET:-${AUTH_PASS}}"
 
 # Ensure credentials exist
-requests.post(f"{base}/create-default-credentials", auth=auth, timeout=10)
+requests.post(f"{base}/create-default-credentials", auth=auth, headers={"X-Topolograph-Bootstrap-Secret": bootstrap_secret}, timeout=10)
 
 s = requests.Session()
 r = s.get(f"{base}/login", timeout=15)

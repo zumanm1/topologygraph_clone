@@ -89,6 +89,28 @@ resolve_graph_time() {
 }
 GRAPH_TIME="$(resolve_graph_time)"
 
+resolve_first_existing() {
+  local candidate
+  for candidate in "$@"; do
+    if [ -f "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' ""
+}
+
+RESOLVED_OSPF_FILE="$(resolve_first_existing \
+  "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-54-unk-test.txt" \
+  "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" \
+  "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" \
+  "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt")"
+RESOLVED_HOST_FILE="$(resolve_first_existing \
+  "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt" \
+  "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv" \
+  "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-3b.txt" \
+  "$PROJECT_ROOT/INPUT-FOLDER/host-file.txt")"
+
 # ── Header ────────────────────────────────────────────────────────────────────
 {
 echo "╔══════════════════════════════════════════════════════════════════════╗"
@@ -96,8 +118,8 @@ echo "║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               
 echo "╠══════════════════════════════════════════════════════════════════════╣"
 echo "║   Date        : $(date '+%Y-%m-%d %H:%M:%S')"
 echo "║   Graph time  : $GRAPH_TIME"
-echo "║   OSPF file   : ospf-database-3.txt (54 routers, 20 UNK)"
-echo "║   Host file   : Load-hosts.txt (34 entries — 20 UNK unmapped)"
+echo "║   OSPF file   : $(basename "${RESOLVED_OSPF_FILE:-unresolved}")"
+echo "║   Host file   : $(basename "${RESOLVED_HOST_FILE:-unresolved}")"
 echo "║   Headless    : $HEADLESS"
 echo "║   Run pipeline: $RUN_PIPELINE"
 echo "║   Project     : $PROJECT_ROOT"
@@ -118,28 +140,39 @@ else
   P0_FAIL=$((P0_FAIL+1))
 fi
 
-# 0b. OSPF input files (both db2 and db3)
+# 0b. OSPF input files
+FOUND_OSPF=0
 for f in \
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-54-unk-test.txt" \
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" \
     "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" \
-    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt"; do
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"; do
   if [ -f "$f" ]; then
     LINES=$(wc -l < "$f")
     echo "  ✅ PASS: Input file: $(basename "$f") (${LINES} lines)" | tee -a "$REPORT"
+    FOUND_OSPF=1
   else
-    echo "  ❌ FAIL: Input file missing: $f" | tee -a "$REPORT"
-    P0_FAIL=$((P0_FAIL+1))
+    echo "  ⚠  WARN: Input file missing: $f" | tee -a "$REPORT"
   fi
 done
+if [ "$FOUND_OSPF" -eq 0 ]; then
+  echo "  ❌ FAIL: No usable OSPF input fixture found in INPUT-FOLDER" | tee -a "$REPORT"
+  P0_FAIL=$((P0_FAIL+1))
+fi
 
 # 0c. Host file (should have only 34 entries for UNK demo)
-HOST_FILE="$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt"
+HOST_FILE="$RESOLVED_HOST_FILE"
 if [ -f "$HOST_FILE" ]; then
-  HOST_COUNT=$(grep -c "^[0-9]" "$HOST_FILE" 2>/dev/null || echo 0)
-  echo "  ✅ PASS: Load-hosts.txt exists ($HOST_COUNT router entries)" | tee -a "$REPORT"
-  [ "$HOST_COUNT" -eq 34 ] && echo "  ✅ PASS: Load-hosts.txt has exactly 34 entries (20 UNK routers unmapped)" | tee -a "$REPORT" \
-    || echo "  ⚠  WARN: Load-hosts.txt has $HOST_COUNT entries (expected 34 for UNK demo)" | tee -a "$REPORT"
+  if [[ "$HOST_FILE" == *.csv ]]; then
+    HOST_COUNT=$(tail -n +2 "$HOST_FILE" | wc -l | tr -d ' ')
+  else
+    HOST_COUNT=$(grep -v '^[[:space:]]*#' "$HOST_FILE" | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
+  fi
+  echo "  ✅ PASS: $(basename "$HOST_FILE") exists ($HOST_COUNT router entries)" | tee -a "$REPORT"
+  [ "$HOST_COUNT" -eq 34 ] && echo "  ✅ PASS: $(basename "$HOST_FILE") has exactly 34 entries (20 UNK routers unmapped)" | tee -a "$REPORT" \
+    || echo "  ⚠  WARN: $(basename "$HOST_FILE") has $HOST_COUNT entries (expected 34 for UNK demo)" | tee -a "$REPORT"
 else
-  echo "  ❌ FAIL: Load-hosts.txt not found" | tee -a "$REPORT"
+  echo "  ❌ FAIL: No usable host file found in INPUT-FOLDER" | tee -a "$REPORT"
   P0_FAIL=$((P0_FAIL+1))
 fi
 
@@ -401,11 +434,11 @@ fi
 
 # ── PHASE 2: Optional Fresh Pipeline Run ──────────────────────────────────────
 if [ "$RUN_PIPELINE" = "true" ]; then
-  echo "━━━ PHASE 2: Fresh Pipeline Run (ospf-database-3.txt) ━━━" | tee -a "$REPORT"
+  echo "━━━ PHASE 2: Fresh Pipeline Run ($(basename "$RESOLVED_OSPF_FILE")) ━━━" | tee -a "$REPORT"
   echo "" | tee -a "$REPORT"
   bash "$WORKFLOW" all \
-    --ospf-file "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" \
-    --host-file "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt" \
+    --ospf-file "$RESOLVED_OSPF_FILE" \
+    --host-file "$RESOLVED_HOST_FILE" \
     --base-url  "$BASE_URL" \
     --user      "$API_USER" \
     --pass      "$API_PASS" 2>&1 | tee -a "$REPORT"

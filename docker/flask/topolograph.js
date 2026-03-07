@@ -349,12 +349,19 @@ function bind_master_vrf(ip, gr_id)
 
 
 
+function security_csrf_token_value() {
+  var meta = document.querySelector('meta[name="security-csrf-token"]');
+  return meta ? meta.getAttribute('content') : '';
+}
+
+
 function add_auth_source_api_net() {
   auth_source_api_net = document.getElementById('auth_source_api_net').value;
   $.ajax({
       url: "/add-auth-source-api-net",
       type: "post",
       data: {'auth_source_api_net': auth_source_api_net},
+      headers: {'X-CSRF-Token': security_csrf_token_value()},
       success:  function callbackFunc(response)
           {
 
@@ -370,6 +377,7 @@ function delete_auth_source_ip_net(source_net) {
       url: "/delete-auth-source-ip-net",
       type: "post",
       data: {'source_net': source_net},
+      headers: {'X-CSRF-Token': security_csrf_token_value()},
       success:  function callbackFunc(response)
           {
 
@@ -605,18 +613,28 @@ function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic
           init_visjs_graph(response.nodes_attr_dd_in_ll, response.edges_attr_dd_in_ll, graph_physics_scale_settings);
           // ── Country filter: apply colours & build panel after graph settles ──
           setTimeout(function() {
-            var finalizeGraphLoad = function(appliedServerSync) {
-              if (!appliedServerSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
+            var finalizeGraphLoad = function(appliedHostnameSync) {
+              if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
               if (typeof applyCountryColors === 'function') { applyCountryColors(); }
               if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
               if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }       // EN-F4
               if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
               if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
             };
-            if (typeof _syncHostnameMappingsFromServer === 'function') {
-              _syncHostnameMappingsFromServer(dynamic_graph_time).then(finalizeGraphLoad, function() { finalizeGraphLoad(false); });
+            var syncHostnameMappingsAfterCountryHydration = function() {
+              if (typeof _syncHostnameMappingsFromServer === 'function') {
+                _syncHostnameMappingsFromServer(dynamic_graph_time).then(finalizeGraphLoad, function() { finalizeGraphLoad(false); });
+              } else {
+                finalizeGraphLoad(false);
+              }
+            };
+            var afterCountrySync = function() {
+              syncHostnameMappingsAfterCountryHydration();
+            };
+            if (typeof _syncCountryMetadataFromServer === 'function') {
+              _syncCountryMetadataFromServer(dynamic_graph_time).then(afterCountrySync, afterCountrySync);
             } else {
-              finalizeGraphLoad(false);
+              afterCountrySync(false);
             }
           }, 900);
           // mark General View as pressed button
@@ -3525,6 +3543,43 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
     network = new vis.Network(container, data, options);
     // ── COLLAPSING: wire double-click expand/collapse handler ─────────────────
     if (typeof _wireCollapseDoubleClick === 'function') { _wireCollapseDoubleClick(); }
+    var _postLoadCountryHydration = function(attempt) {
+      if (typeof nodes === 'undefined' || !nodes || typeof _syncCountryMetadataFromServer !== 'function') return;
+      var allNodes = nodes.get();
+      if (!allNodes.length) return;
+      var countries = Array.from(new Set(allNodes.map(function(n) {
+        return String(n.country || '').toUpperCase();
+      }).filter(function(v) { return !!v; })));
+      if (countries.length > 1 || (countries.length === 1 && countries[0] !== 'UNK')) return;
+      var currentGraphTime = typeof _getGraphTime === 'function' ? _getGraphTime() : '';
+      if (!currentGraphTime) return;
+      var finalizePostLoadCountryHydration = function(appliedHostnameSync) {
+        if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
+        if (typeof applyCountryColors === 'function') { applyCountryColors(); }
+        if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
+        if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }
+        if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
+        if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
+      };
+      _syncCountryMetadataFromServer(currentGraphTime).then(function(appliedServerSync) {
+        if (appliedServerSync) {
+          if (typeof _syncHostnameMappingsFromServer === 'function') {
+            _syncHostnameMappingsFromServer(currentGraphTime).then(finalizePostLoadCountryHydration, function() { finalizePostLoadCountryHydration(false); });
+          } else {
+            finalizePostLoadCountryHydration(false);
+          }
+          return;
+        }
+        if ((attempt || 0) < 2) {
+          setTimeout(function() { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
+        }
+      }, function() {
+        if ((attempt || 0) < 2) {
+          setTimeout(function() { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
+        }
+      });
+    };
+    setTimeout(function() { _postLoadCountryHydration(0); }, 1200);
     // set values
     network.on("select", function (params) {
         // console.log('select Event:', params.nodes[0], params.pointer.DOM.x);
@@ -3562,6 +3617,7 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
       // when we hide progress bar - set progress to 0% for further use
       document.getElementById("text").innerText = "0%";
       document.getElementById("bar").style.width = "0px";
+      _postLoadCountryHydration(0);
     });
     // progress bar end
 
@@ -4274,6 +4330,69 @@ function _syncHostnameMappingsFromServer(graphTime) {
     return true;
   }).catch(function(err) {
     console.warn('[SP3-A] Could not sync hostname mappings from server', err);
+    return false;
+  });
+}
+
+function _syncCountryMetadataFromServer(graphTime) {
+  if (!graphTime || typeof fetch !== 'function' || typeof nodes === 'undefined' || !nodes) return Promise.resolve(false);
+  return fetch('/__security/session-diagram/' + encodeURIComponent(graphTime) + '/nodes', {
+    credentials: 'same-origin'
+  }).then(function(response) {
+    if (!response.ok) throw new Error('Failed to load node metadata for graph ' + graphTime);
+    return response.json();
+  }).then(function(serverNodes) {
+    if (!Array.isArray(serverNodes) || serverNodes.length === 0) return false;
+    var byRouterId = {};
+    serverNodes.forEach(function(serverNode) {
+      var routerId = String(serverNode.name || serverNode.router_id || serverNode.id || '').trim();
+      if (!routerId) return;
+      byRouterId[routerId] = serverNode;
+    });
+    var updates = [];
+    nodes.get().forEach(function(node) {
+      var routerId = String(node.name || node.router_id || node.id || '').split('\n')[0].trim();
+      if (!routerId) return;
+      var serverNode = byRouterId[routerId];
+      if (!serverNode) return;
+      var nextCountry = String(serverNode.country || serverNode.group || node.country || node.group || 'UNK').toUpperCase();
+      var nextGroup = String(serverNode.group || serverNode.country || node.group || nextCountry || 'UNK').toUpperCase();
+      var nextHostname = String(serverNode.hostname || node.hostname || '').trim();
+      var nextGateway = serverNode.is_gateway === true;
+      var nextLabel = serverNode.label || _buildCountryAwareNodeLabel({
+        id: node.id,
+        name: node.name,
+        router_id: node.router_id,
+        hostname: nextHostname,
+        label: node.label,
+        country: nextCountry,
+        group: nextGroup
+      });
+      var nextTitle = serverNode.title || _buildCountryAwareNodeTitle({
+        id: node.id,
+        name: node.name,
+        router_id: node.router_id,
+        hostname: nextHostname || node.name || node.router_id || node.id,
+        country: nextCountry,
+        group: nextGroup,
+        is_gateway: nextGateway
+      });
+      var update = { id: node.id };
+      var changed = false;
+      if ((node.country || 'UNK').toUpperCase() !== nextCountry) { update.country = nextCountry; changed = true; }
+      if ((node.group || 'UNK').toUpperCase() !== nextGroup) { update.group = nextGroup; changed = true; }
+      if ((node.hostname || '') !== nextHostname) { update.hostname = nextHostname; changed = true; }
+      if (!!node.is_gateway !== nextGateway) { update.is_gateway = nextGateway; changed = true; }
+      if (node.label !== nextLabel) { update.label = nextLabel; changed = true; }
+      if (node.title !== nextTitle) { update.title = nextTitle; changed = true; }
+      if (serverNode.color && JSON.stringify(node.color || null) !== JSON.stringify(serverNode.color)) { update.color = serverNode.color; changed = true; }
+      if (changed) updates.push(update);
+    });
+    if (updates.length) nodes.update(updates);
+    console.log('[EN-F0] Synced country metadata from server for graph ' + graphTime + ' (' + updates.length + ' nodes)');
+    return updates.length > 0;
+  }).catch(function(err) {
+    console.warn('[EN-F0] Could not sync country metadata from server', err);
     return false;
   });
 }
@@ -5034,6 +5153,7 @@ function setViewMode(mode) {
       if (typeof _restoreCollapseState === 'function') { _restoreCollapseState(); }
     }
   }
+  if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }
 }
 
 /**
@@ -5408,8 +5528,8 @@ function _getGraphTime() {
   var params = new URLSearchParams(window.location.search);
   var gt = params.get('graph_time') || params.get('graphtime') || params.get('gt');
   if (gt) return gt;
-  var sel = document.querySelector('select');
-  if (sel && sel.value && /^\d+$/.test(sel.value)) return sel.value;
+  var sel = document.getElementById('dynamic_graph_time') || document.getElementById('graph_time') || document.querySelector('select');
+  if (sel && sel.value) return String(sel.value);
   return 'default';
 }
 

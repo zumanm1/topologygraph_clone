@@ -142,7 +142,15 @@ async function graphSnapshot(page) {
         const el = document.getElementById('countryCollapsePanel');
         return !!(el && el.style.display !== 'none');
       })(),
-      unkVisible: !!document.getElementById('unkPanel')
+      unkVisible: !!document.getElementById('unkPanel'),
+      unkButtonVisible: (() => {
+        const el = document.getElementById('btnUnkHighlight');
+        return !!(el && el.style.display !== 'none');
+      })(),
+      unkButtonText: (() => {
+        const el = document.getElementById('btnUnkHighlight');
+        return el ? String(el.textContent || '').trim() : '';
+      })()
     };
   });
 }
@@ -219,9 +227,9 @@ async function resetFilter(page) {
     (!!base && !!base.cpVisible === item.expectCp)
       ? pass(item.label, `Country Groups panel visibility correct (${item.expectCp})`)
       : fail(item.label, `Country Groups panel visibility mismatch: ${JSON.stringify(base)}`);
-    base && base.unkVisible
-      ? pass(item.label, 'UNK panel visible')
-      : fail(item.label, 'UNK panel missing');
+    base && base.unkButtonVisible && base.unkButtonText.includes('UNK')
+      ? pass(item.label, 'UNK control visible')
+      : fail(item.label, `UNK control missing: ${JSON.stringify(base)}`);
 
     const applied = await applyShowOnly(page, 'ZAF');
     applied ? pass(item.label, 'Applied show-only ZAF filter') : fail(item.label, 'Could not apply filter function');

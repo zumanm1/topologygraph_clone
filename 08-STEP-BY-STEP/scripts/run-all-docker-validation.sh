@@ -9,8 +9,26 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 REPORT="$PROJECT_ROOT/08-STEP-BY-STEP/validation-report.txt"
 
+resolve_default_host_file() {
+  local candidates=(
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-54-unk-test.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-3b.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/host-file.txt"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      basename "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' 'Load-hosts.csv'
+}
+
 OSPF_FILE="${OSPF_FILE:-ospf-database-54-unk-test.txt}"
-HOST_FILE="${HOST_FILE:-Load-hosts-54-unk-test.txt}"
+HOST_FILE="${HOST_FILE:-$(resolve_default_host_file)}"
 
 mkdir -p "$PROJECT_ROOT/08-STEP-BY-STEP"
 mkdir -p "$PROJECT_ROOT/08-STEP-BY-STEP/scripts"
@@ -57,7 +75,7 @@ if ! curl -sf -o /dev/null "$HOST_BASE_URL/"; then
   exit 1
 fi
 
-docker compose exec -T pipeline python3 - <<PYEOF
+BEARER_TOKEN="$(docker compose exec -T pipeline python3 - <<PYEOF
 import re
 import requests
 
@@ -86,10 +104,11 @@ if csrf:
 
 r = s.post(f"{base}/token_management/create_token", data=payload, timeout=15, allow_redirects=True)
 r.raise_for_status()
-print(token_name)
+match = re.search(r'(sk-[A-Za-z0-9_\-]+)', r.text)
+print(match.group(1) if match else '')
 PYEOF
-
-BEARER_TOKEN="$(docker compose exec -T mongodb mongo "$MONGODB_DATABASE" -u "$MONGODB_USERNAME" -p "$MONGODB_PASSWORD" --quiet --eval "db.user_tokens.find({name:\"$TOKEN_NAME\"}).sort({_id:-1}).limit(1).forEach(function(doc){print(doc.token)})" | tail -1 | tr -d '\r')"
+)"
+BEARER_TOKEN="$(printf '%s' "$BEARER_TOKEN" | tail -1 | tr -d '\r')"
 
 if [[ -z "$BEARER_TOKEN" ]]; then
   echo "[08-step] ERROR: bearer token was not created"
@@ -141,10 +160,15 @@ const API_PASS = process.env.API_PASS || 'ospf';
     if (input) { input.style.display = 'block'; input.removeAttribute('hidden'); }
   });
   await page.locator('#inputOSPFFileID').setInputFiles(OSPF_FILE);
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: 'networkidle', timeout: 30000 }),
-    page.locator('input[name="upload_files_btn"]').click(),
-  ]);
+  await page.locator('input[name="upload_files_btn"]').click();
+  await page.waitForFunction(
+    (previous) => {
+      const options = Array.from(document.querySelectorAll('#dynamic_graph_time option')).map((o) => o.value);
+      return options.length > 0 && options.join('|') !== previous;
+    },
+    before.join('|'),
+    { timeout: 120000 }
+  );
 
   const after = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
   const created = after.filter(v => !before.includes(v));

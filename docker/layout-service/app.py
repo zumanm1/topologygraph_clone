@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import Any
 
 import psycopg
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 DB_HOST = os.getenv("LAYOUT_DB_HOST", "layout-db")
@@ -45,7 +45,8 @@ def ensure_schema() -> None:
                 with conn.cursor() as cur:
                     cur.execute(
                         """
-                        CREATE TABLE IF NOT EXISTS layout_snapshots (
+                        CREATE TABLE IF NOT EXISTS layout_snapshots_secure (
+                            owner_login TEXT NOT NULL,
                             graph_id TEXT NOT NULL,
                             graph_time TEXT NOT NULL,
                             view_mode TEXT NOT NULL,
@@ -55,7 +56,7 @@ def ensure_schema() -> None:
                             positions_json JSONB NOT NULL DEFAULT '{}'::jsonb,
                             viewport_json JSONB NOT NULL DEFAULT '{}'::jsonb,
                             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                            PRIMARY KEY (graph_id, graph_time, view_mode)
+                            PRIMARY KEY (owner_login, graph_id, graph_time, view_mode)
                         )
                         """
                     )
@@ -76,50 +77,57 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+def require_owner(x_authenticated_user: str | None = Header(default=None)) -> str:
+    owner = (x_authenticated_user or "").strip()
+    if not owner:
+        raise HTTPException(status_code=401, detail="authentication required")
+    return owner
+
+
 @app.get("/layouts")
-def get_layout(graph_id: str, graph_time: str, view_mode: str) -> dict[str, Any]:
+def get_layout(graph_id: str, graph_time: str, view_mode: str, owner_login: str = Depends(require_owner)) -> dict[str, Any]:
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT graph_id, graph_time, view_mode, revision, physics_enabled,
+                SELECT owner_login, graph_id, graph_time, view_mode, revision, physics_enabled,
                        selected_node_id, positions_json, viewport_json, updated_at
-                FROM layout_snapshots
-                WHERE graph_id = %s AND graph_time = %s AND view_mode = %s
+                FROM layout_snapshots_secure
+                WHERE owner_login = %s AND graph_id = %s AND graph_time = %s AND view_mode = %s
                 """,
-                (graph_id, graph_time, view_mode),
+                (owner_login, graph_id, graph_time, view_mode),
             )
             row = cur.fetchone()
     if not row:
         return {"found": False}
     return {
         "found": True,
-        "graph_id": row[0],
-        "graph_time": row[1],
-        "view_mode": row[2],
-        "revision": row[3],
-        "physics_enabled": row[4],
-        "selected_node_id": row[5],
-        "positions": row[6] or {},
-        "viewport": row[7] or {},
-        "updated_at": row[8].isoformat() if row[8] else None,
+        "graph_id": row[1],
+        "graph_time": row[2],
+        "view_mode": row[3],
+        "revision": row[4],
+        "physics_enabled": row[5],
+        "selected_node_id": row[6],
+        "positions": row[7] or {},
+        "viewport": row[8] or {},
+        "updated_at": row[9].isoformat() if row[9] else None,
     }
 
 
 @app.put("/layouts")
-def save_layout(payload: LayoutPayload) -> dict[str, Any]:
+def save_layout(payload: LayoutPayload, owner_login: str = Depends(require_owner)) -> dict[str, Any]:
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO layout_snapshots (
-                    graph_id, graph_time, view_mode, revision, physics_enabled,
+                INSERT INTO layout_snapshots_secure (
+                    owner_login, graph_id, graph_time, view_mode, revision, physics_enabled,
                     selected_node_id, positions_json, viewport_json, updated_at
                 )
-                VALUES (%s, %s, %s, 1, %s, %s, %s::jsonb, %s::jsonb, NOW())
-                ON CONFLICT (graph_id, graph_time, view_mode)
+                VALUES (%s, %s, %s, %s, 1, %s, %s, %s::jsonb, %s::jsonb, NOW())
+                ON CONFLICT (owner_login, graph_id, graph_time, view_mode)
                 DO UPDATE SET
-                    revision = layout_snapshots.revision + 1,
+                    revision = layout_snapshots_secure.revision + 1,
                     physics_enabled = EXCLUDED.physics_enabled,
                     selected_node_id = EXCLUDED.selected_node_id,
                     positions_json = EXCLUDED.positions_json,
@@ -128,6 +136,7 @@ def save_layout(payload: LayoutPayload) -> dict[str, Any]:
                 RETURNING revision, updated_at
                 """,
                 (
+                    owner_login,
                     payload.graph_id,
                     payload.graph_time,
                     payload.view_mode,
@@ -143,12 +152,12 @@ def save_layout(payload: LayoutPayload) -> dict[str, Any]:
 
 
 @app.delete("/layouts")
-def reset_layout(graph_id: str, graph_time: str, view_mode: str) -> dict[str, str]:
+def reset_layout(graph_id: str, graph_time: str, view_mode: str, owner_login: str = Depends(require_owner)) -> dict[str, str]:
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "DELETE FROM layout_snapshots WHERE graph_id = %s AND graph_time = %s AND view_mode = %s",
-                (graph_id, graph_time, view_mode),
+                "DELETE FROM layout_snapshots_secure WHERE owner_login = %s AND graph_id = %s AND graph_time = %s AND view_mode = %s",
+                (owner_login, graph_id, graph_time, view_mode),
             )
             deleted = cur.rowcount
             conn.commit()
@@ -158,19 +167,19 @@ def reset_layout(graph_id: str, graph_time: str, view_mode: str) -> dict[str, st
 
 
 @app.delete("/layouts/node")
-def reset_layout_node(graph_id: str, graph_time: str, view_mode: str, node_id: str) -> dict[str, Any]:
+def reset_layout_node(graph_id: str, graph_time: str, view_mode: str, node_id: str, owner_login: str = Depends(require_owner)) -> dict[str, Any]:
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                UPDATE layout_snapshots
+                UPDATE layout_snapshots_secure
                 SET positions_json = COALESCE(positions_json, '{}'::jsonb) - %s,
                     revision = revision + 1,
                     updated_at = NOW()
-                WHERE graph_id = %s AND graph_time = %s AND view_mode = %s
+                WHERE owner_login = %s AND graph_id = %s AND graph_time = %s AND view_mode = %s
                 RETURNING revision, updated_at
                 """,
-                (node_id, graph_id, graph_time, view_mode),
+                (node_id, owner_login, graph_id, graph_time, view_mode),
             )
             row = cur.fetchone()
             conn.commit()

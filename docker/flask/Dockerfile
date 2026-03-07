@@ -37,6 +37,9 @@ COPY docker/flask/topolograph.js \
 COPY docker/flask/layout-persistence.js \
      /home/flask/flask/static/js/layout-persistence.js
 
+COPY docker/flask/security_overlay.py \
+     /home/flask/flask/security_overlay.py
+
 # Copy the patched navbar template (Analysis dropdown)
 COPY 06-STEP-BY-STEP/docker-patches/base.html \
      /home/flask/flask/templates/base.html
@@ -44,4 +47,10 @@ COPY 06-STEP-BY-STEP/docker-patches/base.html \
 COPY docker/flask/host_to_dns_name_mapping.html \
      /home/flask/flask/templates/host_to_dns_name_mapping.html
 
-# No CMD override — use the upstream entrypoint (Gunicorn)
+COPY docker/flask/security-token-create.html \
+     /home/flask/flask/templates/security-token-create.html
+
+COPY docker/flask/security-token-list.html \
+     /home/flask/flask/templates/security-token-list.html
+
+CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5000", "--timeout", "90", "security_overlay:app"]
