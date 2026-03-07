@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>My API Tokens</h1>
+    <a href="/token_management/create_token" class="btn btn-success">Create New Token</a>
+  </div>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Token</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Expires</th>
+        <th>Last Used</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for token in tokens %}
+      <tr>
+        <td>{{ token.name }}</td>
+        <td><code>{{ token.masked }}</code></td>
+        <td>{% if token.is_active and not token.is_expired %}Active{% elif token.is_expired %}Expired{% else %}Revoked{% endif %}</td>
+        <td>{{ token.created_at }}</td>
+        <td>{{ token.expires_at }}</td>
+        <td>{{ token.last_used_at or '-' }}</td>
+        <td>
+          <form action="/token_management/revoke_token/{{ token.id }}" method="post" style="display:inline-block;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-warning btn-sm" {% if not token.is_active or token.is_expired %}disabled{% endif %}>Revoke</button>
+          </form>
+          <form action="/token_management/delete_token/{{ token.id }}" method="post" style="display:inline-block;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not tokens %}
+      <tr><td colspan="7">No tokens created yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -8,21 +8,32 @@ import sys
 import requests
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
-BASE_URL = os.getenv("TOPOLOGRAPH_BASE_URL", "http://localhost:8081")
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8081")
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-LSDB_PATH = Path(os.getenv("LSDB_FILE", PROJECT_ROOT / "INPUT-FOLDER" / "ospf-database.txt"))
-USER = "ospf@topolograph.com"
-PASS = "ospf"
-TIMEOUT = 30
+USER = os.environ.get("USER", "ospf@topolograph.com")
+PASS = os.environ.get("PASS", "ospf")
+BOOTSTRAP_SECRET = os.environ.get("TOPOLOGRAPH_BOOTSTRAP_SECRET", PASS)
+LSDB_PATH = Path(os.environ.get("LSDB_FILE", PROJECT_ROOT / "INPUT-FOLDER" / "ospf-database.txt"))
+TIMEOUT = int(os.environ.get("TIMEOUT", "120"))
+
+
+def session_for_base_url(base_url: str) -> requests.Session:
+    session = requests.Session()
+    hostname = (urlparse(base_url).hostname or "").lower()
+    if hostname in {"localhost", "127.0.0.1", "::1"}:
+        session.trust_env = False
+    return session
 
 
 def main():
+    session = session_for_base_url(BASE_URL)
     # 1) Validate accessible
     print(f"Checking {BASE_URL} ...")
     try:
-        r = requests.get(f"{BASE_URL}/", timeout=10)
+        r = session.get(f"{BASE_URL}/", timeout=10)
         r.raise_for_status()
         print(f"  OK – Topolograph is reachable (HTTP {r.status_code})")
     except requests.RequestException as e:
@@ -33,7 +44,7 @@ def main():
     # 2) Create default credentials (idempotent)
     print("Creating default API credentials ...")
     try:
-        r = requests.post(f"{BASE_URL}/create-default-credentials", timeout=10)
+        r = session.post(f"{BASE_URL}/create-default-credentials", headers={"X-Topolograph-Bootstrap-Secret": BOOTSTRAP_SECRET}, timeout=10)
         data = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
         if data.get("status") == "ok":
             print("  OK – Default credentials ready")
@@ -50,7 +61,7 @@ def main():
     print(f"Uploading {LSDB_PATH.name} ({len(lsdb_text)} chars) ...")
 
     try:
-        r = requests.post(
+        r = session.post(
             f"{BASE_URL}/api/graph",
             auth=(USER, PASS),
             json={

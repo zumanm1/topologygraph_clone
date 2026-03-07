@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Create New API Token</h1>
+  {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+  {% if success %}<div class="alert alert-success" role="alert">{{ success }}</div>{% endif %}
+  {% if generated_token %}
+  <div class="alert alert-warning" role="alert">
+    <strong>This token will only be shown once.</strong>
+    <div class="mt-2"><code id="generated-token-value">{{ generated_token }}</code></div>
+  </div>
+  {% endif %}
+  <form action="/token_management/create_token" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="form-group">
+      <label for="token_name">Token Name</label>
+      <input class="form-control" id="token_name" name="token_name" value="{{ token_name or '' }}" required>
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-success">Create Token</button>
+    <a href="/token_management/my_tokens" class="btn btn-secondary">Back to My Tokens</a>
+  </form>
+</div>
+{% endblock %}

@@ -34,7 +34,8 @@ fi
 
 # 3) Default credentials
 echo "3. Default API credentials"
-creds=$(curl -s -X POST "$BASE/create-default-credentials" 2>/dev/null || echo "{}")
+BOOTSTRAP_SECRET="${TOPOLOGRAPH_BOOTSTRAP_SECRET:-${PASS:-ospf}}"
+creds=$(curl -s -X POST -H "X-Topolograph-Bootstrap-Secret: $BOOTSTRAP_SECRET" "$BASE/create-default-credentials" 2>/dev/null || echo "{}")
 if echo "$creds" | grep -q '"status".*"ok"'; then
   echo "   OK – Default credentials ready"
 else

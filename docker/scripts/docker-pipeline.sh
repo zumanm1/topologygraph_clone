@@ -30,8 +30,42 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="/app"   # bind-mount inside container
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-OSPF_FILE="${PROJECT_ROOT}/INPUT-FOLDER/ospf-database-54-unk-test.txt"
-HOST_FILE="${PROJECT_ROOT}/INPUT-FOLDER/Load-hosts-54-unk-test.txt"
+resolve_default_ospf_file() {
+  local candidates=(
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-54-unk-test.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"
+}
+
+resolve_default_host_file() {
+  local candidates=(
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts-3b.txt"
+    "$PROJECT_ROOT/INPUT-FOLDER/host-file.txt"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  printf '%s\n' "$PROJECT_ROOT/INPUT-FOLDER/Load-hosts.csv"
+}
+
+OSPF_FILE="$(resolve_default_ospf_file)"
+HOST_FILE="$(resolve_default_host_file)"
 BASE_URL="${BASE_URL:-http://webserver:8081}"
 API_USER="${API_USER:-ospf@topolograph.com}"
 API_PASS="${API_PASS:-ospf}"

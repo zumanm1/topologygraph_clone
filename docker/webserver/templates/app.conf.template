@@ -10,16 +10,74 @@ upstream layout_api {
     server layout-api:8090;
 }
 
+map $security_auth_scheme $api_upstream_authorization {
+    default $http_authorization;
+    bearer "Basic ${INTERNAL_BASIC_AUTH}";
+    session "Basic ${INTERNAL_BASIC_AUTH}";
+}
+
 server {
     listen 0.0.0.0:${TOPOLOGRAPH_PORT};
     server_name _;
     error_log  /var/log/nginx/error.log warn;
     access_log /var/log/nginx/access.log;
     client_max_body_size 64M;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    add_header Content-Security-Policy "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; connect-src 'self' ws: wss: http: https:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'" always;
 
-    # Route MCP requests to MCP server with token validation
+    location = /__security_api_auth {
+        internal;
+        proxy_pass http://flask_app/__security/api-auth;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI $request_uri;
+        proxy_set_header Authorization $http_authorization;
+        proxy_set_header Cookie $http_cookie;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location = /__security_mcp_auth {
+        internal;
+        proxy_pass http://flask_app/__security/mcp-auth;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI $request_uri;
+        proxy_set_header Authorization $http_authorization;
+        proxy_set_header Cookie $http_cookie;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location = /__security_session_auth {
+        internal;
+        proxy_pass http://flask_app/__security/session-auth;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI $request_uri;
+        proxy_set_header Cookie $http_cookie;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /api/ {
+        auth_request /__security_api_auth;
+        auth_request_set $security_auth_scheme $upstream_http_x_security_auth_scheme;
+        proxy_pass http://flask_app;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host:$server_port;
+        proxy_set_header X-Forwarded-Host $host:$server_port;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Authorization $api_upstream_authorization;
+    }
+
     location ~ ^/mcp(/.*)?$ {
-        auth_request /auth;
+        auth_request /__security_mcp_auth;
         proxy_pass http://mcp_app$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Host $host:$server_port;
@@ -34,15 +92,6 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
-    # Token validation endpoint for NGINX auth_request
-    location = /auth {
-        proxy_pass http://flask_app/validate-user;
-        proxy_pass_request_body off;
-        proxy_set_header Content-Length "";
-        proxy_set_header X-Original-URI $request_uri;
-        proxy_set_header Authorization $http_authorization;
-    }
-
     # Route Socket.IO requests to Flask
     location /socket.io/ {
         proxy_pass http://flask_app;
@@ -53,6 +102,8 @@ server {
     }
 
     location /layout-api/ {
+        auth_request /__security_session_auth;
+        auth_request_set $layout_authenticated_user $upstream_http_x_authenticated_user;
         proxy_pass http://layout_api/;
         proxy_http_version 1.1;
         proxy_set_header Host $host:$server_port;
@@ -60,6 +111,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Authenticated-User $layout_authenticated_user;
     }
 
     # Route all other requests to Flask

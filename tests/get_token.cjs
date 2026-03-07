@@ -43,15 +43,15 @@ const { chromium } = require('playwright');
   // ── Step 4: Create a token ──
   await page.goto('http://localhost:8081/token_management/create_token');
   await page.waitForTimeout(2000);
-  const html = await page.content();
+  await page.fill('input[name=token_name]', 'playwright-token');
+  await page.fill('textarea[name=description]', 'playwright token helper');
+  await page.click('button[type=submit]');
+  await page.waitForTimeout(1000);
   const text = await page.innerText('body');
   console.log('\nCreate token page:', text.slice(0, 600));
-
-  // Extract any token value from page
-  const matches = html.match(/[a-f0-9]{40,}/g) || [];
-  const tokens = matches.filter(x => !/sha|bootstrap|jquery|static/.test(x));
-  if (tokens.length) {
-    console.log('\n🔑 TOKEN:', tokens[0]);
+  const tokenValue = await page.locator('#generated-token-value').textContent().catch(() => null);
+  if (tokenValue) {
+    console.log('\n🔑 TOKEN:', tokenValue.trim());
   }
 
   await page.screenshot({ path: 'screenshots/token-page.png' });
