@@ -94,6 +94,7 @@ echo ""
 
 # Override BASE_URL in the script via env var so Playwright uses webserver hostname
 export BASE_URL="$BASE_URL"
+export INSIDE_DOCKER_VALIDATION=1
 
 bash "${PROJECT_ROOT}/06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh" \
   $EXTRA_ARGS

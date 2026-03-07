@@ -137,13 +137,39 @@ async function loadGraph(page, graphTime) {
                   await page.$('button[onclick*="upload_ospf_lsdb"]');
   if (loadBtn) { await loadBtn.click(); }
   else { await page.evaluate((gt) => { if (typeof upload_ospf_lsdb==='function') upload_ospf_lsdb(false,false,gt); }, graphTime); }
-  let total = 0;
-  for (let i = 1; i <= 20; i++) {
-    await settle(page, 1200);
-    total = await page.evaluate(() => { try { return nodes ? nodes.get().length : 0; } catch(e) { return 0; } });
-    if (total > 0) break;
+  return waitForCountryHydration(page, graphTime);
+}
+
+async function waitForCountryHydration(page, graphTime) {
+  for (let i = 1; i <= 30; i++) {
+    await settle(page, 600);
+    const state = await page.evaluate((gt) => {
+      try {
+        const total = typeof nodes !== 'undefined' && nodes ? nodes.get().length : 0;
+        const countries = typeof nodes !== 'undefined' && nodes
+          ? new Set(nodes.get().map(n => (n.country || 'UNK').toUpperCase())).size
+          : 0;
+        const classified = typeof nodes !== 'undefined' && nodes
+          ? nodes.get({ filter: n => (n.country || 'UNK').toUpperCase() !== 'UNK' }).length
+          : 0;
+        const hydration = (typeof window !== 'undefined' && window.__topolographCountryHydration)
+          ? window.__topolographCountryHydration
+          : null;
+        const hydrationMatches = !!(hydration && hydration.status === 'ready' && (!gt || !hydration.graphTime || hydration.graphTime === gt));
+        const hydrationSeen = !!hydration;
+        return { total, countries, classified, hydrationMatches, hydrationSeen };
+      } catch (e) {
+        return { total: 0, countries: 0, classified: 0, hydrationMatches: false, hydrationSeen: false };
+      }
+    }, graphTime);
+    if (state.total > 0 && state.hydrationSeen && state.hydrationMatches) {
+      return state.total;
+    }
+    if (state.total > 0 && !state.hydrationSeen && (state.countries > 1 || state.classified > 0)) {
+      return state.total;
+    }
   }
-  return total;
+  return page.evaluate(() => { try { return nodes ? nodes.get().length : 0; } catch(e) { return 0; } });
 }
 
 // Switch view mode

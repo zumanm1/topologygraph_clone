@@ -114,6 +114,38 @@ async function settle(page, ms) {
   await page.waitForTimeout(ms);
 }
 
+async function waitForCountryHydration(page, graphTime) {
+  for (let i = 1; i <= 30; i++) {
+    await settle(page, 600);
+    const state = await page.evaluate((gt) => {
+      try {
+        const total = window.nodes ? window.nodes.get().length : 0;
+        const countries = window.nodes
+          ? new Set(window.nodes.get().map(n => (n.country || 'UNK').toUpperCase())).size
+          : 0;
+        const classified = window.nodes
+          ? window.nodes.get({ filter: n => (n.country || 'UNK').toUpperCase() !== 'UNK' }).length
+          : 0;
+        const hydration = (typeof window !== 'undefined' && window.__topolographCountryHydration)
+          ? window.__topolographCountryHydration
+          : null;
+        const hydrationMatches = !!(hydration && hydration.status === 'ready' && (!gt || !hydration.graphTime || hydration.graphTime === gt));
+        const hydrationSeen = !!hydration;
+        return { total, countries, classified, hydrationMatches, hydrationSeen };
+      } catch (e) {
+        return { total: 0, countries: 0, classified: 0, hydrationMatches: false, hydrationSeen: false };
+      }
+    }, graphTime);
+    if (state.total > 0 && state.hydrationSeen && state.hydrationMatches) {
+      return state.total;
+    }
+    if (state.total > 0 && !state.hydrationSeen && (state.countries > 1 || state.classified > 0)) {
+      return state.total;
+    }
+  }
+  return visNodeCount(page);
+}
+
 // ── Load a graph by graph_time ────────────────────────────────────────────────
 async function loadGraph(page, graphTime) {
   await page.goto(`${BASE_URL}/upload-ospf-isis-lsdb`, { waitUntil: 'domcontentloaded', timeout: 30000 });
@@ -145,14 +177,7 @@ async function loadGraph(page, graphTime) {
   }
 
   // Wait for vis.js DataSet to populate
-  let total = null;
-  for (let i = 1; i <= 10; i++) {
-    await settle(page, 1500);
-    total = await visNodeCount(page);
-    if (total !== null && total > 0) break;
-    info(`[loadGraph] attempt ${i}/10 — nodes=${total}`);
-  }
-  return total;
+  return waitForCountryHydration(page, graphTime);
 }
 
 // ── Enter COLLAPSING mode ─────────────────────────────────────────────────────
@@ -599,9 +624,11 @@ async function runCollapsingTests(page, graphTime) {
       const parsed = JSON.parse(lsValue);
       pass(`L7b[${GT}]`, `localStorage["topolograph_collapse_v1"] = ${lsValue}`);
       // Validate ZAF is marked true
-      // State may be flat {"ZAF": true} OR nested {"default": {"ZAF": true}}
+      // State may be flat {"ZAF": true}, nested {"default": {"ZAF": true}},
+      // or keyed by graph_time {"<graph_time>": {"ZAF": true}}
       const zafInState = parsed['ZAF'] === true ||
-                         (parsed['default'] && parsed['default']['ZAF'] === true);
+                         (parsed['default'] && parsed['default']['ZAF'] === true) ||
+                         (parsed[GT] && parsed[GT]['ZAF'] === true);
       if (zafInState) {
         pass(`L7b[${GT}]`, `localStorage correctly records ZAF as collapsed`);
       } else {
