@@ -79,7 +79,15 @@ The browser regression prefers those standard host files over the legacy enriche
 
 `08-STEP-BY-STEP/scripts/run-all-docker-validation.sh` now includes the dedicated country-derivation regression as part of the canonical Docker-native validation flow.
 
+`10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh` complements that by validating the broader current user journey:
+
+- browser upload of the packaged OSPF fixture
+- browser hostname import with `Load-hosts.csv`
+- all four main views
+- feature surface, layout/export controls, screenshots, and combined report
+
 So:
 
 - use `09` when you want the focused country-code proof
 - use `08` when you want the full canonical retest
+- use `10` when you want the updated full browser-user validation pack

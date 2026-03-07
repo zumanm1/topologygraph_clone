@@ -1,0 +1,206 @@
+Country View Modes History and Gap Analysis
+=========================================
+
+Purpose
+-------
+This document reconstructs how the Web UI country-aware view modes worked in the older working state,
+using git history, the 06-STEP-BY-STEP screenshots, and the validation logs. It also compares that
+older model with the current implementation and identifies the remaining gap.
+
+Primary Evidence Used
+---------------------
+1. Git commits
+   - cdb2153  Thu Mar 5 18:30:36 2026  feat(06-e2e): 06-STEP-BY-STEP deep validation — 114/114 checks pass
+   - 39b3a5c  Fri Mar 6 19:25:05 2026  Allow cloned stack to coexist with original app
+   - 57a5a92  Fri Mar 6 19:33:10 2026  Validate bearer token auth in 08 docker retest
+   - 247d890  Fri Mar 6 20:28:31 2026  Unify country derivation and add layout persistence
+   - b6f3ab8  Fri Mar 6 20:35:53 2026  Restore visible country codes on node labels
+   - a9fabe9  Fri Mar 6 21:43:21 2026  Update hostname-derived country validation flows
+   - 189a7bc  Fri Mar 6 22:36:13 2026  Fix WebUI host CSV import and country derivation flow
+
+2. Older screenshot set
+   - 06-STEP-BY-STEP/screenshots/03-asis-54.png
+   - 06-STEP-BY-STEP/screenshots/04-enriched-54.png
+   - 06-STEP-BY-STEP/screenshots/05-gateway-54.png
+   - 06-STEP-BY-STEP/screenshots/07-collapsing-panel-54.png
+   - 06-STEP-BY-STEP/screenshots/10-unk-highlight-54.png
+
+3. Older validation log
+   - 06-STEP-BY-STEP/validation-report.txt
+
+4. Current code and targeted validation
+   - docker/flask/topolograph.js
+   - topolograph-docker/init/topolograph.js
+   - tests/validate-country-filter-all-views.cjs
+
+Timeline Reconstruction
+-----------------------
+A. Older working behavior source
+   The screenshot-backed working model is anchored by commit cdb2153, which added the deep 06-step
+   validation and captured the canonical screenshots for the four view families.
+
+B. Same-day 19:25-19:33 commits
+   The commits 39b3a5c and 57a5a92 did not modify topolograph.js or the view-mode UI logic.
+   They changed stack coexistence and bearer-token validation in docker validation flows.
+   Therefore, they are not the source of the older working AS-IS / ENRICHED / GATEWAY / COLLAPSING
+   semantics.
+
+C. Later same-day UI-affecting changes
+   The topolograph.js history for Mar 6 shows later changes at:
+   - b6f3ab8
+   - a9fabe9
+   - 189a7bc
+   These are the relevant post-working-state modifications layered onto the UI.
+
+Important Historical Conclusion
+--------------------------------
+The older 06-step screenshots were not validating a raw upload-only graph.
+They were validating a pipeline-backed graph_time loaded from IN-OUT-FOLDER / OUTPUT artefacts.
+This distinction is critical.
+
+The older working state relied on processed graph data that already contained:
+- country assignments
+- gateway classification (`is_gateway`)
+- collapse-worthy country structure
+
+That is why GATEWAY and COLLAPSING behaved better there than on a fresh upload-only graph.
+
+Older Working Model by View
+---------------------------
+1. AS-IS
+   - Purpose: raw topology view
+   - All routers visible
+   - No country coloring emphasis
+   - UNK routers still present
+   - Toolbar features visible
+   - In the current fix, country filtering is now also allowed here as an operator overlay
+
+2. ENRICHED
+   - Purpose: full graph with country semantics exposed
+   - All routers visible
+   - Country colors visible
+   - Country Filter panel visible
+   - Unknown Nodes panel visible
+   - UNK nodes remain visible and distinguishable
+
+3. GATEWAY
+   - Purpose: inter-country abstraction layer
+   - Named-country core routers hidden
+   - Gateway routers remain visible
+   - UNK hub/gateway nodes remain visible
+   - Behavior depends on reliable `is_gateway` metadata
+   - Validation log expectation:
+     - 32 gateway nodes total
+     - 4 UNK gateway hubs
+   - This mode is semantically impossible to reproduce correctly without gateway classification
+
+4. COLLAPSING
+   - Purpose: hybrid country-aware expand/collapse view
+   - Country Groups panel visible
+   - Country Filter panel visible at the same time
+   - Unknown Nodes panel visible
+   - UNK row in Country Groups is present but non-interactive
+   - Collapse operations attach badges to gateway nodes
+   - Persistent path overlay keeps cross-country structure visible
+   - This mode also depends on reliable gateway classification
+
+What Changed Later
+------------------
+1. Later work improved country derivation and label rendering
+   - hostname-derived country logic
+   - visible [COUNTRY] tags on labels
+   - WebUI host CSV import support
+
+2. But the visibility model in the current UI drifted into a shared hidden-state problem
+   - view mode used `hidden`
+   - country filter used `hidden`
+   - collapsing used `hidden`
+   - result: the last action overwrote the others
+
+3. This caused feature interference
+   - filter operations could wipe out mode restrictions
+   - mode switches could wipe out filter state
+   - collapse logic could conflict with either one
+
+Current Fix Applied
+-------------------
+The current implementation was patched in both:
+- docker/flask/topolograph.js
+- topolograph-docker/init/topolograph.js
+
+The fix separated visibility into composed rule flags:
+- `_modeHidden`
+- `_filterHidden`
+- `_collapseHidden`
+
+Then `_syncEdgeVisibility()` derives final visibility from the composition of those rules.
+
+Practical effect:
+- country filtering now composes correctly with mode selection
+- collapse state no longer stomps filter state
+- filter panel can safely be shown in all four modes
+
+Current Validation Results
+--------------------------
+1. Raw WebUI upload + host CSV import path
+   Using tests/validate-country-filter-all-views.cjs:
+   - AS-IS: filter works
+   - ENRICHED: filter works
+   - COLLAPSING: filter works
+   - GATEWAY: panel is visible, but filtering to ZAF returned 0 visible nodes on the raw upload path
+
+   Interpretation:
+   The remaining failure is not the filter logic itself.
+   The failure is missing or incomplete `is_gateway` metadata on the raw upload-only graph path.
+
+2. Pipeline-backed historical graph path
+   Using graph_time:
+   - 06Mar2026_19h40m23s_54_hosts
+
+   Observed live stats:
+   - total nodes: 54
+   - gateway nodes: 32
+   - UNK nodes: 20
+   - per-country gateways include ZAF: 5 and UNK: 4
+
+   Direct GATEWAY-mode validation on that processed graph produced:
+   - base visible nodes: 48
+   - show_only ZAF in GATEWAY mode: 5 visible nodes
+
+   Interpretation:
+   On the same class of processed graph used by the older screenshots, the current filter logic now behaves
+   correctly in GATEWAY mode as well.
+
+What the Older Commits Teach Us
+-------------------------------
+1. The older working state was correct because the data model and the view model were aligned.
+2. GATEWAY and COLLAPSING are not just visual modes; they depend on a graph enriched with gateway semantics.
+3. The raw upload-only WebUI path currently classifies country but does not yet fully classify gateway role.
+4. Therefore, country-filter parity is solved at the UI-logic level, but data parity is still incomplete on
+   the upload-only path.
+
+Remaining Gap
+-------------
+The remaining functional gap is:
+- raw WebUI upload-only graph
+- after host CSV import
+- in GATEWAY mode (and secondarily COLLAPSING semantics)
+- because `is_gateway` is not fully inferred there
+
+Best Next Fix
+-------------
+Infer `is_gateway` client-side after country assignment for raw upload-only graphs.
+
+The strongest practical rule is:
+- a node should be marked as a gateway if it has at least one edge to a node in a different country
+
+This will bring the raw upload path closer to the processed pipeline-backed graphs that the older working
+state relied on.
+
+Summary
+-------
+1. The older working model is real and reproducible.
+2. It was based on pipeline-backed enriched graph data, not only on a fresh upload.
+3. The current visibility-conflict bug has been fixed.
+4. The remaining gap is not the country filter anymore; it is gateway-role inference on the raw upload path.
+5. Closing that gap should restore near-full parity for AS-IS, ENRICHED, GATEWAY, and COLLAPSING in the Web UI.

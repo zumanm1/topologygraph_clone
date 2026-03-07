@@ -34,7 +34,13 @@ For the current full remote-machine install and Docker-native validation flow, u
 bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 ```
 
-That single command:
+For the updated **full Web UI user-journey validation** on the current codebase, use:
+
+```bash
+bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh
+```
+
+The 08 command above:
 1. Verifies pre-flight conditions (5 checks)
 2. Uploads `ospf-database-3b.txt` to Topolograph
 3. Fetches raw graph → `IN-OUT-FOLDER/{graph_time}/`
@@ -136,4 +142,6 @@ Analysis features (Cost Matrix, What-If Analysis) in the web UI.
 | `05-STEP-BY-STEP/` | ospf-database-2.txt (34 routers) | 5-view modes + Sprint 3 features |
 | `06-STEP-BY-STEP/` | ospf-database-3.txt (54 routers) | Deep validation, 114/114 E2E checks |
 | `07-STEP-BY-STEP/` | ospf-database-3b.txt (54 routers) | New-file pipeline, architecture docs |
+| `08-STEP-BY-STEP/` | packaged 54-router fixtures | Canonical Docker-native rebuild + regression flow |
 | `09-STEP-BY-STEP/` | standard host files + conflicting 3-col fixture | Focused hostname-derived country-code regression |
+| `10-STEP-BY-STEP/` | packaged 54-router fixtures + browser upload path | Updated full Web UI user journey, artifacts, screenshots, layout/export |

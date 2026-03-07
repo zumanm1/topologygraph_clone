@@ -56,10 +56,16 @@ docker compose --profile test up -d e2e-runner
 # 7. Run the canonical all-Docker validation
 bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
-# 8. Open browser
+# 8. Run the updated full Web UI user-journey validation
+bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh
+
+# 9. Open browser
 #    http://localhost:8081/
 #    Login: ospf@topolograph.com / ospf
 ```
+
+Use `08-STEP-BY-STEP` when you want the canonical rebuild + security + Docker-native regression path.
+Use `10-STEP-BY-STEP` when you want the updated full browser upload/import/view/filter/feature/layout validation pack.
 
 ---
 

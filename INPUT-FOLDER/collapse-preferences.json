@@ -1,5 +1,0 @@
-{
-  "_comment": "CL-F1 — countries listed here will be collapsed by default when the pipeline runs generate-collapse-config.py",
-  "collapse_by_default": ["ZAF"],
-  "schema_version": "1.0"
-}
