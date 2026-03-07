@@ -121,9 +121,10 @@ IP ranges which have no hostname entry).
 This is the core command. Run it from the project root:
 
 ```bash
-bash terminal-script/workflow.sh all \
-  --ospf-file INPUT-FOLDER/ospf-database-3b.txt \
-  --host-file INPUT-FOLDER/Load-hosts-3b.txt
+docker compose exec pipeline bash /app/terminal-script/workflow.sh all \
+  --ospf-file /app/INPUT-FOLDER/ospf-database-3b.txt \
+  --host-file /app/INPUT-FOLDER/Load-hosts-3b.txt \
+  --base-url http://webserver:8081
 ```
 
 ### What happens, line by line
@@ -138,7 +139,7 @@ bash terminal-script/workflow.sh all \
 
 The script sends the entire content of `ospf-database-3b.txt` to:
 ```
-POST http://localhost:8081/api/graphs
+POST http://webserver:8081/api/graphs
 Body: [{ "lsdb_output": "<file contents>",
          "vendor_device": "Cisco",
          "igp_protocol": "ospf" }]
@@ -353,9 +354,10 @@ use the `enrich-existing` sub-command to skip the upload step:
 # Find the graph_time of your manually-uploaded graph
 # (shown in the Upload LSDB dropdown)
 
-bash terminal-script/workflow.sh enrich-existing \
+docker compose exec pipeline bash /app/terminal-script/workflow.sh enrich-existing \
   --graph-time 05Mar2026_18h30m00s_54_hosts \
-  --host-file  INPUT-FOLDER/Load-hosts-3b.txt
+  --host-file  /app/INPUT-FOLDER/Load-hosts-3b.txt \
+  --base-url  http://webserver:8081
 ```
 
 This runs Steps 2–5 only (no upload). Useful when:
@@ -378,8 +380,9 @@ This copies `Load-hosts-3b.txt` → `Load-hosts.txt` (after making a
 `.bak` backup of the previous canonical file). After this, running:
 
 ```bash
-bash terminal-script/workflow.sh all \
-  --ospf-file INPUT-FOLDER/ospf-database-3b.txt
+docker compose exec pipeline bash /app/terminal-script/workflow.sh all \
+  --ospf-file /app/INPUT-FOLDER/ospf-database-3b.txt \
+  --base-url http://webserver:8081
 ```
 
 (no `--host-file` needed — picks up `Load-hosts.txt` automatically)
@@ -397,7 +400,7 @@ test architecture. For this session's graph_time:
 docker compose --profile test up -d e2e-runner
 
 # Run Docker-native deep E2E validation for a specific graph_time
-docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
   --graph-time=05Mar2026_18h30m00s_54_hosts
 
 # Or run the canonical all-Docker validation flow:
@@ -426,8 +429,11 @@ page (`Cmd+Shift+R`) and select the graph_time manually.
 ### "54 nodes but country colours missing"
 `push-to-ui.py` did not run (e.g. used `--no-push`). Re-run:
 ```bash
-python3 terminal-script/push-to-ui.py \
-  --graph-time 05Mar2026_18h30m00s_54_hosts
+docker compose exec -T pipeline python3 /app/terminal-script/push-to-ui.py \
+  --graph-time 05Mar2026_18h30m00s_54_hosts \
+  --base-url http://webserver:8081 \
+  --user ospf@topolograph.com \
+  --pass ospf
 ```
 
 ### "UNK nodes showing wrong count"
@@ -450,29 +456,34 @@ filter and highlight still work correctly.
 
 ```bash
 # ─── Full pipeline for new OSPF + host file ──────────────────────
-bash terminal-script/workflow.sh all \
-  --ospf-file INPUT-FOLDER/ospf-database-3b.txt \
-  --host-file INPUT-FOLDER/Load-hosts-3b.txt
+docker compose exec pipeline bash /app/terminal-script/workflow.sh all \
+  --ospf-file /app/INPUT-FOLDER/ospf-database-3b.txt \
+  --host-file /app/INPUT-FOLDER/Load-hosts-3b.txt \
+  --base-url http://webserver:8081
 
 # ─── Re-enrich existing graph (new host file only) ───────────────
-bash terminal-script/workflow.sh enrich-existing \
+docker compose exec pipeline bash /app/terminal-script/workflow.sh enrich-existing \
   --graph-time <YOUR_GRAPH_TIME> \
-  --host-file  INPUT-FOLDER/Load-hosts-3b.txt
+  --host-file  /app/INPUT-FOLDER/Load-hosts-3b.txt \
+  --base-url  http://webserver:8081
 
 # ─── Promote host file to canonical ──────────────────────────────
 bash terminal-script/save-load-hosts.sh \
   --from INPUT-FOLDER/Load-hosts-3b.txt
 
 # ─── Run E2E validation ───────────────────────────────────────────
-docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
   --graph-time=<YOUR_GRAPH_TIME>
 
 # ─── Show current canonical host file ────────────────────────────
 bash terminal-script/save-load-hosts.sh --show
 
 # ─── Manual colour push (if workflow was run with --no-push) ─────
-python3 terminal-script/push-to-ui.py \
-  --graph-time <YOUR_GRAPH_TIME>
+docker compose exec -T pipeline python3 /app/terminal-script/push-to-ui.py \
+  --graph-time <YOUR_GRAPH_TIME> \
+  --base-url http://webserver:8081 \
+  --user ospf@topolograph.com \
+  --pass ospf
 
 # ─── Fetch raw graph manually (if already uploaded via web UI) ───
 bash terminal-script/fetch-from-api.sh \

@@ -40,10 +40,10 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 ### Step 1: Run the pipeline with ospf-database-3.txt
 
 ```bash
-bash terminal-script/workflow.sh all \
-  --ospf-file INPUT-FOLDER/ospf-database-3.txt \
-  --host-file INPUT-FOLDER/Load-hosts.txt \
-  --base-url  http://localhost:8081
+docker compose exec pipeline bash /app/terminal-script/workflow.sh all \
+  --ospf-file /app/INPUT-FOLDER/ospf-database-3.txt \
+  --host-file /app/INPUT-FOLDER/Load-hosts.txt \
+  --base-url  http://webserver:8081
 ```
 
 This uploads 54 routers. The 20 routers not in `Load-hosts.txt` get classified as `UNK`.
@@ -59,14 +59,14 @@ UNK: total=20 gw=4 core=16
 
 ```bash
 GRAPH_TIME="$(ls -1 IN-OUT-FOLDER | grep '_54_hosts' | sort | tail -1)"
-docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
+docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
   --graph-time="$GRAPH_TIME"
 ```
 
 Or with a visible browser:
 ```bash
-docker compose exec e2e-runner bash docker/scripts/docker-e2e.sh \
-  --graph-time="$GRAPH_TIME" --visible
+docker compose exec -T e2e-runner env HEADLESS=false bash /app/docker/scripts/docker-e2e.sh \
+  --graph-time="$GRAPH_TIME"
 ```
 
 Or trigger fresh pipeline + validation in one shot:
@@ -237,4 +237,4 @@ INPUT-FOLDER/
 | Cost Matrix shows 10 rows (no UNK) | `filter(c => c !== 'UNK')` bug — check topolograph.js `_computeCountryMatrix` |
 | Apply Change closes matrix | `_refreshCostMatrix` bug (same as above) |
 | P10 Integration fails | Ensure Docker restarted after topolograph.js fix |
-| No 54-host COLLAPSING artefact | Run: `bash terminal-script/workflow.sh all --ospf-file INPUT-FOLDER/ospf-database-3.txt --host-file INPUT-FOLDER/Load-hosts.txt` |
+| No 54-host COLLAPSING artefact | Run: `docker compose exec pipeline bash /app/terminal-script/workflow.sh all --ospf-file /app/INPUT-FOLDER/ospf-database-3.txt --host-file /app/INPUT-FOLDER/Load-hosts.txt --base-url http://webserver:8081` |

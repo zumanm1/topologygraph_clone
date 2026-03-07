@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+COMPOSE_CMD=(docker compose --project-directory "$PROJECT_ROOT" -f "$PROJECT_ROOT/docker-compose.yml")
 
 TERMINAL_VALIDATE="$PROJECT_ROOT/terminal-script/validate-terminal-app-outputs.sh"
 TERMINAL_TESTS="$PROJECT_ROOT/terminal-script/test-topology-country-tool.sh"
@@ -24,12 +25,14 @@ if [[ ! -x "$APP_VALIDATE" ]]; then
   exit 1
 fi
 
+"${COMPOSE_CMD[@]}" up -d pipeline >/dev/null
+
 echo "1) Terminal app output validation"
-"$TERMINAL_VALIDATE"
+"${COMPOSE_CMD[@]}" exec -T pipeline bash /app/terminal-script/validate-terminal-app-outputs.sh
 echo ""
 
 echo "2) Terminal app regression tests"
-"$TERMINAL_TESTS"
+"${COMPOSE_CMD[@]}" exec -T pipeline bash /app/terminal-script/test-topology-country-tool.sh
 echo ""
 
 echo "3) Main Topolograph validation"

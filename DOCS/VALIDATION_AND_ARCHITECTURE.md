@@ -19,23 +19,29 @@ So: **the app is restarted and working end-to-end.**
 
 ## How to re-validate anytime
 
-**Quick check (reachability + credentials):**
+**Quick check (Docker-native reachability + credentials):**
 ```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/
-curl -s -X POST http://localhost:8081/create-default-credentials
+docker compose --profile test up -d e2e-runner
+bash app-scripts/validate_topolograph.sh
 ```
 
-**Full validation (HTTP, identity, credentials, API upload, containers):**
+**Full validation (Docker-native HTTP, identity, credentials, API upload, containers, browser smoke):**
 ```bash
-chmod +x validate_topolograph.sh
-./validate_topolograph.sh
+chmod +x app-scripts/validate_topolograph.sh
+bash app-scripts/validate_topolograph.sh
 # Or with a specific LSDB file:
-./validate_topolograph.sh /path/to/other-lsdb.txt
+bash app-scripts/validate_topolograph.sh /path/to/other-lsdb.txt
 ```
 
-**Upload and validate (Python script):**
+**Upload and validate (manual Docker-native helper call):**
 ```bash
-python3 upload_and_validate.py
+docker compose --profile test up -d e2e-runner
+docker compose exec -T e2e-runner env \
+  BASE_URL=http://webserver:8081 \
+  API_USER=ospf@topolograph.com \
+  API_PASS=ospf \
+  LSDB_FILE=/app/INPUT-FOLDER/ospf-database.txt \
+  python3 /app/app-scripts/upload_and_validate.py
 ```
 
 ---
@@ -82,14 +88,14 @@ That message is the **default Nginx index** page. So you’re hitting **an Nginx
 
 ### 5. One-off “create credentials” container
 
-`flask-create-creds-from-env` runs once at startup: it calls Flask’s `create-default-credentials` so the user and password from `.env` exist and authorised networks are set. After that the container exits. It’s not needed for normal operation; re-running `POST /create-default-credentials` from the host does the same and is used by the validation script.
+`flask-create-creds-from-env` runs once at startup: it calls Flask’s `create-default-credentials` so the user and password from `.env` exist and authorised networks are set. After that the container exits. It’s not needed for normal operation; the Docker-native validation scripts can re-run the same bootstrap endpoint through the `e2e-runner` container when needed.
 
 ---
 
 ## Summary
 
 - **Restart:** `docker compose down && docker compose up -d` from the repository root.
-- **Validate:** Run `bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh` for the canonical Docker-native validation flow.
+- **Validate:** Run `bash app-scripts/validate_topolograph.sh` for the primary Docker-native smoke validation, or `bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh` for the canonical full Docker-native validation flow.
 - **Login URL:** **http://localhost:8081/** with **Login / Local login** and credentials from `.env` (e.g. `ospf@topolograph.com` / `ospf`).
 
 With the checks above, everything is validated and working.
