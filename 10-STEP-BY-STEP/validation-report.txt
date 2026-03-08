@@ -3,25 +3,25 @@
 [10-step] Ensuring e2e-runner is running
 [10-step] Web UI responding at http://localhost:8081
 [10-step] Uploading packaged OSPF fixture through the Web UI
-[10-step] Running enrich-existing pipeline for graph_time=07Mar2026_08h55m19s_54_hosts
+[10-step] Running enrich-existing pipeline for graph_time=08Mar2026_08h11m14s_54_hosts
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Fetch raw graph → IN-OUT-FOLDER
 ══════════════════════════════════════════════════════════
-[fetch-from-api] Saving to: /app/IN-OUT-FOLDER/07Mar2026_08h55m19s_54_hosts
+[fetch-from-api] Saving to: /app/IN-OUT-FOLDER/08Mar2026_08h11m14s_54_hosts
 [fetch-from-api]   meta.json saved
 [fetch-from-api]   nodes.json saved (54 nodes)
 [fetch-from-api]   edges.json saved (148 edges)
 [fetch-from-api]   edges.csv saved
-[fetch-from-api] Done. graph_time=07Mar2026_08h55m19s_54_hosts
-[workflow] graph_time confirmed: 07Mar2026_08h55m19s_54_hosts
+[fetch-from-api] Done. graph_time=08Mar2026_08h11m14s_54_hosts
+[workflow] graph_time confirmed: 08Mar2026_08h11m14s_54_hosts
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Run terminal topology pipeline
 ══════════════════════════════════════════════════════════
-[workflow] AS-IS output: /app/OUTPUT/AS-IS/07Mar2026_08h55m19s_54_hosts_AS-IS
+[workflow] AS-IS output: /app/OUTPUT/AS-IS/08Mar2026_08h11m14s_54_hosts_AS-IS
 [workflow] Edge source: OSPF file (/app/INPUT-FOLDER/ospf-database-54-unk-test.txt)
-[topology-tool] Done. Files written to: /app/OUTPUT/.tmp_work_07Mar2026_08h55m19s_54_hosts
+[topology-tool] Done. Files written to: /app/OUTPUT/.tmp_work_08Mar2026_08h11m14s_54_hosts
   - country-core-summary.json
   - country-core-summary.yaml
   - country-mapping.csv
@@ -29,22 +29,22 @@
   - gateway-only-topology.yaml
   - original-topology-with-country.json
   - original-topology-with-country.yaml
-[workflow] GATEWAY output: /app/OUTPUT/GATEWAY/07Mar2026_08h55m19s_54_hosts_GATEWAY
-[workflow] ENRICHED output: /app/OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED
+[workflow] GATEWAY output: /app/OUTPUT/GATEWAY/08Mar2026_08h11m14s_54_hosts_GATEWAY
+[workflow] ENRICHED output: /app/OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Generate COLLAPSING stage — gateway/core split + collapsed topology
 ══════════════════════════════════════════════════════════
-[collapse-config] graph_time   : 07Mar2026_08h55m19s_54_hosts
-[collapse-config] enriched_dir : /app/OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED
-[collapse-config] asis_dir     : /app/OUTPUT/AS-IS/07Mar2026_08h55m19s_54_hosts_AS-IS
-[collapse-config] output_dir   : /app/OUTPUT/COLLAPSING/07Mar2026_08h55m19s_54_hosts_COLLAPSING
+[collapse-config] graph_time   : 08Mar2026_08h11m14s_54_hosts
+[collapse-config] enriched_dir : /app/OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED
+[collapse-config] asis_dir     : /app/OUTPUT/AS-IS/08Mar2026_08h11m14s_54_hosts_AS-IS
+[collapse-config] output_dir   : /app/OUTPUT/COLLAPSING/08Mar2026_08h11m14s_54_hosts_COLLAPSING
 [collapse-config] Loaded 54 router entries from country-mapping.csv
 [collapse-config] Loaded 54 nodes from AS-IS_nodes.json
 [collapse-config] Loaded 148 edges from AS-IS_edges.json
 [collapse-config] Country split: 11 countries, 54 total, 32 gateways, 22 cores
 [collapse-config] Wrote COLLAPSING_country-collapse-config.json
-[collapse-config] Collapsed topology: 4 gateway nodes, 90 gateway edges (from 54 nodes, 148 edges)
+[collapse-config] Collapsed topology: 32 gateway nodes, 90 gateway edges (from 54 nodes, 148 edges)
 [collapse-config] Wrote COLLAPSING_collapsed-topology.json
 [collapse-config] Wrote COLLAPSING_collapsed-topology.yaml
 
@@ -69,15 +69,15 @@
 ║    ZAF    total=8  gw=5  core=3                 ║
 ╚══════════════════════════════════════════════════╝
 
-[workflow] COLLAPSING output: /app/OUTPUT/COLLAPSING/07Mar2026_08h55m19s_54_hosts_COLLAPSING
+[workflow] COLLAPSING output: /app/OUTPUT/COLLAPSING/08Mar2026_08h11m14s_54_hosts_COLLAPSING
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Push country colours → Topolograph UI
 ══════════════════════════════════════════════════════════
-[push-to-ui] Loading country mapping: /app/OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
+[push-to-ui] Loading country mapping: /app/OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
 [push-to-ui] 54 routers mapped to countries
 [push-to-ui] Countries: DJB:2 | DRC:4 | FRA:3 | GBR:3 | KEN:2 | LES:3 | MOZ:4 | POR:3 | TAN:2 | UNK:20 | ZAF:8
-[push-to-ui] Fetching nodes for graph_time=07Mar2026_08h55m19s_54_hosts …
+[push-to-ui] Fetching nodes for graph_time=08Mar2026_08h11m14s_54_hosts …
 [push-to-ui] 54 nodes in graph
 
 [push-to-ui] Patched: 54 OK  |  0 FAILED  |  0 skipped
@@ -102,64 +102,64 @@
              • 22.22.22.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
              • 22.22.22.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
              • 22.22.22.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
-[push-to-ui] Palette written: /app/OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED/ENRICHED_country-palette.json
-[push-to-ui] Done — open http://localhost:8081/ and load graph_time=07Mar2026_08h55m19s_54_hosts
+[push-to-ui] Palette written: /app/OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED/ENRICHED_country-palette.json
+[push-to-ui] Done — open http://localhost:8081/ and load graph_time=08Mar2026_08h11m14s_54_hosts
              The Country Filter panel will appear automatically in the UI.
 [workflow] UI push complete.
 
 ╔══════════════════════════════════════════════════════════════╗
 ║               WORKFLOW COMPLETE                              ║
 ╠══════════════════════════════════════════════════════════════╣
-║  graph_time : 07Mar2026_08h55m19s_54_hosts                   ║
+║  graph_time : 08Mar2026_08h11m14s_54_hosts                   ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  OUTPUT FOLDERS:                                             ║
-║  AS-IS    → OUTPUT/AS-IS/07Mar2026_08h55m19s_54_hosts_AS-IS/  ║
-║  GATEWAY  → OUTPUT/GATEWAY/07Mar2026_08h55m19s_54_hosts_GATEWAY/║
-║  ENRICHED   → OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED/║
-║  COLLAPSING → OUTPUT/COLLAPSING/07Mar2026_08h55m19s_54_hosts_COLLAPSING/║
+║  AS-IS    → OUTPUT/AS-IS/08Mar2026_08h11m14s_54_hosts_AS-IS/  ║
+║  GATEWAY  → OUTPUT/GATEWAY/08Mar2026_08h11m14s_54_hosts_GATEWAY/║
+║  ENRICHED   → OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED/║
+║  COLLAPSING → OUTPUT/COLLAPSING/08Mar2026_08h11m14s_54_hosts_COLLAPSING/║
 ╠══════════════════════════════════════════════════════════════╣
 ║  NEXT STEPS:                                                 ║
 ║  1. Open http://localhost:8081/                               ║
 ║  2. Select the graph from the dropdown                       ║
 ║  3. Use the 🌍 Country Filter panel (top-right)              ║
 ╚══════════════════════════════════════════════════════════════╝
-[10-step] Resolved graph_time: 07Mar2026_08h55m19s_54_hosts
+[10-step] Resolved graph_time: 08Mar2026_08h11m14s_54_hosts
 [10-step] Artifact validation
 ╔══════════════════════════════════════════════════════════════════╗
 ║   Step 10 Artifact Validation                                  ║
 ╚══════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time: 07Mar2026_08h55m19s_54_hosts
+  ℹ  Graph time: 08Mar2026_08h11m14s_54_hosts
   ✅ PASS [INPUT]: OSPF fixture: INPUT-FOLDER/ospf-database-54-unk-test.txt
   ✅ PASS [INPUT]: Host CSV fixture: INPUT-FOLDER/Load-hosts.csv
-  ✅ PASS [INOUT]: IN-OUT graph folder: IN-OUT-FOLDER/07Mar2026_08h55m19s_54_hosts
-  ✅ PASS [INOUT]: nodes.json: IN-OUT-FOLDER/07Mar2026_08h55m19s_54_hosts/nodes.json
-  ✅ PASS [INOUT]: edges.json: IN-OUT-FOLDER/07Mar2026_08h55m19s_54_hosts/edges.json
-  ✅ PASS [INOUT]: meta.json: IN-OUT-FOLDER/07Mar2026_08h55m19s_54_hosts/meta.json
-  ✅ PASS [INOUT]: edges.csv: IN-OUT-FOLDER/07Mar2026_08h55m19s_54_hosts/edges.csv
+  ✅ PASS [INOUT]: IN-OUT graph folder: IN-OUT-FOLDER/08Mar2026_08h11m14s_54_hosts
+  ✅ PASS [INOUT]: nodes.json: IN-OUT-FOLDER/08Mar2026_08h11m14s_54_hosts/nodes.json
+  ✅ PASS [INOUT]: edges.json: IN-OUT-FOLDER/08Mar2026_08h11m14s_54_hosts/edges.json
+  ✅ PASS [INOUT]: meta.json: IN-OUT-FOLDER/08Mar2026_08h11m14s_54_hosts/meta.json
+  ✅ PASS [INOUT]: edges.csv: IN-OUT-FOLDER/08Mar2026_08h11m14s_54_hosts/edges.csv
   ✅ PASS [INOUT]: nodes.json contains 54 nodes
   ✅ PASS [INOUT]: edges.json contains 148 edges
-  ✅ PASS [AS-IS]: AS-IS output folder: OUTPUT/AS-IS/07Mar2026_08h55m19s_54_hosts_AS-IS
-  ✅ PASS [AS-IS]: AS-IS_nodes.json: OUTPUT/AS-IS/07Mar2026_08h55m19s_54_hosts_AS-IS/AS-IS_nodes.json
-  ✅ PASS [AS-IS]: AS-IS_edges.json: OUTPUT/AS-IS/07Mar2026_08h55m19s_54_hosts_AS-IS/AS-IS_edges.json
-  ✅ PASS [AS-IS]: AS-IS_meta.json: OUTPUT/AS-IS/07Mar2026_08h55m19s_54_hosts_AS-IS/AS-IS_meta.json
-  ✅ PASS [AS-IS]: AS-IS_ospf-database.txt: OUTPUT/AS-IS/07Mar2026_08h55m19s_54_hosts_AS-IS/AS-IS_ospf-database.txt
-  ✅ PASS [GATEWAY]: GATEWAY output folder: OUTPUT/GATEWAY/07Mar2026_08h55m19s_54_hosts_GATEWAY
-  ✅ PASS [GATEWAY]: GATEWAY_gateway-only-topology.json: OUTPUT/GATEWAY/07Mar2026_08h55m19s_54_hosts_GATEWAY/GATEWAY_gateway-only-topology.json
-  ✅ PASS [GATEWAY]: GATEWAY_gateway-only-topology.yaml: OUTPUT/GATEWAY/07Mar2026_08h55m19s_54_hosts_GATEWAY/GATEWAY_gateway-only-topology.yaml
-  ✅ PASS [GATEWAY]: GATEWAY_country-core-summary.json: OUTPUT/GATEWAY/07Mar2026_08h55m19s_54_hosts_GATEWAY/GATEWAY_country-core-summary.json
-  ✅ PASS [GATEWAY]: GATEWAY_country-core-summary.yaml: OUTPUT/GATEWAY/07Mar2026_08h55m19s_54_hosts_GATEWAY/GATEWAY_country-core-summary.yaml
+  ✅ PASS [AS-IS]: AS-IS output folder: OUTPUT/AS-IS/08Mar2026_08h11m14s_54_hosts_AS-IS
+  ✅ PASS [AS-IS]: AS-IS_nodes.json: OUTPUT/AS-IS/08Mar2026_08h11m14s_54_hosts_AS-IS/AS-IS_nodes.json
+  ✅ PASS [AS-IS]: AS-IS_edges.json: OUTPUT/AS-IS/08Mar2026_08h11m14s_54_hosts_AS-IS/AS-IS_edges.json
+  ✅ PASS [AS-IS]: AS-IS_meta.json: OUTPUT/AS-IS/08Mar2026_08h11m14s_54_hosts_AS-IS/AS-IS_meta.json
+  ✅ PASS [AS-IS]: AS-IS_ospf-database.txt: OUTPUT/AS-IS/08Mar2026_08h11m14s_54_hosts_AS-IS/AS-IS_ospf-database.txt
+  ✅ PASS [GATEWAY]: GATEWAY output folder: OUTPUT/GATEWAY/08Mar2026_08h11m14s_54_hosts_GATEWAY
+  ✅ PASS [GATEWAY]: GATEWAY_gateway-only-topology.json: OUTPUT/GATEWAY/08Mar2026_08h11m14s_54_hosts_GATEWAY/GATEWAY_gateway-only-topology.json
+  ✅ PASS [GATEWAY]: GATEWAY_gateway-only-topology.yaml: OUTPUT/GATEWAY/08Mar2026_08h11m14s_54_hosts_GATEWAY/GATEWAY_gateway-only-topology.yaml
+  ✅ PASS [GATEWAY]: GATEWAY_country-core-summary.json: OUTPUT/GATEWAY/08Mar2026_08h11m14s_54_hosts_GATEWAY/GATEWAY_country-core-summary.json
+  ✅ PASS [GATEWAY]: GATEWAY_country-core-summary.yaml: OUTPUT/GATEWAY/08Mar2026_08h11m14s_54_hosts_GATEWAY/GATEWAY_country-core-summary.yaml
   ✅ PASS [GATEWAY]: Gateway topology exposes 32 node records
   ✅ PASS [GATEWAY]: Country-core summary contains 2 entries
-  ✅ PASS [ENRICHED]: ENRICHED output folder: OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED
-  ✅ PASS [ENRICHED]: ENRICHED_original-topology-with-country.json: OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED/ENRICHED_original-topology-with-country.json
-  ✅ PASS [ENRICHED]: ENRICHED_original-topology-with-country.yaml: OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED/ENRICHED_original-topology-with-country.yaml
-  ✅ PASS [ENRICHED]: ENRICHED_country-palette.json: OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED/ENRICHED_country-palette.json
-  ✅ PASS [ENRICHED]: ENRICHED_country-mapping.csv: OUTPUT/ENRICHED/07Mar2026_08h55m19s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
+  ✅ PASS [ENRICHED]: ENRICHED output folder: OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED
+  ✅ PASS [ENRICHED]: ENRICHED_original-topology-with-country.json: OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED/ENRICHED_original-topology-with-country.json
+  ✅ PASS [ENRICHED]: ENRICHED_original-topology-with-country.yaml: OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED/ENRICHED_original-topology-with-country.yaml
+  ✅ PASS [ENRICHED]: ENRICHED_country-palette.json: OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED/ENRICHED_country-palette.json
+  ✅ PASS [ENRICHED]: ENRICHED_country-mapping.csv: OUTPUT/ENRICHED/08Mar2026_08h11m14s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
   ✅ PASS [ENRICHED]: Country mapping CSV has 54 data rows
-  ✅ PASS [COLLAPSING]: COLLAPSING output folder: OUTPUT/COLLAPSING/07Mar2026_08h55m19s_54_hosts_COLLAPSING
-  ✅ PASS [COLLAPSING]: COLLAPSING_collapsed-topology.json: OUTPUT/COLLAPSING/07Mar2026_08h55m19s_54_hosts_COLLAPSING/COLLAPSING_collapsed-topology.json
-  ✅ PASS [COLLAPSING]: COLLAPSING_collapsed-topology.yaml: OUTPUT/COLLAPSING/07Mar2026_08h55m19s_54_hosts_COLLAPSING/COLLAPSING_collapsed-topology.yaml
-  ✅ PASS [COLLAPSING]: COLLAPSING_country-collapse-config.json: OUTPUT/COLLAPSING/07Mar2026_08h55m19s_54_hosts_COLLAPSING/COLLAPSING_country-collapse-config.json
+  ✅ PASS [COLLAPSING]: COLLAPSING output folder: OUTPUT/COLLAPSING/08Mar2026_08h11m14s_54_hosts_COLLAPSING
+  ✅ PASS [COLLAPSING]: COLLAPSING_collapsed-topology.json: OUTPUT/COLLAPSING/08Mar2026_08h11m14s_54_hosts_COLLAPSING/COLLAPSING_collapsed-topology.json
+  ✅ PASS [COLLAPSING]: COLLAPSING_collapsed-topology.yaml: OUTPUT/COLLAPSING/08Mar2026_08h11m14s_54_hosts_COLLAPSING/COLLAPSING_collapsed-topology.yaml
+  ✅ PASS [COLLAPSING]: COLLAPSING_country-collapse-config.json: OUTPUT/COLLAPSING/08Mar2026_08h11m14s_54_hosts_COLLAPSING/COLLAPSING_country-collapse-config.json
   ✅ PASS [COLLAPSING]: Collapse config keys: 3
 
 TOTAL PASSED: 32
@@ -169,12 +169,12 @@ TOTAL FAILED: 0
 ║   WebUI Host CSV Import → Automatic Country Derivation         ║
 ╚══════════════════════════════════════════════════════════════════╝
   ✅ PASS [AUTH]: Logged in as ospf@topolograph.com
-  ✅ PASS [UPLOAD]: Uploaded OSPF file and resolved graph_time=07Mar2026_09h12m52s_54_hosts
+  ✅ PASS [UPLOAD]: Uploaded OSPF file and resolved graph_time=08Mar2026_08h11m25s_54_hosts
   ℹ  Screenshot → 03-webui-ospf-uploaded.png
-  ✅ PASS [HOSTS]: Loaded hostname page for graph 07Mar2026_09h12m52s_54_hosts
+  ✅ PASS [HOSTS]: Loaded hostname page for graph 08Mar2026_08h11m25s_54_hosts
   ✅ PASS [HOSTS]: Imported Load-hosts.csv via normal WebUI flow
   ✅ PASS [HOSTS]: Updated hostnames on the graph from saved hostname mappings
-  ✅ PASS [GRAPH]: Loaded graph 07Mar2026_09h12m52s_54_hosts with 54 nodes
+  ✅ PASS [GRAPH]: Loaded graph 08Mar2026_08h11m25s_54_hosts with 54 nodes
   ℹ  Screenshot → 04-webui-graph-loaded-after-host-import.png
   ✅ PASS [DERIVE]: 12.12.12.2 => ken-mob-r2 => KEN through normal WebUI flow
   ✅ PASS [DERIVE]: 13.13.13.1 => drc-moa-r1 => DRC through normal WebUI flow
@@ -189,33 +189,33 @@ TOTAL FAILED: 0
 ║   Country Filter Across AS-IS / GATEWAY / ENRICHED / COLLAPSING║
 ╚══════════════════════════════════════════════════════════════════╝
   ✅ PASS [AUTH]: Logged in as ospf@topolograph.com
-  ✅ PASS [SETUP]: Uploaded OSPF graph 07Mar2026_09h13m14s_54_hosts
+  ✅ PASS [SETUP]: Uploaded OSPF graph 08Mar2026_08h11m46s_54_hosts
   ✅ PASS [SETUP]: Imported Load-hosts.csv
   ✅ PASS [SETUP]: Graph loaded with 54 nodes
   ✅ PASS [AS-IS]: Country Filter panel visible
   ✅ PASS [AS-IS]: Country Groups panel visibility correct (false)
-  ✅ PASS [AS-IS]: UNK panel visible
+  ✅ PASS [AS-IS]: UNK control visible
   ✅ PASS [AS-IS]: Applied show-only ZAF filter
   ✅ PASS [AS-IS]: Filter isolated ZAF (8 visible nodes)
   ✅ PASS [AS-IS]: Reset restored baseline visibility (54)
   ℹ  Screenshot → filter-asis-view.png
   ✅ PASS [GATEWAY]: Country Filter panel visible
   ✅ PASS [GATEWAY]: Country Groups panel visibility correct (false)
-  ✅ PASS [GATEWAY]: UNK panel visible
+  ✅ PASS [GATEWAY]: UNK control visible
   ✅ PASS [GATEWAY]: Applied show-only ZAF filter
   ✅ PASS [GATEWAY]: Filter isolated ZAF (5 visible nodes)
-  ✅ PASS [GATEWAY]: Reset restored baseline visibility (48)
+  ✅ PASS [GATEWAY]: Reset restored baseline visibility (32)
   ℹ  Screenshot → filter-gateway-view.png
   ✅ PASS [ENRICHED]: Country Filter panel visible
   ✅ PASS [ENRICHED]: Country Groups panel visibility correct (false)
-  ✅ PASS [ENRICHED]: UNK panel visible
+  ✅ PASS [ENRICHED]: UNK control visible
   ✅ PASS [ENRICHED]: Applied show-only ZAF filter
   ✅ PASS [ENRICHED]: Filter isolated ZAF (8 visible nodes)
   ✅ PASS [ENRICHED]: Reset restored baseline visibility (54)
   ℹ  Screenshot → filter-enriched-view.png
   ✅ PASS [COLLAPSING]: Country Filter panel visible
   ✅ PASS [COLLAPSING]: Country Groups panel visibility correct (true)
-  ✅ PASS [COLLAPSING]: UNK panel visible
+  ✅ PASS [COLLAPSING]: UNK control visible
   ✅ PASS [COLLAPSING]: Applied show-only ZAF filter
   ✅ PASS [COLLAPSING]: Filter isolated ZAF (8 visible nodes)
   ✅ PASS [COLLAPSING]: Reset restored baseline visibility (54)
@@ -229,7 +229,7 @@ TOTAL FAILED: 0
 ║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
 ║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time : 07Mar2026_08h55m19s_54_hosts
+  ℹ  Graph time : 08Mar2026_08h11m14s_54_hosts
   ℹ  Base URL   : http://webserver:8081
   ℹ  Headless   : true
   ℹ  Screenshots: /app/10-STEP-BY-STEP/screenshots/full-e2e
@@ -393,7 +393,7 @@ TOTAL FAILED: 0
 ║   MULTI-MODE FEATURE VALIDATION  v1                             ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║   BASE_URL   : http://webserver:8081                             ║
-║   GRAPH_TIME : 07Mar2026_08h55m19s_54_hosts                      ║
+║   GRAPH_TIME : 08Mar2026_08h11m14s_54_hosts                      ║
 ║   HEADLESS   : true                                              ║
 ╚══════════════════════════════════════════════════════════════════╝
 
@@ -402,9 +402,9 @@ TOTAL FAILED: 0
   ℹ  Screenshot → 02-F0-after-login.png
   ✅ PASS: F0 — Login successful, redirected to: /dashboard
 
-[features] F1 — Load enriched graph 07Mar2026_08h55m19s_54_hosts, verify view-mode bar + tool buttons
+[features] F1 — Load enriched graph 08Mar2026_08h11m14s_54_hosts, verify view-mode bar + tool buttons
   ℹ  Screenshot → 03-F1-upload-page.png
-  ℹ  F1 — Dropdown selected: 07Mar2026_08h55m19s_54_hosts
+  ℹ  F1 — Dropdown selected: 08Mar2026_08h11m14s_54_hosts
   ℹ  Screenshot → 04-F1-graph-selected.png
   ℹ  F1 — Load button clicked
   ℹ  F1 — [attempt 1/8] vis.js nodes: 54
@@ -519,9 +519,9 @@ TOTAL FAILED: 0
   ✅ PASS [LOAD]: Saved layout re-applied to node 9.9.9.1
   ✅ PASS [RESET-NODE]: Selected node 9.9.9.1 removed from saved layout
   ✅ PASS [RESET]: Full layout reset removed saved snapshot
-  ✅ PASS [EXPORT]: btnExportYaml download started (topology-07Mar2026_08h55m19s_54_hosts-enriched.yaml)
-  ✅ PASS [EXPORT]: btnExportCsv download started (topology-07Mar2026_08h55m19s_54_hosts-enriched.csv)
-  ✅ PASS [EXPORT]: btnExportExcel download started (topology-07Mar2026_08h55m19s_54_hosts-enriched.xls)
+  ✅ PASS [EXPORT]: btnExportYaml download started (topology-08Mar2026_08h11m14s_54_hosts-enriched.yaml)
+  ✅ PASS [EXPORT]: btnExportCsv download started (topology-08Mar2026_08h11m14s_54_hosts-enriched.csv)
+  ✅ PASS [EXPORT]: btnExportExcel download started (topology-08Mar2026_08h11m14s_54_hosts-enriched.xls)
 
 TOTAL PASSED: 17
 TOTAL FAILED: 0
@@ -534,11 +534,11 @@ TOTAL FAILED: 0
   ℹ  Screenshot → 02-01-upload-page.png
   ℹ  Screenshot → 03-02-ospf-selected.png
   ℹ  Screenshot → 04-03-after-upload.png
-  ✅ PASS [UPLOAD]: Uploaded raw OSPF and created graph_time=07Mar2026_09h26m25s_54_hosts
+  ✅ PASS [UPLOAD]: Uploaded raw OSPF and created graph_time=08Mar2026_08h14m20s_54_hosts
   ℹ  Screenshot → 05-04-host-mapping-page.png
   ℹ  Screenshot → 06-05-host-csv-imported.png
   ✅ PASS [HOSTS]: Imported Load-hosts.csv on host mapping page
-  ✅ PASS [GRAPH]: Loaded graph 07Mar2026_09h26m25s_54_hosts with 54 nodes
+  ✅ PASS [GRAPH]: Loaded graph 08Mar2026_08h14m20s_54_hosts with 54 nodes
   ℹ  Screenshot → 07-06-graph-loaded.png
   ℹ  Screenshot → 08-07-view-asis.png
   ✅ PASS [VIEW]: AS-IS rendered
@@ -564,5 +564,5 @@ TOTAL FAILED: 0
 TOTAL PASSED: 17
 TOTAL FAILED: 0
 [10-step] Step 10 validation complete
-[10-step] graph_time=07Mar2026_08h55m19s_54_hosts
+[10-step] graph_time=08Mar2026_08h11m14s_54_hosts
 [10-step] report=/Users/macbook/Documents/OSPF-DATABASE-TEST/10-STEP-BY-STEP/validation-report.txt
