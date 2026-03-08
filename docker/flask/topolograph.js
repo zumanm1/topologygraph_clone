@@ -4791,7 +4791,7 @@ function _syncEdgeVisibility() {
   nodes.get().forEach(function(n) { if (_nodeHiddenByRules(n)) hiddenNodes.add(n.id); });
   var edgeUpdates = [];
   edges.get().forEach(function(e) {
-    var h = !!e._collapseHidden || hiddenNodes.has(e.from) || hiddenNodes.has(e.to);
+    var h = !!e._collapseHidden || !!e._bundledHidden || hiddenNodes.has(e.from) || hiddenNodes.has(e.to);
     if (!!e.hidden !== h) edgeUpdates.push({ id: e.id, hidden: h });
   });
   if (edgeUpdates.length) edges.update(edgeUpdates);
@@ -5030,6 +5030,17 @@ function _getCountryNodesByType(code) {
 }
 
 /**
+ * Check if a node is a gateway node.
+ * @param {number} nodeId  vis.js node ID
+ * @returns {boolean}  true if node.is_gateway === true
+ */
+function _isGatewayNode(nodeId) {
+  if (typeof nodes === 'undefined' || !nodes) return false;
+  var n = nodes.get(nodeId);
+  return n && n.is_gateway === true;
+}
+
+/**
  * IP Fabric "Persistent Path Overlay" implementation.
  *
  * Returns {toHide:[id,…], intraCost:N} for edges whose collapse behaviour
@@ -5052,24 +5063,35 @@ function _getCountryNodesByType(code) {
  * @returns {{ toHide: number[], intraCost: number }}
  */
 function _collapseEdgeIds(coreNodeIdSet, countryCode) {
-  if (typeof edges === 'undefined' || !edges) return { toHide: [], intraCost: 0 };
-  var toHide    = [];
-  var intraCost = 0;
+  if (typeof edges === 'undefined' || !edges) return { toHide: [], intraCost: 0, crossCountry: [] };
+  var toHide        = [];
+  var intraCost     = 0;
+  var crossCountry  = [];  // Cross-country edges to keep visible
   var cc = countryCode ? countryCode.toUpperCase() : null;
 
   edges.get().forEach(function(e) {
-    // Only process edges that touch at least one core node
-    if (!coreNodeIdSet.has(e.from) && !coreNodeIdSet.has(e.to)) return;
+    // Check if endpoints are core or gateway nodes of this country
+    var fromIsCore = coreNodeIdSet.has(e.from);
+    var toIsCore   = coreNodeIdSet.has(e.to);
+    
+    // Get node countries for cross-country check
+    var srcNode = typeof nodes !== 'undefined' && nodes ? nodes.get(e.from) : null;
+    var dstNode = typeof nodes !== 'undefined' && nodes ? nodes.get(e.to) : null;
+    var srcC = srcNode && srcNode.country ? srcNode.country.toUpperCase() : null;
+    var dstC = dstNode && dstNode.country ? dstNode.country.toUpperCase() : null;
+    
+    // Check if this edge involves the country being collapsed
+    var fromInCountry = srcC === cc;
+    var toInCountry   = dstC === cc;
+    
+    // Skip edges that don't involve this country at all
+    if (!fromInCountry && !toInCountry) return;
 
     // ── Persistent Path Overlay: keep cross-country edges visible ─────────
-    if (cc && typeof nodes !== 'undefined' && nodes) {
-      var srcNode = nodes.get(e.from);
-      var dstNode = nodes.get(e.to);
-      var srcC = srcNode && srcNode.country ? srcNode.country.toUpperCase() : null;
-      var dstC = dstNode && dstNode.country ? dstNode.country.toUpperCase() : null;
-      // If the two endpoints belong to DIFFERENT countries, this is an
-      // inter-domain link — leave it visible regardless of core status.
-      if (srcC && dstC && srcC !== dstC) return;
+    // Cross-country edge = endpoints belong to DIFFERENT countries
+    if (srcC && dstC && srcC !== dstC) {
+      crossCountry.push(e);
+      return;  // Keep visible, don't hide
     }
 
     // Intra-country edge → hide it and accumulate OSPF cost
@@ -5078,7 +5100,73 @@ function _collapseEdgeIds(coreNodeIdSet, countryCode) {
     intraCost += _edgeCost(e);
   });
 
-  return { toHide: toHide, intraCost: intraCost };
+  return { toHide: toHide, intraCost: intraCost, crossCountry: crossCountry };
+}
+
+/**
+ * Aggregate multiple parallel gateway-to-gateway links into meta-edges.
+ * 
+ * When multiple links exist between the same gateway pair, bundle them into
+ * a single visual "meta-edge" showing link count + total cost.
+ * 
+ * @param {Array} crossCountryEdges  Array of edge objects to potentially aggregate
+ * @returns {{ metaEdges: Array, bundledEdgeIds: Set }}
+ */
+function _aggregateGatewayLinks(crossCountryEdges) {
+  if (!crossCountryEdges || crossCountryEdges.length === 0) {
+    return { metaEdges: [], bundledEdgeIds: new Set() };
+  }
+  
+  // Group edges by (from, to) pair
+  var edgeGroups = {};
+  crossCountryEdges.forEach(function(e) {
+    var key = e.from + '_' + e.to;
+    if (!edgeGroups[key]) {
+      edgeGroups[key] = [];
+    }
+    edgeGroups[key].push(e);
+  });
+  
+  var metaEdges = [];
+  var bundledEdgeIds = new Set();
+  
+  // For each group with multiple links, create a meta-edge
+  Object.keys(edgeGroups).forEach(function(key) {
+    var group = edgeGroups[key];
+    
+    if (group.length > 1) {
+      // Multiple links - create aggregated meta-edge
+      var totalCost = 0;
+      var costDetails = [];
+      
+      group.forEach(function(e) {
+        var cost = _edgeCost(e);
+        totalCost += cost;
+        costDetails.push('  • ' + (e.label || 'Link ' + e.id) + ': cost ' + cost);
+        bundledEdgeIds.add(e.id);
+      });
+      
+      var metaEdge = {
+        id: 'meta_' + key,
+        from: group[0].from,
+        to: group[0].to,
+        _isMetaEdge: true,
+        _bundledEdgeIds: group.map(function(e) { return e.id; }),
+        _linkCount: group.length,
+        _totalCost: totalCost,
+        width: Math.min(10, 2 + group.length),
+        label: group.length + ' links | Σ' + totalCost,
+        color: { color: '#FF6B35', highlight: '#FF8C42' },
+        font: { size: 12, color: '#333', background: '#FFE5D9' },
+        title: 'Bundled gateway links (' + group.length + '):\n' + costDetails.join('\n') + '\nTotal cost: ' + totalCost,
+        arrows: group[0].arrows || { to: { enabled: false } }
+      };
+      
+      metaEdges.push(metaEdge);
+    }
+  });
+  
+  return { metaEdges: metaEdges, bundledEdgeIds: bundledEdgeIds };
 }
 
 /**
@@ -5181,10 +5269,17 @@ function collapseCountry(code) {
   // ── IP Fabric Persistent Path Overlay + Cost Aggregation ──────────────
   // _collapseEdgeIds now filters out cross-country edges (kept visible)
   // and returns the summed intra-country OSPF cost for the badge.
-  var edgeResult   = _collapseEdgeIds(coreIds, code);
-  var edgeIds      = edgeResult.toHide;
-  var intraCost    = edgeResult.intraCost;
-  var edgeIdSet    = new Set(edgeIds);
+  var edgeResult      = _collapseEdgeIds(coreIds, code);
+  var edgeIds         = edgeResult.toHide;
+  var intraCost       = edgeResult.intraCost;
+  var crossCountry    = edgeResult.crossCountry;
+  var edgeIdSet       = new Set(edgeIds);
+
+  // ── Gateway Link Aggregation ──────────────────────────────────────────
+  // Bundle multiple parallel links between same gateway pairs
+  var aggregation     = _aggregateGatewayLinks(crossCountry);
+  var metaEdges       = aggregation.metaEdges;
+  var bundledEdgeIds  = aggregation.bundledEdgeIds;
 
   // Disable physics briefly to prevent layout jump
   if (typeof network !== 'undefined' && network) {
@@ -5199,14 +5294,33 @@ function collapseCountry(code) {
   if (edgeIds.length) {
     edges.update(edgeIds.map(function(id) { return { id: id, _collapseHidden: true }; }));
   }
+  
+  // Hide bundled edges and add meta-edges
+  if (bundledEdgeIds.size > 0) {
+    var bundleUpdates = [];
+    bundledEdgeIds.forEach(function(id) {
+      bundleUpdates.push({ id: id, _bundledHidden: true });
+      edgeIdSet.add(id);  // Track for restoration
+    });
+    edges.update(bundleUpdates);
+  }
+  if (metaEdges.length > 0) {
+    edges.add(metaEdges);
+  }
+  
   _syncEdgeVisibility();
 
   // Visual badge on gateway nodes — includes ∑cost for Cost Aggregation
   _markGatewayCollapsed(code, true, cores.length, intraCost);
 
-  // Record state
+  // Record state (including meta-edges for cleanup on expand)
   _collapseState[code]  = true;
-  _collapseHidden[code] = { nodeIds: coreIds, edgeIds: edgeIdSet, intraCost: intraCost };
+  _collapseHidden[code] = { 
+    nodeIds: coreIds, 
+    edgeIds: edgeIdSet, 
+    intraCost: intraCost,
+    metaEdges: metaEdges.map(function(e) { return e.id; })
+  };
 
   _updateCollapsePanel();
 }
@@ -5225,6 +5339,11 @@ function expandCountry(code) {
     network.setOptions({ physics: { enabled: false } });
   }
 
+  // Remove meta-edges first
+  if (hidden.metaEdges && hidden.metaEdges.length > 0) {
+    edges.remove(hidden.metaEdges);
+  }
+
   // Restore core nodes
   if (hidden.nodeIds.size) {
     var nodeUpd = [];
@@ -5232,10 +5351,12 @@ function expandCountry(code) {
     nodes.update(nodeUpd);
   }
 
-  // Restore edges
+  // Restore edges (both intra-country and bundled gateway edges)
   if (hidden.edgeIds.size) {
     var edgeUpd = [];
-    hidden.edgeIds.forEach(function(id) { edgeUpd.push({ id: id, _collapseHidden: false }); });
+    hidden.edgeIds.forEach(function(id) { 
+      edgeUpd.push({ id: id, _collapseHidden: false, _bundledHidden: false }); 
+    });
     edges.update(edgeUpd);
   }
   _syncEdgeVisibility();
