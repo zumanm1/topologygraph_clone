@@ -28,7 +28,7 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 | Topolograph UI at port 8081 | `curl http://localhost:8081/login` |
 | Node.js ≥ 18 | `node --version` |
 | Playwright installed | `ls tests/node_modules/playwright` |
-| `ospf-database-3.txt` in INPUT-FOLDER | 54 routers (34 named + 20 UNK) |
+| `ospf-database-54-unk-test.txt` in INPUT-FOLDER | 54 routers (34 named + 20 UNK) — canonical fixture |
 | `Load-hosts.txt` in INPUT-FOLDER | 34 entries (leaves 20 UNK unmapped) |
 | `Load-hosts.csv` or `Load-hosts-3b.txt` in INPUT-FOLDER | standard host-file fixture for hostname-derived country checks |
 | Pipeline run at least once | `ls OUTPUT/COLLAPSING/*_54_hosts_*/` |
@@ -94,9 +94,9 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 |---------|----|----|
 | AS-IS 54 nodes | ≥30 | ≥50 + UNK count |
 | ENRICHED | ≥30 | ≥50 + 11 countries + UNK visible |
-| GATEWAY | ≥20 | ≥32 + UNK hubs + 22 cores hidden |
+| GATEWAY | ≥20 | ≥32 visible + UNK hubs visible + **6** named-country cores hidden (FRA:1 GBR:1 POR:1 ZAF:3) |
 | COLLAPSING | ZAF collapse, Collapse All | + UNK non-interactive row |
-| Cost Matrix | rows≥5, cells>0 | rows≥11, UNK row, UNK non-zero costs, Excel btn, ↺ btn, functions, **↺ rebuilds (bug fix)** |
+| Cost Matrix | rows≥5, cells>0 | rows≥11, UNK row present (zero cells — expected, non-geographic), Excel btn, ↺ btn, functions, **↺ rebuilds (bug fix)** |
 | What-If | run, risk, apply btn | + auto-fill cost, Δ column, affected pairs, **Apply → vis.js update**, confirmation, **CSV export callable** |
 | Integration | — | **Apply Change while matrix open → matrix survives + updates** |
 | Phase 1 | Dynamic counts | + UNK gateways (4), UNK cores (16), `edges.csv` |
@@ -107,8 +107,8 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 
 ### Phase 0: Pre-Flight (10 checks)
 - Docker webserver responding
-- `ospf-database-2.txt` and `ospf-database-3.txt` exist
-- `Load-hosts.txt` has exactly 34 entries (20 UNK demo)
+- `ospf-database-54-unk-test.txt` exists (canonical; legacy filenames suppressed as INFO if primary found)
+- `Load-hosts.txt`/`Load-hosts.csv` has 34 entries (20 UNK demo)
 - `Load-hosts.csv` or `Load-hosts-3b.txt` provides standard hostname mappings for the browser regression
 - Node.js + Playwright available
 - 54-host COLLAPSING artefacts on disk
@@ -133,12 +133,12 @@ bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 | LOAD | 54 nodes loaded |
 | P1-ASIS | 54 visible, UNK nodes ≥20, 4 toolbar buttons |
 | P2-ENRICHED | 54 visible, Country Filter, ≥34 classified, ≥20 UNK visible, 11 countries |
-| P3-GATEWAY | ≥32 visible, ≥22 cores hidden, ≥4 UNK hubs visible |
+| P3-GATEWAY | ≥32 visible, ≥6 named-country cores hidden, ≥4 UNK hubs visible (UNK nodes all remain visible) |
 | P4-CURRENT | Loads without error |
 | P5-COLLAPSING | Panel, UNK non-interactive, ZAF ▲badge, Σcost, Persistent Path Overlay, Collapse All ≥22 |
 | P6-UNK | Toggle on/off, GATEWAY cross-mode |
 | P7-HOST | standard host file, derived KEN/DRC/ZAF checks, conflicting static country ignored, UNK preserved ≥20, manual reclassify |
-| P8-MATRIX | 11 rows, UNK row, UNK non-zero costs, Excel btn, ↺ btn, functions, **↺ REBUILDS** (not closes), GATEWAY mode |
+| P8-MATRIX | 11 rows, UNK row (zero cells — expected for non-geographic group), Excel btn, ↺ btn, functions, **↺ REBUILDS** (not closes), GATEWAY mode |
 | P9-WHATIF | Edge picker, auto-fill, CSV Export btn, functions, cost change card, affected pairs, Δ column, Apply → vis.js, confirmation, Apply btn disabled, Export callable, COLLAPSING cross-mode |
 | P10-INT | Both panels open, analysis, **Apply → matrix survives + data updates** |
 
