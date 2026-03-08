@@ -59,6 +59,10 @@ async function loadGraph(page, graphTime) {
   } else {
     await page.evaluate((gt) => { if (typeof upload_ospf_lsdb === 'function') upload_ospf_lsdb(false, false, gt); }, graphTime);
   }
+  // Wait for any navigation triggered by upload_ospf_lsdb to settle before
+  // calling page.evaluate — otherwise execution context is destroyed mid-nav.
+  await page.waitForLoadState('domcontentloaded').catch(() => null);
+  await settle(page, 1500);
   for (let i = 0; i < 12; i++) {
     await settle(page, 1200);
     const total = await page.evaluate(() => {
@@ -153,7 +157,8 @@ async function fetchSavedLayout(page) {
 
     // ── Auto-load test: reload graph in-page, expect waitForStableGraph to apply layout ──
     await page.evaluate((gt) => { if (typeof upload_ospf_lsdb === 'function') upload_ospf_lsdb(false, false, gt); }, GRAPH_TIME);
-    await settle(page, 3500);
+    await page.waitForLoadState('domcontentloaded').catch(() => null);
+    await settle(page, 5000);
     const autoLoadPosition = await page.evaluate((nodeId) => {
       const pos = network.getPositions([Number(nodeId)])[Number(nodeId)] || network.getPositions([nodeId])[nodeId];
       return pos || null;

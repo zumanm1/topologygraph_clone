@@ -162,7 +162,8 @@ const API_PASS = process.env.API_PASS || 'ospf';
   ]);
   await page.waitForTimeout(1500);
 
-  await page.goto(`${BASE_URL}/upload-ospf-isis-lsdb`, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto(`${BASE_URL}/upload-ospf-isis-lsdb`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.waitForTimeout(1500);
   const before = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
   await page.click('#Cisco').catch(() => {});
   await page.evaluate(() => {
@@ -239,7 +240,8 @@ const API_PASS = process.env.API_PASS || 'ospf';
     page.click('input[type="submit"], button[type="submit"]').catch(() => {}),
   ]);
   await page.waitForTimeout(1500);
-  await page.goto(`${BASE_URL}/upload-ospf-isis-lsdb`, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto(`${BASE_URL}/upload-ospf-isis-lsdb`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.waitForTimeout(1500);
   const before = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
   await page.click('#Cisco').catch(() => {});
   await page.evaluate(() => {
