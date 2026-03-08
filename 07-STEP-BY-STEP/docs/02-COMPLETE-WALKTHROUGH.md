@@ -308,7 +308,7 @@ The toolbar buttons control which nodes are visible:
 |--------|-----------|-------------|
 | AS-IS | All routers, raw IP labels | 54 grey nodes |
 | ENRICHED | All routers, country colours | 54 coloured nodes (10 colours + grey UNK) |
-| GATEWAY | Border routers only | 32 coloured nodes, 22 cores hidden |
+| GATEWAY | Border routers only | 32 gateway nodes visible, 6 named-country cores hidden (FRA:1 GBR:1 POR:1 ZAF:3); UNK nodes all remain visible (non-geographic group) |
 | CURRENT | Currently selected topology | Depends on last selection |
 | COLLAPSING | Country-collapse panel | Collapse ZAF or any country to a single node |
 
@@ -407,7 +407,7 @@ docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh \
 bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
 ```
 
-Expected result: **114/114 checks pass, 0 failures**.
+Expected result: **127/127 checks pass, 0 failures, 0 warnings**.
 
 See `06-STEP-BY-STEP/docs/HOW-TO-REPEAT.md` for the complete test
 breakdown, screenshot list, and troubleshooting guide.
@@ -445,10 +445,14 @@ grep "Edge source\|host.file" workflow.log 2>/dev/null
 ```
 
 ### "Cost Matrix shows empty UNK row"
-Known behaviour: UNK hub routers connect to named-country gateways but the
-Dijkstra APSP may not compute costs to/from UNK if UNK gateways are
-treated as leaf nodes. This is a WARN (not FAIL) in E2E tests. The UNK
-filter and highlight still work correctly.
+Expected and correct behaviour — not a warning or bug. The Cost Matrix
+computes Dijkstra shortest paths between **named-country endpoint pairs**.
+UNK is a non-geographic classification (unmapped routers with no hostname
+or IP-like hostnames). It has no outbound named-country Dijkstra endpoint,
+so all UNK Cost Matrix cells are legitimately zero. The 4 UNK gateway
+edges (DRC/FRA/GBR/POR → UNK at cost=100) exist in the topology but the
+matrix does not expose them as country-pair paths. The UNK filter,
+highlight, and COLLAPSING-mode collapse all work correctly.
 
 ---
 

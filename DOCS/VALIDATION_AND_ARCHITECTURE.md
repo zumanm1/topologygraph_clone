@@ -2,16 +2,18 @@
 
 ## Validation summary (after restart)
 
-After restarting the app, the following was validated:
+After restarting the app, the following is validated:
 
 | Check | Result |
 |-------|--------|
-| **Containers** | All 5 core services running: `pipeline`, `webserver`, `flask`, `mongodb`, `mcp-server` |
-| **HTTP** | `http://localhost:8081/` returns 200 |
+| **Containers** | All 7 core services running: `pipeline`, `webserver`, `flask`, `mongodb`, `mcp-server`, `layout-api`, `layout-db` |
+| **HTTP** | `http://localhost:8081/login` returns 200 (full Flask app registered) |
 | **App identity** | Page is Topolograph (OSPF/IS-IS topology UI), not default Nginx |
-| **Default credentials** | `POST /create-default-credentials` → `{"status":"ok"}` |
-| **API upload** | `POST /api/graph` with `ospf-database.txt` → 201, `graph_time` and 34 hosts |
-| **API data** | `GET /api/network/<graph_time>` returns network/prefix data for the uploaded graph |
+| **Default credentials** | Bootstrap secret accepted → session credentials active |
+| **Bearer token** | `Authorization: Bearer <token>` against `/api/graph/` returns 200 |
+| **API upload** | Upload OSPF via Web UI → `graph_time` created (54 hosts with UNK test fixture) |
+| **Deep E2E** | 127 Playwright checks pass across AS-IS/ENRICHED/GATEWAY/COLLAPSING/Cost Matrix/What-If |
+| **Security** | 17 security + 14 layout-isolation checks pass, 0 failures |
 
 So: **the app is restarted and working end-to-end.**
 
@@ -19,29 +21,33 @@ So: **the app is restarted and working end-to-end.**
 
 ## How to re-validate anytime
 
-**Quick check (Docker-native reachability + credentials):**
+**Quick stack health check:**
 ```bash
-docker compose --profile test up -d e2e-runner
-bash app-scripts/validate_topolograph.sh
+docker compose ps
+curl -s --max-time 5 http://localhost:8081/login | grep -c 'Topolograph\|login'
 ```
 
-**Full validation (Docker-native HTTP, identity, credentials, API upload, containers, browser smoke):**
+**Full Docker-native rebuild + deep validation (canonical):**
 ```bash
-chmod +x app-scripts/validate_topolograph.sh
-bash app-scripts/validate_topolograph.sh
-# Or with a specific LSDB file:
-bash app-scripts/validate_topolograph.sh /path/to/other-lsdb.txt
+bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
+# Result: 127 passed, 0 failed, 0 warned (Steps 06+07+regression checks)
 ```
 
-**Upload and validate (manual Docker-native helper call):**
+**Web UI user-journey + feature-surface validation:**
 ```bash
-docker compose --profile test up -d e2e-runner
-docker compose exec -T e2e-runner env \
-  BASE_URL=http://webserver:8081 \
-  API_USER=ospf@topolograph.com \
-  API_PASS=ospf \
-  LSDB_FILE=/app/INPUT-FOLDER/ospf-database.txt \
-  python3 /app/app-scripts/upload_and_validate.py
+bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh
+# Result: 7 validators, 0 failed, 0 warned
+```
+
+**Security + layout-isolation validation:**
+```bash
+bash 11-STEP-BY-STEP-SECURITY/scripts/run-security-validation.sh
+# Result: 17+14 passed, 0 failed, 0 warned
+```
+
+**Orchestrated run (Steps 08 + 11 in sequence):**
+```bash
+bash 12-STEP-BY-STEP-ORCHESTRATED/scripts/run-orchestrated-validation.sh
 ```
 
 ---
@@ -56,9 +62,11 @@ docker compose exec -T e2e-runner env \
 |-----------|------|-------------|------------|
 | **mongodb** | Stores graphs, users, API state | 27017 | — |
 | **flask** | Topolograph backend: parses LSDB, builds graph, REST API, auth | (none exposed) | mongodb |
-| **webserver** | Nginx: reverse proxy; forwards `/` and `/api/*` to Flask, `/mcp` to MCP server | **8081** | flask, mcp-server |
+| **webserver** | Nginx: reverse proxy; forwards `/` and `/api/*` to Flask, `/layout-api/*` to layout-api, `/mcp` to MCP server | **8081** | flask, mcp-server, layout-api |
 | **mcp-server** | MCP server for AI/LLM tools (path, nodes, etc.) | 8000 | flask (via API) |
 | **pipeline** | Bash + Python runner for the packaged OSPF pipeline | — | webserver, flask |
+| **layout-api** | FastAPI service: saves/loads per-user per-graph-time vis.js node positions | (internal) | layout-db |
+| **layout-db** | PostgreSQL: stores layout snapshots keyed by owner+graph_id+graph_time+view_mode | 5432 (internal) | — |
 
 You only need to open **http://localhost:8081** in the browser. Nginx receives the request and proxies it to Flask. Flask serves the web UI and the REST API under `/api/`.
 
@@ -95,7 +103,9 @@ That message is the **default Nginx index** page. So you’re hitting **an Nginx
 ## Summary
 
 - **Restart:** `docker compose down && docker compose up -d` from the repository root.
-- **Validate:** Run `bash app-scripts/validate_topolograph.sh` for the primary Docker-native smoke validation, or `bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh` for the canonical full Docker-native validation flow.
+- **Validate (canonical):** `bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh` — full Docker rebuild + 127-check E2E + security regression.
+- **Validate (Web UI suite):** `bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh` — 7-validator user-journey + feature-surface suite.
+- **Validate (orchestrated):** `bash 12-STEP-BY-STEP-ORCHESTRATED/scripts/run-orchestrated-validation.sh` — Steps 08 + 11 in sequence.
 - **Login URL:** **http://localhost:8081/** with **Login / Local login** and credentials from `.env` (e.g. `ospf@topolograph.com` / `ospf`).
 
 With the checks above, everything is validated and working.
