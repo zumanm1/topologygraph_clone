@@ -105,6 +105,7 @@ async function fetchSavedLayout(page) {
     if (nodeCount <= 0) throw new Error('graph load failed');
     await shot(page, 'layout-01-graph-loaded');
 
+    await page.waitForSelector('#btnLayoutSave', { timeout: 8000 }).catch(() => {});
     const controls = [
       'btnLayoutSave',
       'btnLayoutLoad',

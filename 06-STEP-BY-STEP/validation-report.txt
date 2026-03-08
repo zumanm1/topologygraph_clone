@@ -1,8 +1,8 @@
 ╔══════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║   Date        : 2026-03-08 08:20:26
-║   Graph time  : 08Mar2026_08h20m24s_54_hosts
+║   Date        : 2026-03-08 12:09:29
+║   Graph time  : 08Mar2026_12h09m25s_54_hosts
 ║   OSPF file   : ospf-database-54-unk-test.txt
 ║   Host file   : Load-hosts.csv
 ║   Headless    : true
@@ -23,15 +23,15 @@
   ✅ PASS: Load-hosts.csv provides 34 hostname mappings (≥34)
   ✅ PASS: Node.js v18.20.8
   ✅ PASS: Playwright found
-  ✅ PASS: 54-host COLLAPSING artefact found: 08Mar2026_08h20m24s_54_hosts_COLLAPSING
+  ✅ PASS: 54-host COLLAPSING artefact found: 08Mar2026_12h09m25s_54_hosts_COLLAPSING
 UNK: total=20 gw=4 core=16
   ✅ PASS: UNK present in COLLAPSING config with routers
-  ✅ PASS: IN-OUT-FOLDER/08Mar2026_08h20m24s_54_hosts exists (54 nodes)
+  ✅ PASS: IN-OUT-FOLDER/08Mar2026_12h09m25s_54_hosts exists (54 nodes)
 
   PHASE 0: ALL PRE-FLIGHT CHECKS PASSED ✅
 
 ━━━ PHASE 1: JSON Artefact Integrity (54-router topology) ━━━
-  Graph time: 08Mar2026_08h20m24s_54_hosts
+  Graph time: 08Mar2026_12h09m25s_54_hosts
 
   [detected] hosts=54 gw=32 countries=11 cores=22
   [1a] IN-OUT-FOLDER
@@ -84,7 +84,7 @@ UNK: total=20 gw=4 core=16
 ║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
 ║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time : 08Mar2026_08h20m24s_54_hosts
+  ℹ  Graph time : 08Mar2026_12h09m25s_54_hosts
   ℹ  Base URL   : http://webserver:8081
   ℹ  Headless   : true
   ℹ  Screenshots: /app/06-STEP-BY-STEP/screenshots
@@ -255,4 +255,4 @@ UNK: total=20 gw=4 core=16
 
   Full report : /app/06-STEP-BY-STEP/validation-report.txt
   Screenshots : /app/06-STEP-BY-STEP/screenshots/
-  Graph time  : 08Mar2026_08h20m24s_54_hosts
+  Graph time  : 08Mar2026_12h09m25s_54_hosts
