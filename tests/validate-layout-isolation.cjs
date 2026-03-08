@@ -199,6 +199,11 @@ async function moveNodeAndSave(page, layoutContext, x, y) {
     countA > 0 ? pass('LOAD-A', `Primary graph loaded with ${countA} nodes`) : fail('LOAD-A', 'Primary graph failed to load');
     if (countA <= 0) throw new Error('graph load failed');
 
+    // Wait for any in-flight navigation triggered by upload_ospf_lsdb to settle
+    // before evaluating JS context, otherwise execution context is destroyed
+    await pageA.waitForLoadState('domcontentloaded').catch(() => null);
+    await settle(pageA, 1500);
+
     const layoutContext = await getLayoutContext(pageA);
     if (!layoutContext.graph_id || !layoutContext.graph_time || !layoutContext.view_mode) {
       throw new Error('could not resolve layout context from primary graph');
