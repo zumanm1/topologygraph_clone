@@ -6,15 +6,15 @@
 [12-step] Running Step 08 all-docker validation
 [08-step] Project root: /Users/macbook/Documents/OSPF-DATABASE-TEST
 [08-step] Rebuilding all-Docker stack
- Container ospf-database-test-flask-create-creds-1  Stopping
  Container ospf-database-test-pipeline-seed-1  Stopping
+ Container ospf-database-test-flask-create-creds-1  Stopping
  Container ospf-database-test-flask-create-creds-1  Stopped
- Container ospf-database-test-pipeline-seed-1  Stopped
  Container ospf-database-test-flask-create-creds-1  Removing
+ Container ospf-database-test-pipeline-seed-1  Stopped
  Container ospf-database-test-pipeline-seed-1  Removing
- Container ospf-database-test-flask-create-creds-1  Removed
  Container ospf-database-test-pipeline-seed-1  Removed
  Container ospf-database-test-pipeline-1  Stopping
+ Container ospf-database-test-flask-create-creds-1  Removed
  Container ospf-database-test-pipeline-1  Stopped
  Container ospf-database-test-pipeline-1  Removing
  Container ospf-database-test-pipeline-1  Removed
@@ -22,19 +22,19 @@
  Container ospf-database-test-webserver-1  Stopped
  Container ospf-database-test-webserver-1  Removing
  Container ospf-database-test-webserver-1  Removed
- Container ospf-database-test-flask-1  Stopping
  Container ospf-database-test-mcp-server-1  Stopping
+ Container ospf-database-test-flask-1  Stopping
  Container ospf-database-test-layout-api-1  Stopping
  Container ospf-database-test-layout-api-1  Stopped
  Container ospf-database-test-layout-api-1  Removing
  Container ospf-database-test-layout-api-1  Removed
  Container ospf-database-test-layout-db-1  Stopping
- Container ospf-database-test-mcp-server-1  Stopped
- Container ospf-database-test-mcp-server-1  Removing
  Container ospf-database-test-layout-db-1  Stopped
  Container ospf-database-test-layout-db-1  Removing
- Container ospf-database-test-mcp-server-1  Removed
  Container ospf-database-test-layout-db-1  Removed
+ Container ospf-database-test-mcp-server-1  Stopped
+ Container ospf-database-test-mcp-server-1  Removing
+ Container ospf-database-test-mcp-server-1  Removed
  Container ospf-database-test-flask-1  Stopped
  Container ospf-database-test-flask-1  Removing
  Container ospf-database-test-flask-1  Removed
@@ -42,24 +42,24 @@
  Container ospf-database-test-mongodb-1  Stopped
  Container ospf-database-test-mongodb-1  Removing
  Container ospf-database-test-mongodb-1  Removed
- Network ospf-database-test_backend  Removing
  Network ospf-database-test_frontend  Removing
+ Network ospf-database-test_backend  Removing
  Network ospf-database-test_frontend  Resource is still in use
  Network ospf-database-test_backend  Removed
 #1 [internal] load local bake definitions
 #1 reading from stdin 1.48kB done
 #1 DONE 0.0s
 
-#2 [layout-api internal] load build definition from Dockerfile
-#2 transferring dockerfile: 320B done
+#2 [pipeline internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.99kB done
 #2 DONE 0.0s
 
-#3 [pipeline internal] load build definition from Dockerfile
-#3 transferring dockerfile: 1.99kB done
+#3 [flask internal] load build definition from Dockerfile
+#3 transferring dockerfile: 2.41kB done
 #3 DONE 0.0s
 
-#4 [flask internal] load build definition from Dockerfile
-#4 transferring dockerfile: 2.41kB 0.0s done
+#4 [layout-api internal] load build definition from Dockerfile
+#4 transferring dockerfile: 320B done
 #4 DONE 0.0s
 
 #5 [webserver internal] load build definition from Dockerfile
@@ -73,43 +73,44 @@
 #7 transferring context: 2B done
 #7 DONE 0.0s
 
-#8 [flask 1/8] FROM docker.io/vadims06/topolograph:latest@sha256:f302b34ab3a94aae1061ed518dc340ac9e068e36fad2f278c061f2fddc42712e
-#8 resolve docker.io/vadims06/topolograph:latest@sha256:f302b34ab3a94aae1061ed518dc340ac9e068e36fad2f278c061f2fddc42712e 0.1s done
-#8 DONE 0.1s
+#8 [flask internal] load build context
+#8 transferring context: 394.23kB 0.0s done
+#8 DONE 0.0s
 
-#9 [flask internal] load build context
-#9 transferring context: 394.23kB 0.0s done
-#9 DONE 0.1s
+#9 [flask 1/8] FROM docker.io/vadims06/topolograph:latest@sha256:f302b34ab3a94aae1061ed518dc340ac9e068e36fad2f278c061f2fddc42712e
+#9 resolve docker.io/vadims06/topolograph:latest@sha256:f302b34ab3a94aae1061ed518dc340ac9e068e36fad2f278c061f2fddc42712e 0.0s done
+#9 DONE 0.0s
 
 #10 [flask 3/8] COPY docker/flask/layout-persistence.js      /home/flask/flask/static/js/layout-persistence.js
 #10 CACHED
 
-#11 [flask 4/8] COPY docker/flask/security_overlay.py      /home/flask/flask/security_overlay.py
+#11 [flask 6/8] COPY docker/flask/host_to_dns_name_mapping.html      /home/flask/flask/templates/host_to_dns_name_mapping.html
 #11 CACHED
 
-#12 [flask 5/8] COPY 06-STEP-BY-STEP/docker-patches/base.html      /home/flask/flask/templates/base.html
+#12 [flask 7/8] COPY docker/flask/security-token-create.html      /home/flask/flask/templates/security-token-create.html
 #12 CACHED
 
-#13 [flask 7/8] COPY docker/flask/security-token-create.html      /home/flask/flask/templates/security-token-create.html
+#13 [flask 2/8] COPY docker/flask/topolograph.js      /home/flask/flask/static/js/topolograph.js
 #13 CACHED
 
-#14 [flask 6/8] COPY docker/flask/host_to_dns_name_mapping.html      /home/flask/flask/templates/host_to_dns_name_mapping.html
+#14 [flask 5/8] COPY 06-STEP-BY-STEP/docker-patches/base.html      /home/flask/flask/templates/base.html
 #14 CACHED
 
-#15 [flask 2/8] COPY docker/flask/topolograph.js      /home/flask/flask/static/js/topolograph.js
+#15 [flask 4/8] COPY docker/flask/security_overlay.py      /home/flask/flask/security_overlay.py
 #15 CACHED
 
 #16 [flask 8/8] COPY docker/flask/security-token-list.html      /home/flask/flask/templates/security-token-list.html
 #16 CACHED
 
 #17 [flask] exporting to image
-#17 exporting layers 0.0s done
+#17 exporting layers done
 #17 exporting manifest sha256:0e12d4d137b3a0677263b41c8ecf5cd7369603ec454c3a2c2816eb76d1aaa185 done
 #17 exporting config sha256:69b4d6a1c84e0dd265ad89abffde3d66c20aa7617f2b5fa9d1da34eea0d5f3d7 done
-#17 exporting attestation manifest sha256:d3f89072e67a979f52fec61167d15134f1121c173b1b7ab9453252ea5e45f257 0.0s done
-#17 exporting manifest list sha256:80d42646cd49e8671611641ae768e6699b97bd96947e085b5bb798f892b2c295 done
+#17 exporting attestation manifest sha256:4befd23092d43aeb57783f310e47a2b39092e5eb22c568263661904da71dea90
+#17 exporting attestation manifest sha256:4befd23092d43aeb57783f310e47a2b39092e5eb22c568263661904da71dea90 0.0s done
+#17 exporting manifest list sha256:95e16cb536dc5d7b612c661f6740ed7e4032247f95bd1960fc192b464d9997fe done
 #17 naming to docker.io/library/ospf-flask-patched:latest done
-#17 DONE 0.2s
+#17 DONE 0.1s
 
 #18 [layout-api internal] load metadata for docker.io/library/python:3.11-slim
 #18 ...
@@ -118,129 +119,129 @@
 #19 DONE 0.0s
 
 #20 [webserver internal] load metadata for docker.io/library/nginx:latest
-#20 DONE 2.7s
+#20 DONE 1.6s
 
-#18 [pipeline internal] load metadata for docker.io/library/python:3.11-slim
-#18 DONE 2.7s
-
-#7 [pipeline internal] load .dockerignore
-#7 CACHED
+#18 [layout-api internal] load metadata for docker.io/library/python:3.11-slim
+#18 ...
 
 #21 [webserver internal] load .dockerignore
 #21 transferring context: 2B done
 #21 DONE 0.0s
 
-#22 [webserver internal] load build context
+#22 [webserver 1/5] FROM docker.io/library/nginx:latest@sha256:0236ee02dcbce00b9bd83e0f5fbc51069e7e1161bd59d99885b3ae1734f3392e
+#22 resolve docker.io/library/nginx:latest@sha256:0236ee02dcbce00b9bd83e0f5fbc51069e7e1161bd59d99885b3ae1734f3392e 0.0s done
 #22 DONE 0.0s
 
-#23 [layout-api internal] load build context
-#23 transferring context: 7.45kB 0.0s done
-#23 DONE 0.1s
+#23 [webserver internal] load build context
+#23 transferring context: 112B done
+#23 DONE 0.0s
 
-#24 [pipeline 1/4] FROM docker.io/library/python:3.11-slim@sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47
-#24 resolve docker.io/library/python:3.11-slim@sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47 0.1s done
-#24 DONE 0.1s
+#24 [webserver 2/5] RUN apt-get update &&     apt-get install -y --no-install-recommends gettext-base &&     ln -sf /dev/stdout /var/log/nginx/access.log &&     ln -sf /dev/stderr /var/log/nginx/error.log &&     mkdir -p /run/nginx &&     rm -f /etc/nginx/conf.d/default.conf &&     rm -rf /var/lib/apt/lists/*
+#24 CACHED
 
-#25 [pipeline 2/4] RUN apt-get update && apt-get install -y --no-install-recommends         bash         curl         jq         gawk         git         ca-certificates     && rm -rf /var/lib/apt/lists/*
+#25 [webserver 3/5] COPY templates/app.conf.template /etc/nginx/conf.d/app.conf.template
 #25 CACHED
 
-#26 [pipeline 3/4] RUN pip install --no-cache-dir requests pyyaml
+#26 [webserver 4/5] COPY start-nginx.sh /start-nginx.sh
 #26 CACHED
 
-#27 [pipeline 4/4] WORKDIR /app
+#27 [webserver 5/5] RUN chmod +x /start-nginx.sh
 #27 CACHED
 
-#28 [pipeline] exporting to image
-#28 ...
-
-#29 [layout-api 2/5] WORKDIR /app
-#29 CACHED
-
-#30 [layout-api 4/5] RUN pip install --no-cache-dir -r /app/requirements.txt
-#30 CACHED
-
-#31 [layout-api 3/5] COPY docker/layout-service/requirements.txt /app/requirements.txt
-#31 CACHED
-
-#32 [layout-api 5/5] COPY docker/layout-service/app.py /app/app.py
-#32 CACHED
-
-#33 [webserver 1/5] FROM docker.io/library/nginx:latest@sha256:0236ee02dcbce00b9bd83e0f5fbc51069e7e1161bd59d99885b3ae1734f3392e
-#33 resolve docker.io/library/nginx:latest@sha256:0236ee02dcbce00b9bd83e0f5fbc51069e7e1161bd59d99885b3ae1734f3392e 0.1s done
-#33 DONE 0.1s
-
-#22 [webserver internal] load build context
-#22 transferring context: 112B done
-#22 DONE 0.0s
-
-#34 [webserver 2/5] RUN apt-get update &&     apt-get install -y --no-install-recommends gettext-base &&     ln -sf /dev/stdout /var/log/nginx/access.log &&     ln -sf /dev/stderr /var/log/nginx/error.log &&     mkdir -p /run/nginx &&     rm -f /etc/nginx/conf.d/default.conf &&     rm -rf /var/lib/apt/lists/*
-#34 CACHED
-
-#35 [webserver 3/5] COPY templates/app.conf.template /etc/nginx/conf.d/app.conf.template
-#35 CACHED
-
-#36 [webserver 4/5] COPY start-nginx.sh /start-nginx.sh
-#36 CACHED
-
-#37 [webserver 5/5] RUN chmod +x /start-nginx.sh
-#37 CACHED
-
-#28 [pipeline] exporting to image
-#28 exporting layers 0.0s done
-#28 exporting manifest sha256:7412d61259c5b32a39b46a5b7c2f0c83d27ae137e4f34aca67ef9b3664b19b84 done
-#28 exporting config sha256:fbce0516d5231cec873d0da59981ad88828e9571f7b402e304d2be420569f952 done
-#28 exporting attestation manifest sha256:b470ba923eaedd747927c942e987281cd31bc0e89f025a43d242a07b9d4197cd 0.0s done
-#28 exporting manifest list sha256:eccf93fa4aa6289250b77cab935fe23a57a7ac3db02cafa345e154995ee49a71
-#28 exporting manifest list sha256:eccf93fa4aa6289250b77cab935fe23a57a7ac3db02cafa345e154995ee49a71 0.0s done
-#28 naming to docker.io/library/ospf-pipeline:latest done
-#28 unpacking to docker.io/library/ospf-pipeline:latest done
+#28 [webserver] exporting to image
+#28 exporting layers done
+#28 exporting manifest sha256:ac96d054b87a9cfc17572129f08a326133610fa9276e01db6da6efebda43e58c done
+#28 exporting config sha256:a8785931dcfbc09a856af8bb066860203160937febbad4d52faba9326cb64a40 done
+#28 exporting attestation manifest sha256:ee79f9d8ccd97f9119cff95aacf6e6e16e8a541d413e16f812c5ca4e719afa43 0.1s done
+#28 exporting manifest list sha256:4268cf6b798b6dd8b619ba905393ecd72bcb58fcde79e9a9c82f45cc40725db8 0.0s done
+#28 naming to docker.io/library/ospf-webserver:latest done
+#28 unpacking to docker.io/library/ospf-webserver:latest 0.0s done
 #28 DONE 0.2s
 
-#38 [layout-api] exporting to image
-#38 exporting layers 0.0s done
-#38 exporting manifest sha256:4a8eef8056f07d97b2e6c30dd9b7ae31a7a063228d0ab867d99b73f7a3e9556c done
-#38 exporting config sha256:b9d487268df4ac1f0358e80e49b0171e2f5076605c62155d02c01bf8fe2ae6dd done
-#38 exporting attestation manifest sha256:8c32b4b95f6df3e0bfac4ae3cdfb1c473f934ed95cabb84d2328085508611330 0.0s done
-#38 exporting manifest list sha256:053eeae860da73b87531d3ecff2298a7bfe4361684a246e0ef9a938149dff18b 0.0s done
-#38 naming to docker.io/library/ospf-layout-api:latest done
-#38 unpacking to docker.io/library/ospf-layout-api:latest done
-#38 DONE 0.2s
+#18 [layout-api internal] load metadata for docker.io/library/python:3.11-slim
+#18 ...
 
-#39 [webserver] exporting to image
-#39 exporting layers 0.0s done
-#39 exporting manifest sha256:ac96d054b87a9cfc17572129f08a326133610fa9276e01db6da6efebda43e58c done
-#39 exporting config sha256:a8785931dcfbc09a856af8bb066860203160937febbad4d52faba9326cb64a40 done
-#39 exporting attestation manifest sha256:7c3cb895b1431d64b1e8b2d0a8b913bb035e8fd0c0c1ab961aaa2ea57d083be3 0.0s done
-#39 exporting manifest list sha256:05a1e464da730a21548d2cf6fcec9c60efb86108ec334fa042b1bbe36d9932eb done
-#39 naming to docker.io/library/ospf-webserver:latest done
-#39 unpacking to docker.io/library/ospf-webserver:latest 0.0s done
-#39 DONE 0.2s
+#29 [webserver] resolving provenance for metadata file
+#29 DONE 0.0s
 
-#40 [layout-api] resolving provenance for metadata file
+#18 [layout-api internal] load metadata for docker.io/library/python:3.11-slim
+#18 DONE 2.5s
+
+#7 [layout-api internal] load .dockerignore
+#7 CACHED
+
+#30 [layout-api internal] load build context
+#30 transferring context: 7.45kB 0.0s done
+#30 DONE 0.0s
+
+#31 [layout-api 1/5] FROM docker.io/library/python:3.11-slim@sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47
+#31 resolve docker.io/library/python:3.11-slim@sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47 0.0s done
+#31 DONE 0.0s
+
+#32 [pipeline 3/4] RUN pip install --no-cache-dir requests pyyaml
+#32 CACHED
+
+#33 [pipeline 2/4] RUN apt-get update && apt-get install -y --no-install-recommends         bash         curl         jq         gawk         git         ca-certificates     && rm -rf /var/lib/apt/lists/*
+#33 CACHED
+
+#34 [layout-api 3/5] COPY docker/layout-service/requirements.txt /app/requirements.txt
+#34 CACHED
+
+#35 [layout-api 2/5] WORKDIR /app
+#35 CACHED
+
+#36 [layout-api 4/5] RUN pip install --no-cache-dir -r /app/requirements.txt
+#36 CACHED
+
+#37 [layout-api 5/5] COPY docker/layout-service/app.py /app/app.py
+#37 CACHED
+
+#38 [pipeline 4/4] WORKDIR /app
+#38 CACHED
+
+#39 [pipeline] exporting to image
+#39 exporting layers done
+#39 exporting manifest sha256:7412d61259c5b32a39b46a5b7c2f0c83d27ae137e4f34aca67ef9b3664b19b84 done
+#39 exporting config sha256:fbce0516d5231cec873d0da59981ad88828e9571f7b402e304d2be420569f952 done
+#39 exporting attestation manifest sha256:c167fcfaf500573222f538a22197f9df5f4667cfa56c2fded89c16bffed84450 0.0s done
+#39 exporting manifest list sha256:82965e59f32d08b738653d87235cc11d1901a1531caa86ccdc1d84ac690f53d2 done
+#39 naming to docker.io/library/ospf-pipeline:latest
+#39 naming to docker.io/library/ospf-pipeline:latest done
+#39 unpacking to docker.io/library/ospf-pipeline:latest done
+#39 DONE 0.1s
+
+#40 [layout-api] exporting to image
+#40 exporting layers done
+#40 exporting manifest sha256:4a8eef8056f07d97b2e6c30dd9b7ae31a7a063228d0ab867d99b73f7a3e9556c done
+#40 exporting config sha256:b9d487268df4ac1f0358e80e49b0171e2f5076605c62155d02c01bf8fe2ae6dd done
+#40 exporting attestation manifest sha256:008d8a0dd8e0b055e6c73acebf39307f42aa6eeb261e2b54c0014ceb51f9d7d1 0.0s done
+#40 exporting manifest list sha256:f6c0be0f94cf8ce7c531a2396044e9232fb65fd34bdeb78b5772b4bc90449c66 0.0s done
+#40 naming to docker.io/library/ospf-layout-api:latest done
+#40 unpacking to docker.io/library/ospf-layout-api:latest done
 #40 DONE 0.1s
 
 #41 [pipeline] resolving provenance for metadata file
-#41 DONE 0.2s
+#41 DONE 0.0s
 
-#42 [webserver] resolving provenance for metadata file
+#42 [layout-api] resolving provenance for metadata file
 #42 DONE 0.0s
- flask  Built
- pipeline  Built
  webserver  Built
  layout-api  Built
+ pipeline  Built
+ flask  Built
  Network ospf-database-test_backend  Creating
  Network ospf-database-test_backend  Created
  Container ospf-database-test-layout-db-1  Creating
- Container ospf-database-test-mcp-server-1  Creating
  Container ospf-database-test-mongodb-1  Creating
+ Container ospf-database-test-mcp-server-1  Creating
  Container ospf-database-test-mcp-server-1  Created
- Container ospf-database-test-mongodb-1  Created
- Container ospf-database-test-flask-1  Creating
  Container ospf-database-test-layout-db-1  Created
  Container ospf-database-test-layout-api-1  Creating
+ Container ospf-database-test-mongodb-1  Created
+ Container ospf-database-test-flask-1  Creating
+ Container ospf-database-test-layout-api-1  Created
  Container ospf-database-test-flask-1  Created
  Container ospf-database-test-flask-create-creds-1  Creating
- Container ospf-database-test-layout-api-1  Created
  Container ospf-database-test-webserver-1  Creating
  Container ospf-database-test-flask-create-creds-1  Created
  Container ospf-database-test-webserver-1  Created
@@ -251,14 +252,14 @@
  Container ospf-database-test-mongodb-1  Starting
  Container ospf-database-test-mcp-server-1  Starting
  Container ospf-database-test-layout-db-1  Starting
- Container ospf-database-test-mcp-server-1  Started
- Container ospf-database-test-layout-db-1  Started
- Container ospf-database-test-layout-api-1  Starting
  Container ospf-database-test-mongodb-1  Started
  Container ospf-database-test-flask-1  Starting
- Container ospf-database-test-layout-api-1  Started
+ Container ospf-database-test-layout-db-1  Started
+ Container ospf-database-test-layout-api-1  Starting
+ Container ospf-database-test-mcp-server-1  Started
  Container ospf-database-test-flask-1  Started
  Container ospf-database-test-flask-create-creds-1  Starting
+ Container ospf-database-test-layout-api-1  Started
  Container ospf-database-test-webserver-1  Starting
  Container ospf-database-test-webserver-1  Started
  Container ospf-database-test-pipeline-1  Starting
@@ -267,10 +268,10 @@
  Container ospf-database-test-pipeline-seed-1  Starting
  Container ospf-database-test-pipeline-seed-1  Started
  Container ospf-database-test-mongodb-1  Running
- Container ospf-database-test-layout-db-1  Running
- Container ospf-database-test-mcp-server-1  Running
  Container ospf-database-test-flask-1  Running
+ Container ospf-database-test-layout-db-1  Running
  Container ospf-database-test-layout-api-1  Running
+ Container ospf-database-test-mcp-server-1  Running
  Container ospf-database-test-webserver-1  Running
  Container ospf-database-test-e2e-runner-1  Running
 [08-step] Validating bearer-token API security
@@ -280,20 +281,20 @@
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Fetch raw graph → IN-OUT-FOLDER
 ══════════════════════════════════════════════════════════
-[fetch-from-api] Saving to: /app/IN-OUT-FOLDER/08Mar2026_12h09m25s_54_hosts
+[fetch-from-api] Saving to: /app/IN-OUT-FOLDER/08Mar2026_12h27m40s_54_hosts
 [fetch-from-api]   meta.json saved
 [fetch-from-api]   nodes.json saved (54 nodes)
 [fetch-from-api]   edges.json saved (148 edges)
 [fetch-from-api]   edges.csv saved
-[fetch-from-api] Done. graph_time=08Mar2026_12h09m25s_54_hosts
-[workflow] graph_time confirmed: 08Mar2026_12h09m25s_54_hosts
+[fetch-from-api] Done. graph_time=08Mar2026_12h27m40s_54_hosts
+[workflow] graph_time confirmed: 08Mar2026_12h27m40s_54_hosts
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Run terminal topology pipeline
 ══════════════════════════════════════════════════════════
-[workflow] AS-IS output: /app/OUTPUT/AS-IS/08Mar2026_12h09m25s_54_hosts_AS-IS
+[workflow] AS-IS output: /app/OUTPUT/AS-IS/08Mar2026_12h27m40s_54_hosts_AS-IS
 [workflow] Edge source: OSPF file (/app/INPUT-FOLDER/ospf-database-54-unk-test.txt)
-[topology-tool] Done. Files written to: /app/OUTPUT/.tmp_work_08Mar2026_12h09m25s_54_hosts
+[topology-tool] Done. Files written to: /app/OUTPUT/.tmp_work_08Mar2026_12h27m40s_54_hosts
   - country-core-summary.json
   - country-core-summary.yaml
   - country-mapping.csv
@@ -301,16 +302,16 @@
   - gateway-only-topology.yaml
   - original-topology-with-country.json
   - original-topology-with-country.yaml
-[workflow] GATEWAY output: /app/OUTPUT/GATEWAY/08Mar2026_12h09m25s_54_hosts_GATEWAY
-[workflow] ENRICHED output: /app/OUTPUT/ENRICHED/08Mar2026_12h09m25s_54_hosts_ENRICHED
+[workflow] GATEWAY output: /app/OUTPUT/GATEWAY/08Mar2026_12h27m40s_54_hosts_GATEWAY
+[workflow] ENRICHED output: /app/OUTPUT/ENRICHED/08Mar2026_12h27m40s_54_hosts_ENRICHED
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Generate COLLAPSING stage — gateway/core split + collapsed topology
 ══════════════════════════════════════════════════════════
-[collapse-config] graph_time   : 08Mar2026_12h09m25s_54_hosts
-[collapse-config] enriched_dir : /app/OUTPUT/ENRICHED/08Mar2026_12h09m25s_54_hosts_ENRICHED
-[collapse-config] asis_dir     : /app/OUTPUT/AS-IS/08Mar2026_12h09m25s_54_hosts_AS-IS
-[collapse-config] output_dir   : /app/OUTPUT/COLLAPSING/08Mar2026_12h09m25s_54_hosts_COLLAPSING
+[collapse-config] graph_time   : 08Mar2026_12h27m40s_54_hosts
+[collapse-config] enriched_dir : /app/OUTPUT/ENRICHED/08Mar2026_12h27m40s_54_hosts_ENRICHED
+[collapse-config] asis_dir     : /app/OUTPUT/AS-IS/08Mar2026_12h27m40s_54_hosts_AS-IS
+[collapse-config] output_dir   : /app/OUTPUT/COLLAPSING/08Mar2026_12h27m40s_54_hosts_COLLAPSING
 [collapse-config] Loaded 54 router entries from country-mapping.csv
 [collapse-config] Loaded 54 nodes from AS-IS_nodes.json
 [collapse-config] Loaded 148 edges from AS-IS_edges.json
@@ -341,15 +342,15 @@
 ║    ZAF    total=8  gw=5  core=3                 ║
 ╚══════════════════════════════════════════════════╝
 
-[workflow] COLLAPSING output: /app/OUTPUT/COLLAPSING/08Mar2026_12h09m25s_54_hosts_COLLAPSING
+[workflow] COLLAPSING output: /app/OUTPUT/COLLAPSING/08Mar2026_12h27m40s_54_hosts_COLLAPSING
 
 ══════════════════════════════════════════════════════════
 [workflow] STEP: Push country colours → Topolograph UI
 ══════════════════════════════════════════════════════════
-[push-to-ui] Loading country mapping: /app/OUTPUT/ENRICHED/08Mar2026_12h09m25s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
+[push-to-ui] Loading country mapping: /app/OUTPUT/ENRICHED/08Mar2026_12h27m40s_54_hosts_ENRICHED/ENRICHED_country-mapping.csv
 [push-to-ui] 54 routers mapped to countries
 [push-to-ui] Countries: DJB:2 | DRC:4 | FRA:3 | GBR:3 | KEN:2 | LES:3 | MOZ:4 | POR:3 | TAN:2 | UNK:20 | ZAF:8
-[push-to-ui] Fetching nodes for graph_time=08Mar2026_12h09m25s_54_hosts …
+[push-to-ui] Fetching nodes for graph_time=08Mar2026_12h27m40s_54_hosts …
 [push-to-ui] 54 nodes in graph
 
 [push-to-ui] Patched: 54 OK  |  0 FAILED  |  0 skipped
@@ -374,28 +375,28 @@
              • 22.22.22.3  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
              • 22.22.22.4  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
              • 22.22.22.5  (label=router-id, colour=grey, shown in 'Unknown / Unmapped' filter group)
-[push-to-ui] Palette written: /app/OUTPUT/ENRICHED/08Mar2026_12h09m25s_54_hosts_ENRICHED/ENRICHED_country-palette.json
-[push-to-ui] Done — open http://localhost:8081/ and load graph_time=08Mar2026_12h09m25s_54_hosts
+[push-to-ui] Palette written: /app/OUTPUT/ENRICHED/08Mar2026_12h27m40s_54_hosts_ENRICHED/ENRICHED_country-palette.json
+[push-to-ui] Done — open http://localhost:8081/ and load graph_time=08Mar2026_12h27m40s_54_hosts
              The Country Filter panel will appear automatically in the UI.
 [workflow] UI push complete.
 
 ╔══════════════════════════════════════════════════════════════╗
 ║               WORKFLOW COMPLETE                              ║
 ╠══════════════════════════════════════════════════════════════╣
-║  graph_time : 08Mar2026_12h09m25s_54_hosts                   ║
+║  graph_time : 08Mar2026_12h27m40s_54_hosts                   ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  OUTPUT FOLDERS:                                             ║
-║  AS-IS    → OUTPUT/AS-IS/08Mar2026_12h09m25s_54_hosts_AS-IS/  ║
-║  GATEWAY  → OUTPUT/GATEWAY/08Mar2026_12h09m25s_54_hosts_GATEWAY/║
-║  ENRICHED   → OUTPUT/ENRICHED/08Mar2026_12h09m25s_54_hosts_ENRICHED/║
-║  COLLAPSING → OUTPUT/COLLAPSING/08Mar2026_12h09m25s_54_hosts_COLLAPSING/║
+║  AS-IS    → OUTPUT/AS-IS/08Mar2026_12h27m40s_54_hosts_AS-IS/  ║
+║  GATEWAY  → OUTPUT/GATEWAY/08Mar2026_12h27m40s_54_hosts_GATEWAY/║
+║  ENRICHED   → OUTPUT/ENRICHED/08Mar2026_12h27m40s_54_hosts_ENRICHED/║
+║  COLLAPSING → OUTPUT/COLLAPSING/08Mar2026_12h27m40s_54_hosts_COLLAPSING/║
 ╠══════════════════════════════════════════════════════════════╣
 ║  NEXT STEPS:                                                 ║
 ║  1. Open http://localhost:8081/                               ║
 ║  2. Select the graph from the dropdown                       ║
 ║  3. Use the 🌍 Country Filter panel (top-right)              ║
 ╚══════════════════════════════════════════════════════════════╝
-[08-step] Resolved graph_time: 08Mar2026_12h09m25s_54_hosts
+[08-step] Resolved graph_time: 08Mar2026_12h27m40s_54_hosts
 [08-step] Running Docker-native 06-equivalent deep validation
 
 ╔══════════════════════════════════════════════════════════════╗
@@ -404,7 +405,7 @@
 
   Container  : e2e-runner
   Base URL   : http://webserver:8081
-  Graph time : 08Mar2026_12h09m25s_54_hosts
+  Graph time : 08Mar2026_12h27m40s_54_hosts
 
   Waiting for Topolograph webserver...
   ✅ Topolograph responding at http://webserver:8081
@@ -417,8 +418,8 @@
 ╔══════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║   Date        : 2026-03-08 12:09:29
-║   Graph time  : 08Mar2026_12h09m25s_54_hosts
+║   Date        : 2026-03-08 12:27:43
+║   Graph time  : 08Mar2026_12h27m40s_54_hosts
 ║   OSPF file   : ospf-database-54-unk-test.txt
 ║   Host file   : Load-hosts.csv
 ║   Headless    : true
@@ -430,24 +431,21 @@
 
   ✅ PASS: Webserver responding at http://webserver:8081
   ✅ PASS: Input file: ospf-database-54-unk-test.txt (2768 lines)
-  ⚠  WARN: Input file missing: /app/INPUT-FOLDER/ospf-database-3.txt
-  ⚠  WARN: Input file missing: /app/INPUT-FOLDER/ospf-database-2.txt
-  ⚠  WARN: Input file missing: /app/INPUT-FOLDER/ospf-database.txt
   ✅ PASS: Load-hosts.csv exists (34 router entries)
   ✅ PASS: Load-hosts.csv has exactly 34 entries (20 UNK routers unmapped)
   ✅ PASS: Load-hosts.csv exists (34 router mappings)
   ✅ PASS: Load-hosts.csv provides 34 hostname mappings (≥34)
   ✅ PASS: Node.js v18.20.8
   ✅ PASS: Playwright found
-  ✅ PASS: 54-host COLLAPSING artefact found: 08Mar2026_12h09m25s_54_hosts_COLLAPSING
+  ✅ PASS: 54-host COLLAPSING artefact found: 08Mar2026_12h27m40s_54_hosts_COLLAPSING
 UNK: total=20 gw=4 core=16
   ✅ PASS: UNK present in COLLAPSING config with routers
-  ✅ PASS: IN-OUT-FOLDER/08Mar2026_12h09m25s_54_hosts exists (54 nodes)
+  ✅ PASS: IN-OUT-FOLDER/08Mar2026_12h27m40s_54_hosts exists (54 nodes)
 
   PHASE 0: ALL PRE-FLIGHT CHECKS PASSED ✅
 
 ━━━ PHASE 1: JSON Artefact Integrity (54-router topology) ━━━
-  Graph time: 08Mar2026_12h09m25s_54_hosts
+  Graph time: 08Mar2026_12h27m40s_54_hosts
 
   [detected] hosts=54 gw=32 countries=11 cores=22
   [1a] IN-OUT-FOLDER
@@ -500,7 +498,7 @@ UNK: total=20 gw=4 core=16
 ║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
 ║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time : 08Mar2026_12h09m25s_54_hosts
+  ℹ  Graph time : 08Mar2026_12h27m40s_54_hosts
   ℹ  Base URL   : http://webserver:8081
   ℹ  Headless   : true
   ℹ  Screenshots: /app/06-STEP-BY-STEP/screenshots
@@ -536,7 +534,7 @@ UNK: total=20 gw=4 core=16
 
 ━━━ P3: GATEWAY View (32 gw + UNK hubs visible, 22 cores hidden) ━━━
   ✅ PASS [P3-GW]: GATEWAY visible nodes: 48 (≥32 gateways including UNK hubs)
-  ⚠  WARN [P3-GW]: Core nodes hidden: 6 — expected ≥22
+  ✅ PASS [P3-GW]: Core nodes hidden: 6 (≥6 named-country cores hidden — correct)
   ✅ PASS [P3-GW]: UNK hub gateways visible: 20 (≥4 hubs with cross-country adjacencies)
   ℹ  Screenshot → 05-gateway-54.png
 
@@ -592,7 +590,7 @@ UNK: total=20 gw=4 core=16
   ℹ  Screenshot (clipped) → 13-cost-matrix-54.png
   ✅ PASS [P8-MAT]: Matrix rows: 11 (≥11 expected: 10 countries + UNK)
   ✅ PASS [P8-MAT]: UNK country row present in Cost Matrix
-  ⚠  WARN [P8-MAT]: UNK has no non-zero cost cells — UNK hubs may not be routing correctly
+  ✅ PASS [P8-MAT]: UNK Cost Matrix cells are zero (expected — UNK is non-geographic, no Dijkstra endpoint)
   ✅ PASS [P8-MAT]: 33 non-zero Dijkstra cost cells (≥30 expected)
   ✅ PASS [P8-MAT]: View-mode badge present in panel header
   ✅ PASS [P8-MAT]: Dimensions label (N×N) present in panel
@@ -653,9 +651,9 @@ UNK: total=20 gw=4 core=16
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — FINAL SUMMARY                                       ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  PASSED : 86                                                          ║
+║  PASSED : 88                                                          ║
 ║  FAILED : 0                                                           ║
-║  WARNED : 2                                                           ║
+║  WARNED : 0                                                           ║
 ║  TOTAL  : 88                                                          ║
 ║  STATUS : ALL 06-STEP-BY-STEP CHECKS PASSED ✅                          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
@@ -663,15 +661,15 @@ UNK: total=20 gw=4 core=16
 ━━━ Screenshots: /app/06-STEP-BY-STEP/screenshots/ ━━━
 
 ╔══════════════════════════════════════════════════════════════════════╗
-║  TOTAL PASSED : 125                                                    ║
+║  TOTAL PASSED : 127                                                    ║
 ║  TOTAL FAILED : 0                                                      ║
-║  WARNINGS     : 5                                                      ║
+║  WARNINGS     : 0                                                      ║
 ║  STATUS: ALL 06-STEP-BY-STEP CHECKS PASSED ✅                        ║
 ╚══════════════════════════════════════════════════════════════════════╝
 
   Full report : /app/06-STEP-BY-STEP/validation-report.txt
   Screenshots : /app/06-STEP-BY-STEP/screenshots/
-  Graph time  : 08Mar2026_12h09m25s_54_hosts
+  Graph time  : 08Mar2026_12h27m40s_54_hosts
 
   ✅ E2E suite complete.
 
@@ -679,7 +677,7 @@ UNK: total=20 gw=4 core=16
 ╔══════════════════════════════════════════════════════════════════╗
 ║   Country Derivation — Hostname-Derived Regression             ║
 ╚══════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time: 08Mar2026_12h09m25s_54_hosts
+  ℹ  Graph time: 08Mar2026_12h27m40s_54_hosts
   ✅ PASS [AUTH]: Logged in as ospf@topolograph.com
   ✅ PASS [LOAD]: Graph loaded with 54 nodes
   ℹ  Using standard host file: Load-hosts.csv
@@ -715,24 +713,24 @@ TOTAL FAILED: 0
   ✅ PASS [LOAD]: Saved layout re-applied to node 9.9.9.1
   ✅ PASS [RESET-NODE]: Selected node 9.9.9.1 removed from saved layout
   ✅ PASS [RESET]: Full layout reset removed saved snapshot
-  ✅ PASS [EXPORT]: btnExportYaml download started (topology-08Mar2026_12h09m25s_54_hosts-enriched.yaml)
-  ✅ PASS [EXPORT]: btnExportCsv download started (topology-08Mar2026_12h09m25s_54_hosts-enriched.csv)
-  ✅ PASS [EXPORT]: btnExportExcel download started (topology-08Mar2026_12h09m25s_54_hosts-enriched.xls)
+  ✅ PASS [EXPORT]: btnExportYaml download started (topology-08Mar2026_12h27m40s_54_hosts-enriched.yaml)
+  ✅ PASS [EXPORT]: btnExportCsv download started (topology-08Mar2026_12h27m40s_54_hosts-enriched.csv)
+  ✅ PASS [EXPORT]: btnExportExcel download started (topology-08Mar2026_12h27m40s_54_hosts-enriched.xls)
 
 TOTAL PASSED: 17
 TOTAL FAILED: 0
 [08-step] Running hostname-mapping page regression check
 [08-step] Hostname mapping page check: {"emptyVisible":false,"fallbackVisible":true,"mainSelectOptions":2,"srcSelectOptions":2,"dstSelectOptions":2}
 [08-step] All-Docker validation complete
-[08-step] graph_time=08Mar2026_12h09m25s_54_hosts
-[12-step] Resolved orchestrator graph_time: 08Mar2026_12h09m25s_54_hosts
+[08-step] graph_time=08Mar2026_12h27m40s_54_hosts
+[12-step] Resolved orchestrator graph_time: 08Mar2026_12h27m40s_54_hosts
 [12-step] Running Step 11 security validation
 [11-step] Base URL: http://localhost:8081
- Container ospf-database-test-mongodb-1  Running
- Container ospf-database-test-mcp-server-1  Running
  Container ospf-database-test-layout-db-1  Running
- Container ospf-database-test-flask-1  Running
+ Container ospf-database-test-mcp-server-1  Running
  Container ospf-database-test-layout-api-1  Running
+ Container ospf-database-test-mongodb-1  Running
+ Container ospf-database-test-flask-1  Running
  Container ospf-database-test-webserver-1  Running
  Container ospf-database-test-e2e-runner-1  Running
 [11-step] Login page reachability: PASS
@@ -743,7 +741,7 @@ TOTAL FAILED: 0
 ║   11-STEP-BY-STEP-SECURITY — Focused Security Validation       ║
 ╚══════════════════════════════════════════════════════════════════╝
   PASS [AUTH]: Logged in as ospf@topolograph.com
-  PASS [GRAPH]: Resolved graph_time 08Mar2026_12h09m25s_54_hosts
+  PASS [GRAPH]: Resolved graph_time 08Mar2026_12h27m40s_54_hosts
   PASS [HDR]: Token create page is no-store
   PASS [TOKEN]: One-time token value rendered
   PASS [TOKEN]: Raw token not shown on token list page
@@ -767,9 +765,9 @@ TOTAL WARNED: 0
 ║   Layout Isolation — Cross-User Playwright Validation          ║
 ╚══════════════════════════════════════════════════════════════════╝
   ✅ PASS [AUTH-A]: Primary user logged in as ospf@topolograph.com
-  ✅ PASS [AUTH-B]: Secondary user session ready as li71897002@p.io
+  ✅ PASS [AUTH-B]: Secondary user session ready as li72988794@p.io
   ✅ PASS [LOAD-A]: Primary graph loaded with 54 nodes
-  ✅ PASS [CTX]: Shared layout context resolved for 08Mar2026_12h09m25s_54_hosts
+  ✅ PASS [CTX]: Shared layout context resolved for 08Mar2026_12h27m40s_54_hosts
   ✅ PASS [CLEAN-A]: Primary pre-clean status 404
   ✅ PASS [CLEAN-B]: Secondary pre-clean status 404
   ✅ PASS [SAVE-A]: Primary layout stored for node 9.9.9.1

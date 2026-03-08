@@ -155,21 +155,30 @@ else
   P0_FAIL=$((P0_FAIL+1))
 fi
 
-# 0b. OSPF input files
+# 0b. OSPF input files — primary canonical name checked first; legacy fallbacks are
+#     optional aliases kept for backward compatibility and only reported if the
+#     primary is absent (suppresses noise WARNs when the canonical file exists).
+PRIMARY_OSPF="$PROJECT_ROOT/INPUT-FOLDER/ospf-database-54-unk-test.txt"
 FOUND_OSPF=0
-for f in \
-    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-54-unk-test.txt" \
-    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" \
-    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" \
-    "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"; do
-  if [ -f "$f" ]; then
-    LINES=$(wc -l < "$f")
-    echo "  ✅ PASS: Input file: $(basename "$f") (${LINES} lines)" | tee -a "$REPORT"
-    FOUND_OSPF=1
-  else
-    echo "  ⚠  WARN: Input file missing: $f" | tee -a "$REPORT"
-  fi
-done
+if [ -f "$PRIMARY_OSPF" ]; then
+  LINES=$(wc -l < "$PRIMARY_OSPF")
+  echo "  ✅ PASS: Input file: $(basename "$PRIMARY_OSPF") (${LINES} lines)" | tee -a "$REPORT"
+  FOUND_OSPF=1
+else
+  echo "  ⚠  WARN: Primary input file missing: $PRIMARY_OSPF" | tee -a "$REPORT"
+  for f in \
+      "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-3.txt" \
+      "$PROJECT_ROOT/INPUT-FOLDER/ospf-database-2.txt" \
+      "$PROJECT_ROOT/INPUT-FOLDER/ospf-database.txt"; do
+    if [ -f "$f" ]; then
+      LINES=$(wc -l < "$f")
+      echo "  ✅ PASS: Fallback input file: $(basename "$f") (${LINES} lines)" | tee -a "$REPORT"
+      FOUND_OSPF=1
+    else
+      echo "  ℹ  INFO: Fallback not present: $(basename "$f") (optional)" | tee -a "$REPORT"
+    fi
+  done
+fi
 if [ "$FOUND_OSPF" -eq 0 ]; then
   echo "  ❌ FAIL: No usable OSPF input fixture found in INPUT-FOLDER" | tee -a "$REPORT"
   P0_FAIL=$((P0_FAIL+1))
