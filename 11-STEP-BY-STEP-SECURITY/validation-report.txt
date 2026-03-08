@@ -1,8 +1,8 @@
 [11-step] Base URL: http://localhost:8081
- Container ospf-database-test-layout-db-1  Running
  Container ospf-database-test-mcp-server-1  Running
- Container ospf-database-test-layout-api-1  Running
  Container ospf-database-test-mongodb-1  Running
+ Container ospf-database-test-layout-db-1  Running
+ Container ospf-database-test-layout-api-1  Running
  Container ospf-database-test-flask-1  Running
  Container ospf-database-test-webserver-1  Running
  Container ospf-database-test-e2e-runner-1  Running
@@ -14,7 +14,7 @@
 ║   11-STEP-BY-STEP-SECURITY — Focused Security Validation       ║
 ╚══════════════════════════════════════════════════════════════════╝
   PASS [AUTH]: Logged in as ospf@topolograph.com
-  PASS [GRAPH]: Resolved graph_time 08Mar2026_12h27m40s_54_hosts
+  PASS [GRAPH]: Resolved graph_time 08Mar2026_12h45m02s_54_hosts
   PASS [HDR]: Token create page is no-store
   PASS [TOKEN]: One-time token value rendered
   PASS [TOKEN]: Raw token not shown on token list page
@@ -38,9 +38,9 @@ TOTAL WARNED: 0
 ║   Layout Isolation — Cross-User Playwright Validation          ║
 ╚══════════════════════════════════════════════════════════════════╝
   ✅ PASS [AUTH-A]: Primary user logged in as ospf@topolograph.com
-  ✅ PASS [AUTH-B]: Secondary user session ready as li72988794@p.io
+  ✅ PASS [AUTH-B]: Secondary user session ready as li74027230@p.io
   ✅ PASS [LOAD-A]: Primary graph loaded with 54 nodes
-  ✅ PASS [CTX]: Shared layout context resolved for 08Mar2026_12h27m40s_54_hosts
+  ✅ PASS [CTX]: Shared layout context resolved for 08Mar2026_12h45m02s_54_hosts
   ✅ PASS [CLEAN-A]: Primary pre-clean status 404
   ✅ PASS [CLEAN-B]: Secondary pre-clean status 404
   ✅ PASS [SAVE-A]: Primary layout stored for node 9.9.9.1

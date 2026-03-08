@@ -51,16 +51,19 @@ HOST_BASE_URL="http://localhost:${TOPOLOGRAPH_PORT:-8081}"
 INTERNAL_BASE_URL="http://webserver:${TOPOLOGRAPH_PORT:-8081}"
 
 wait_for_docker_app() {
-  local max_wait=60
+  local max_wait=90
   local waited=0
   local code="000"
+  # Wait for /login — requires full Flask app registration (stricter than just '/')
   while [[ "$waited" -lt "$max_wait" ]]; do
-    code=$("${COMPOSE_CMD[@]}" exec -T e2e-runner env BASE_URL="$INTERNAL_BASE_URL" sh -lc 'curl -s -o /tmp/08-ready.html -w "%{http_code}" "$BASE_URL/" || echo "000"' 2>/dev/null || echo "000")
+    code=$("${COMPOSE_CMD[@]}" exec -T e2e-runner env BASE_URL="$INTERNAL_BASE_URL" sh -lc 'curl -s -o /tmp/08-ready.html -w "%{http_code}" "$BASE_URL/login" || echo "000"' 2>/dev/null || echo "000")
     if [[ "$code" == "200" ]]; then
+      # Extra stabilisation sleep so Flask finishes registering all routes
+      sleep 5
       return 0
     fi
-    sleep 2
-    waited=$((waited + 2))
+    sleep 3
+    waited=$((waited + 3))
   done
   return 1
 }
@@ -211,12 +214,70 @@ info "Running Docker-native 06-equivalent deep validation"
 "${COMPOSE_CMD[@]}" exec e2e-runner bash /app/docker/scripts/docker-e2e.sh \
   --graph-time="$GRAPH_TIME"
 
+# Regression checks need a fresh graph — the deep E2E run mutates the existing
+# graph_time via What-If cost changes and hostname rewrites, so reusing it causes
+# null-country failures. Upload a new graph specifically for these checks.
+info "Uploading fresh graph for regression checks"
+REGRESSION_GRAPH_TIME="$("${COMPOSE_CMD[@]}" exec -T \
+  -e OSPF_FILE="$OSPF_FILE" \
+  -e API_USER="$TOPOLOGRAPH_WEB_API_USERNAME_EMAIL" \
+  -e API_PASS="$TOPOLOGRAPH_WEB_API_PASSWORD" \
+  e2e-runner node - <<'NODE'
+const { chromium } = require('playwright');
+const BASE_URL = 'http://webserver:8081';
+const OSPF_FILE = `/app/INPUT-FOLDER/${process.env.OSPF_FILE || ''}`;
+const API_USER = process.env.API_USER || 'ospf@topolograph.com';
+const API_PASS = process.env.API_PASS || 'ospf';
+(async () => {
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+  await page.fill('#login', API_USER);
+  await page.fill('#password', API_PASS);
+  await Promise.race([
+    page.press('#password', 'Enter'),
+    page.click('input[type="submit"], button[type="submit"]').catch(() => {}),
+  ]);
+  await page.waitForTimeout(1500);
+  await page.goto(`${BASE_URL}/upload-ospf-isis-lsdb`, { waitUntil: 'networkidle', timeout: 30000 });
+  const before = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
+  await page.click('#Cisco').catch(() => {});
+  await page.evaluate(() => {
+    const wrap = document.getElementById('devinputGroupFile02');
+    if (wrap) wrap.removeAttribute('hidden');
+    const input = document.getElementById('inputOSPFFileID');
+    if (input) { input.style.display = 'block'; input.removeAttribute('hidden'); }
+  });
+  await page.locator('#inputOSPFFileID').setInputFiles(OSPF_FILE);
+  await page.locator('input[name="upload_files_btn"]').click();
+  await page.waitForFunction(
+    (previous) => {
+      const options = Array.from(document.querySelectorAll('#dynamic_graph_time option')).map((o) => o.value);
+      return options.length > 0 && options.join('|') !== previous;
+    },
+    before.join('|'),
+    { timeout: 120000 }
+  );
+  const after = await page.$$eval('#dynamic_graph_time option', opts => opts.map(o => o.value));
+  const created = after.filter(v => !before.includes(v));
+  console.log(created.length ? created[0] : after[0] || '');
+  await browser.close();
+})().catch(err => { console.error(err.message || String(err)); process.exit(1); });
+NODE
+)"
+REGRESSION_GRAPH_TIME="$(printf '%s\n' "$REGRESSION_GRAPH_TIME" | tail -1 | tr -d '\r')"
+if [[ -z "$REGRESSION_GRAPH_TIME" ]]; then
+  echo "[08-step] WARN: could not upload fresh regression graph — reusing deep-E2E graph_time"
+  REGRESSION_GRAPH_TIME="$GRAPH_TIME"
+fi
+info "Regression graph_time: $REGRESSION_GRAPH_TIME"
+
 info "Running hostname-derived country-code regression check"
-"${COMPOSE_CMD[@]}" exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
+"${COMPOSE_CMD[@]}" exec -T -e GRAPH_TIME="$REGRESSION_GRAPH_TIME" e2e-runner \
   node /app/tests/validate-country-derivation.cjs
 
 info "Running layout-persistence regression check"
-"${COMPOSE_CMD[@]}" exec -T -e GRAPH_TIME="$GRAPH_TIME" e2e-runner \
+"${COMPOSE_CMD[@]}" exec -T -e GRAPH_TIME="$REGRESSION_GRAPH_TIME" e2e-runner \
   node /app/tests/validate-layout-persistence.cjs
 
 info "Running hostname-mapping page regression check"
