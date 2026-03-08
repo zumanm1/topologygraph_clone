@@ -5,9 +5,10 @@
 #
 # PURPOSE
 # ───────
-# Runs the full 114-check Playwright validation suite inside Docker:
-#   tests/validate-full-e2e-v2.cjs    (12-phase, 114 checks)
-#   tests/validate-country-filter.cjs (legacy country filter)
+# Runs the full 127-check Playwright validation suite inside Docker:
+#   tests/validate-full-e2e-v2.cjs    (12-phase, 127 checks)
+#   tests/validate-country-derivation.cjs (11-check regression)
+#   tests/validate-layout-persistence.cjs (19-check regression)
 #   06-STEP-BY-STEP/scripts/run-full-e2e-v2.sh
 #
 # The project root is mounted at /app so test files are available at:
@@ -24,7 +25,7 @@
 FROM node:18-slim
 
 LABEL maintainer="OSPF Country Topology E2E Runner"
-LABEL description="Playwright E2E test runner: Node.js 18 + Chromium"
+LABEL description="Playwright E2E test runner: Node.js 18 + Chromium (127 checks)"
 
 # System dependencies for tools + Chromium browser
 RUN apt-get update && apt-get install -y --no-install-recommends \
