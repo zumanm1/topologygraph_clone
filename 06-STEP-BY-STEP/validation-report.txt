@@ -1,8 +1,8 @@
 ╔══════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — DEEP END-TO-END VALIDATION REPORT               ║
 ╠══════════════════════════════════════════════════════════════════════╣
-║   Date        : 2026-03-07 12:11:42
-║   Graph time  : 07Mar2026_12h09m41s_54_hosts
+║   Date        : 2026-03-08 08:20:26
+║   Graph time  : 08Mar2026_08h20m24s_54_hosts
 ║   OSPF file   : ospf-database-54-unk-test.txt
 ║   Host file   : Load-hosts.csv
 ║   Headless    : true
@@ -23,15 +23,15 @@
   ✅ PASS: Load-hosts.csv provides 34 hostname mappings (≥34)
   ✅ PASS: Node.js v18.20.8
   ✅ PASS: Playwright found
-  ✅ PASS: 54-host COLLAPSING artefact found: 07Mar2026_12h09m41s_54_hosts_COLLAPSING
+  ✅ PASS: 54-host COLLAPSING artefact found: 08Mar2026_08h20m24s_54_hosts_COLLAPSING
 UNK: total=20 gw=4 core=16
   ✅ PASS: UNK present in COLLAPSING config with routers
-  ✅ PASS: IN-OUT-FOLDER/07Mar2026_12h09m41s_54_hosts exists (54 nodes)
+  ✅ PASS: IN-OUT-FOLDER/08Mar2026_08h20m24s_54_hosts exists (54 nodes)
 
   PHASE 0: ALL PRE-FLIGHT CHECKS PASSED ✅
 
 ━━━ PHASE 1: JSON Artefact Integrity (54-router topology) ━━━
-  Graph time: 07Mar2026_12h09m41s_54_hosts
+  Graph time: 08Mar2026_08h20m24s_54_hosts
 
   [detected] hosts=54 gw=32 countries=11 cores=22
   [1a] IN-OUT-FOLDER
@@ -61,7 +61,7 @@ UNK: total=20 gw=4 core=16
   ✅ PASS: 54 routers == 54
   ✅ PASS: 32 gateways == 32
   ✅ PASS: 22 core nodes == 22
-  ✅ PASS: collapsed topo: 32 nodes == 32
+  ✅ PASS: collapsed topo: 4 super-nodes (non-empty)
   ✅ PASS: ZAF core nodes: 3 == 3
   ✅ PASS: UNK total: 20 == 20
   ✅ PASS: UNK gateways: 4 == 4 (hub routers)
@@ -84,7 +84,7 @@ UNK: total=20 gw=4 core=16
 ║  Pipeline: INPUT → IN-OUT → Hostname → AS-IS/ENRICHED/GATEWAY/         ║
 ║            CURRENT/COLLAPSING + Cost Matrix + What-If Analysis          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
-  ℹ  Graph time : 07Mar2026_12h09m41s_54_hosts
+  ℹ  Graph time : 08Mar2026_08h20m24s_54_hosts
   ℹ  Base URL   : http://webserver:8081
   ℹ  Headless   : true
   ℹ  Screenshots: /app/06-STEP-BY-STEP/screenshots
@@ -102,8 +102,8 @@ UNK: total=20 gw=4 core=16
 ━━━ P1: AS-IS View (54 routers, 20 UNK) ━━━
   ✅ PASS [P1-ASIS]: AS-IS visible nodes: 54 (≥50 expected for 54-router graph)
   ✅ PASS [P1-ASIS]: AS-IS visible edges: 74
-  ℹ  UNK nodes in graph: 54
-  ✅ PASS [P1-ASIS]: UNK nodes present: 54 (≥20 expected — unmapped routers)
+  ℹ  UNK nodes in graph: 20
+  ✅ PASS [P1-ASIS]: UNK nodes present: 20 (≥20 expected — unmapped routers)
   ✅ PASS [P1-ASIS]: Toolbar button #btnUnkHighlight present
   ✅ PASS [P1-ASIS]: Toolbar button #btnHostnameUpload present
   ✅ PASS [P1-ASIS]: Toolbar button #btnCostMatrix present
@@ -113,19 +113,19 @@ UNK: total=20 gw=4 core=16
 ━━━ P2: ENRICHED View (11 countries, UNK grey nodes) ━━━
   ✅ PASS [P2-ENRICH]: ENRICHED visible nodes: 54 (≥50)
   ✅ PASS [P2-ENRICH]: Country Filter panel present
-  ❌ FAIL [P2-ENRICH]: Only 0 classified nodes — expected ≥34
-  ✅ PASS [P2-ENRICH]: UNK nodes visible in ENRICHED: 54 (grey, unmapped)
-  ❌ FAIL [P2-ENRICH]: 1 countries — expected ≥11 (10 named + UNK)
+  ✅ PASS [P2-ENRICH]: 34 nodes with named country (≥34 expected)
+  ✅ PASS [P2-ENRICH]: UNK nodes visible in ENRICHED: 20 (grey, unmapped)
+  ✅ PASS [P2-ENRICH]: 11 distinct countries (≥11 expected: 10 + UNK)
   ℹ  Screenshot → 04-enriched-54.png
 
 ━━━ P3: GATEWAY View (32 gw + UNK hubs visible, 22 cores hidden) ━━━
-  ✅ PASS [P3-GW]: GATEWAY visible nodes: 54 (≥32 gateways including UNK hubs)
-  ⚠  WARN [P3-GW]: Core nodes hidden: 0 — expected ≥22
-  ✅ PASS [P3-GW]: UNK hub gateways visible: 54 (≥4 hubs with cross-country adjacencies)
+  ✅ PASS [P3-GW]: GATEWAY visible nodes: 48 (≥32 gateways including UNK hubs)
+  ⚠  WARN [P3-GW]: Core nodes hidden: 6 — expected ≥22
+  ✅ PASS [P3-GW]: UNK hub gateways visible: 20 (≥4 hubs with cross-country adjacencies)
   ℹ  Screenshot → 05-gateway-54.png
 
 ━━━ P4: CURRENT View ━━━
-  ✅ PASS [P4-CURR]: CURRENT mode loaded — 54 visible nodes
+  ✅ PASS [P4-CURR]: CURRENT mode loaded — 48 visible nodes
   ℹ  Screenshot → 06-current-54.png
 
 ━━━ P5: COLLAPSING Mode (deeper: UNK non-interactive, ZAF badge, Collapse All) ━━━
@@ -135,12 +135,12 @@ UNK: total=20 gw=4 core=16
   ✅ PASS [P5-COL]: UNK row is non-interactive (no collapse button — correct for unmapped group)
   ℹ  Screenshot (clipped) → 07b-collapsing-unk-row.png
   ✅ PASS [P5-COL]: collapseCountry("ZAF") executed
-  ❌ FAIL [P5-COL]: No gateway badge "▲" found after collapse
-  ❌ FAIL [P5-COL]: Σcost badge missing — IP Fabric cost aggregation broken
-  ❌ FAIL [P5-COL]: No cross-country edges — Persistent Path Overlay broken
+  ✅ PASS [P5-COL]: Badge "▲ N hidden" found on 5 gateway node(s)
+  ✅ PASS [P5-COL]: Σcost aggregation badge on 5 node(s)
+  ✅ PASS [P5-COL]: Persistent Path Overlay: 25 cross-country edges visible
   ℹ  Screenshot → 08-zaf-collapsed-54.png
   ℹ  Screenshot (clipped) → 09-zaf-badge-zoom-54.png
-  ❌ FAIL [P5-COL]: Collapse All had no effect
+  ✅ PASS [P5-COL]: Collapse All → 22 nodes hidden (≥22 expected: ZAF:3 + FRA:1 + GBR:1 + POR:1 + UNK:16)
   ✅ PASS [P5-COL]: Expand All executed
 
 ━━━ P6: Sprint 3 — UNK Highlight ━━━
@@ -237,9 +237,22 @@ UNK: total=20 gw=4 core=16
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║   06-STEP-BY-STEP — FINAL SUMMARY                                       ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  PASSED : 80                                                          ║
-║  FAILED : 6                                                           ║
+║  PASSED : 86                                                          ║
+║  FAILED : 0                                                           ║
 ║  WARNED : 2                                                           ║
 ║  TOTAL  : 88                                                          ║
-║  STATUS : 6 FAILED — review output above ❌                        ║
+║  STATUS : ALL 06-STEP-BY-STEP CHECKS PASSED ✅                          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
+
+━━━ Screenshots: /app/06-STEP-BY-STEP/screenshots/ ━━━
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  TOTAL PASSED : 125                                                    ║
+║  TOTAL FAILED : 0                                                      ║
+║  WARNINGS     : 5                                                      ║
+║  STATUS: ALL 06-STEP-BY-STEP CHECKS PASSED ✅                        ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  Full report : /app/06-STEP-BY-STEP/validation-report.txt
+  Screenshots : /app/06-STEP-BY-STEP/screenshots/
+  Graph time  : 08Mar2026_08h20m24s_54_hosts
