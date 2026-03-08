@@ -151,19 +151,40 @@ async function fetchSavedLayout(page) {
       throw new Error('save failed');
     }
 
+    // ── Auto-load test: reload graph in-page, expect waitForStableGraph to apply layout ──
     await page.evaluate((gt) => { if (typeof upload_ospf_lsdb === 'function') upload_ospf_lsdb(false, false, gt); }, GRAPH_TIME);
-    await settle(page, 2600);
-    const reloadedPosition = await page.evaluate((nodeId) => {
+    await settle(page, 3500);
+    const autoLoadPosition = await page.evaluate((nodeId) => {
       const pos = network.getPositions([Number(nodeId)])[Number(nodeId)] || network.getPositions([nodeId])[nodeId];
       return pos || null;
     }, moved.nodeId);
-    if (reloadedPosition && Math.abs(reloadedPosition.x - 4321) < 25 && Math.abs(reloadedPosition.y + 2345) < 25) {
-      pass('LOAD', `Saved layout re-applied to node ${moved.nodeId}`);
+    if (autoLoadPosition && Math.abs(autoLoadPosition.x - 4321) < 25 && Math.abs(autoLoadPosition.y + 2345) < 25) {
+      pass('AUTO-LOAD', `Auto-load: saved layout re-applied to node ${moved.nodeId} after in-page reload`);
     } else {
-      fail('LOAD', 'Saved layout not re-applied after graph reload');
-      throw new Error('load failed');
+      fail('AUTO-LOAD', `Auto-load: position mismatch — got ${JSON.stringify(autoLoadPosition)}`);
     }
     await shot(page, 'layout-02-layout-reloaded');
+
+    // ── Explicit Load-button round-trip: navigate away → come back → click Load ──
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await settle(page, 500);
+    const nodeCountAfterNav = await loadGraph(page, GRAPH_TIME);
+    nodeCountAfterNav > 0
+      ? pass('NAV-RELOAD', `Graph reloaded after page navigation (${nodeCountAfterNav} nodes)`)
+      : fail('NAV-RELOAD', 'Graph failed to reload after page navigation');
+    await page.waitForSelector('#btnLayoutLoad', { timeout: 8000 }).catch(() => {});
+    await page.click('#btnLayoutLoad');
+    await settle(page, 2000);
+    const explicitLoadPosition = await page.evaluate((nodeId) => {
+      const pos = network.getPositions([Number(nodeId)])[Number(nodeId)] || network.getPositions([nodeId])[nodeId];
+      return pos || null;
+    }, moved.nodeId);
+    if (explicitLoadPosition && Math.abs(explicitLoadPosition.x - 4321) < 25 && Math.abs(explicitLoadPosition.y + 2345) < 25) {
+      pass('BTN-LOAD', `Explicit Load button: saved positions restored for node ${moved.nodeId}`);
+    } else {
+      fail('BTN-LOAD', `Explicit Load button: position mismatch — got ${JSON.stringify(explicitLoadPosition)}`);
+    }
+    await shot(page, 'layout-02b-explicit-load-after-nav');
 
     await page.click('#btnLayoutResetNode');
     await settle(page, 1200);
