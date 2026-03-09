@@ -7425,9 +7425,12 @@ function buildOspfWhatIf() {
     'border-radius:4px;padding:2px 7px;margin-left:8px;color:#ff8c42;font-weight:600;">' +
     (typeof _viewMode!=='undefined'?_viewMode:'ENRICHED').toUpperCase() + '</span></span>' +
     '<div style="display:flex;gap:8px;align-items:center;">' +
+    '<button onclick="WhatIfScenarioManager.showScenarioList()" ' +
+    'style="padding:4px 10px;background:#2a3248;border:1px solid #3a4560;border-radius:6px;color:#88aaff;cursor:pointer;font-size:11px;" ' +
+    'title="View and manage saved scenarios">📋 View Scenarios</button>' +
     '<button onclick="WhatIfScenarioManager.showScenarioCreator()" ' +
     'style="padding:4px 10px;background:#0d6efd;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:11px;font-weight:500;" ' +
-    'title="Create advanced scenarios with node/link failures and cost changes">📊 Advanced Scenarios</button>' +
+    'title="Create advanced scenarios with node/link failures and cost changes">📊 Create Scenario</button>' +
     '<button onclick="document.getElementById(\'ospfWhatIfPanel\').remove();" ' +
     'style="background:none;border:none;color:#aab;cursor:pointer;font-size:18px;">×</button></div></div>' +
 

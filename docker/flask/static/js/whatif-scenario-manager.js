@@ -163,10 +163,152 @@ const WhatIfScenarioManager = (function() {
         document.getElementById('whatifScenarioModal')?.remove();
     }
 
+    /**
+     * Show scenario list panel
+     */
+    function showScenarioList() {
+        const graphId = typeof _graphId !== 'undefined' ? _graphId : 'default';
+        const graphTime = typeof _graphTime !== 'undefined' ? _graphTime : null;
+
+        fetch(`${API_BASE}/whatif/scenarios?graph_id=${graphId}${graphTime ? '&graph_time=' + graphTime : ''}`)
+            .then(r => r.ok ? r.json() : Promise.reject(r))
+            .then(scenarios => renderScenarioList(scenarios))
+            .catch(err => {
+                console.error('[WhatIf] Failed to load scenarios:', err);
+                alert('Failed to load scenarios. Check console for details.');
+            });
+    }
+
+    /**
+     * Render scenario list panel
+     */
+    function renderScenarioList(scenarios) {
+        const existing = document.getElementById('whatifScenarioListPanel');
+        if (existing) { existing.remove(); return; }
+
+        const panel = document.createElement('div');
+        panel.id = 'whatifScenarioListPanel';
+        panel.style.cssText = 'position:fixed;top:70px;right:20px;z-index:9996;background:#1e2330;border:1px solid #3a4560;border-radius:12px;width:400px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 36px rgba(0,0,0,.7);';
+
+        panel.innerHTML = `
+            <div style="padding:16px 20px;border-bottom:1px solid #3a4560;background:#262d42;border-radius:12px 12px 0 0;position:sticky;top:0;z-index:1;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:16px;font-weight:600;color:#e0e6f0;">📊 Saved Scenarios</span>
+                    <button onclick="WhatIfScenarioManager.closeScenarioList()" style="background:none;border:none;color:#aab;cursor:pointer;font-size:24px;">×</button>
+                </div>
+                <button onclick="WhatIfScenarioManager.showScenarioCreator()" style="margin-top:10px;width:100%;padding:8px;background:#0d6efd;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:12px;font-weight:500;">+ Create New Scenario</button>
+            </div>
+            <div id="scenarioListContent" style="padding:12px;">
+                ${scenarios.length === 0 ? '<div style="text-align:center;padding:40px 20px;color:#778;font-size:12px;">No scenarios found. Create one to get started!</div>' : ''}
+            </div>
+        `;
+
+        document.body.appendChild(panel);
+
+        if (scenarios.length > 0) {
+            const content = document.getElementById('scenarioListContent');
+            scenarios.forEach(scenario => {
+                const card = createScenarioCard(scenario);
+                content.appendChild(card);
+            });
+        }
+    }
+
+    /**
+     * Create scenario card element
+     */
+    function createScenarioCard(scenario) {
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#141824;border:1px solid #3a4560;border-radius:8px;padding:12px;margin-bottom:10px;';
+
+        const typeIcons = {
+            node_failure: '🖥️',
+            link_failure: '🔗',
+            cost_change: '💰',
+            multi_change: '🔀'
+        };
+
+        const typeLabels = {
+            node_failure: 'Node Failure',
+            link_failure: 'Link Failure',
+            cost_change: 'Cost Change',
+            multi_change: 'Multi-Change'
+        };
+
+        card.innerHTML = `
+            <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:8px;">
+                <div style="flex:1;">
+                    <div style="font-size:13px;font-weight:600;color:#e0e6f0;margin-bottom:4px;">${escapeHtml(scenario.scenario_name)}</div>
+                    <div style="font-size:10px;color:#778;">
+                        ${typeIcons[scenario.scenario_type] || '📋'} ${typeLabels[scenario.scenario_type] || scenario.scenario_type}
+                        ${scenario.is_public ? ' • 🌐 Public' : ''}
+                    </div>
+                </div>
+                <button onclick="WhatIfScenarioManager.deleteScenario(${scenario.id})" style="background:#e74c3c;border:none;border-radius:4px;color:#fff;cursor:pointer;padding:4px 8px;font-size:11px;">Delete</button>
+            </div>
+            ${scenario.description ? `<div style="font-size:11px;color:#9ba8c0;margin-bottom:8px;">${escapeHtml(scenario.description)}</div>` : ''}
+            ${scenario.statistics ? `
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;font-size:10px;">
+                    <div style="background:#1a2030;padding:6px;border-radius:4px;text-align:center;">
+                        <div style="color:#778;">Paths</div>
+                        <div style="color:#e0e6f0;font-weight:600;">${scenario.statistics.total_paths || 0}</div>
+                    </div>
+                    <div style="background:#1a2030;padding:6px;border-radius:4px;text-align:center;">
+                        <div style="color:#778;">Lost</div>
+                        <div style="color:#e74c3c;font-weight:600;">${scenario.statistics.paths_lost || 0}</div>
+                    </div>
+                    <div style="background:#1a2030;padding:6px;border-radius:4px;text-align:center;">
+                        <div style="color:#778;">Improved</div>
+                        <div style="color:#27ae60;font-weight:600;">${scenario.statistics.paths_improved || 0}</div>
+                    </div>
+                </div>
+            ` : ''}
+            <button onclick="WhatIfMatrixViewer.showComparison(${scenario.id})" style="width:100%;padding:6px;background:#2a3248;border:1px solid #3a4560;border-radius:6px;color:#88aaff;cursor:pointer;font-size:11px;">View Comparison</button>
+        `;
+
+        return card;
+    }
+
+    /**
+     * Delete a scenario
+     */
+    function deleteScenario(scenarioId) {
+        if (!confirm('Delete this scenario? This action cannot be undone.')) return;
+
+        fetch(`${API_BASE}/whatif/scenarios/${scenarioId}`, { method: 'DELETE' })
+            .then(r => r.ok ? Promise.resolve() : Promise.reject(r))
+            .then(() => {
+                showScenarioList(); // Refresh list
+            })
+            .catch(err => {
+                console.error('[WhatIf] Delete failed:', err);
+                alert('Failed to delete scenario. Check console for details.');
+            });
+    }
+
+    /**
+     * Close scenario list panel
+     */
+    function closeScenarioList() {
+        document.getElementById('whatifScenarioListPanel')?.remove();
+    }
+
+    /**
+     * HTML escape utility
+     */
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     return {
         showScenarioCreator,
+        showScenarioList,
         createScenario,
+        deleteScenario,
         closeModal,
+        closeScenarioList,
         updateForm,
         addCostChange
     };
