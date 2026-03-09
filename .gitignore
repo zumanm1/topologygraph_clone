@@ -45,3 +45,16 @@ echo
 tests/EXIT=
 tests/echo
 INPUT-FOLDER/Load-hosts.csv
+
+# Generated output folders (regenerated on demand)
+IN-OUT-FOLDER/
+OUTPUT/
+
+# Backup hostname files
+INPUT-FOLDER copy/
+INPUT-FOLDER/*.csv
+INPUT-FOLDER/*.txt
+
+# Validation reports (generated)
+*-STEP-BY-STEP/validation-report.txt
+*-STEP-BY-STEP/pipeline-report.txt
