@@ -17,8 +17,8 @@ IN-OUT-FOLDER/.tmp*/
 **/.tmp/
 
 # Credentials / env
-.env
-*.env
+# .env is now tracked with safe defaults - users can modify if needed
+*.env.local
 .api-token
 
 # Nested git repos (tracked separately, not as submodules)

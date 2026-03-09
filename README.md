@@ -45,19 +45,19 @@ A containerized OSPF network topology visualization and analysis platform with c
 git clone https://github.com/zumanm1/topologygraph_clone.git
 cd topologygraph_clone
 
-# Build containers
+# Build and start all services
 docker compose build
-
-# Start all services
 docker compose up -d
 
-# Wait for initialization
+# Wait for initialization (30 seconds)
 sleep 30
 
 # Verify services
 docker ps
 curl -s http://localhost:8081/__security/health
 ```
+
+**Note:** The repository includes a `.env` file with safe defaults. For production use, modify passwords in `.env` before running `docker compose up`.
 
 ### Access Application
 
