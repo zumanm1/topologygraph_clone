@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "description": "IP range classification rules for C-type hostname resolution. Evaluated in order — first match wins. Each octet value may be a literal number or '*' (wildcard matches any value).",
+  "rules": [
+    { "pattern": { "o1": "9",   "o2": "9",   "o3": "9",   "o4": "*" }, "country": "CAN", "description": "Canada Toronto" },
+    { "pattern": { "o1": "10",  "o2": "10",  "o3": "*",   "o4": "*" }, "country": "CAN", "description": "Canada Vancouver" },
+    { "pattern": { "o1": "19",  "o2": "19",  "o3": "19",  "o4": "*" }, "country": "MTP", "description": "Malta core" },
+    { "pattern": { "o1": "20",  "o2": "20",  "o3": "20",  "o4": "*" }, "country": "GBR", "description": "GB peering" },
+    { "pattern": { "o1": "21",  "o2": "21",  "o3": "21",  "o4": "*" }, "country": "USA", "description": "USA West" },
+    { "pattern": { "o1": "22",  "o2": "22",  "o3": "22",  "o4": "*" }, "country": "DEU", "description": "Germany" },
+    { "pattern": { "o1": "23",  "o2": "23",  "o3": "23",  "o4": "*" }, "country": "FRA", "description": "France" },
+    { "pattern": { "o1": "24",  "o2": "24",  "o3": "24",  "o4": "*" }, "country": "JPN", "description": "Japan" },
+    { "pattern": { "o1": "25",  "o2": "25",  "o3": "25",  "o4": "*" }, "country": "AUS", "description": "Australia" },
+    { "pattern": { "o1": "26",  "o2": "26",  "o3": "26",  "o4": "*" }, "country": "BRA", "description": "Brazil" },
+    { "pattern": { "o1": "192", "o2": "168", "o3": "*",   "o4": "*" }, "country": "UNK", "description": "RFC1918 private (192.168.x.x)" }
+  ]
+}

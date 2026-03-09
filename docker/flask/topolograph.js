@@ -6,28 +6,26 @@ let edge1_cost = '10'
 let data = [{'edge_from': '192.168.1.1', 'edge_to': '192.168.1.2', 'edge_cost': 10},
 {'edge_from': '192.168.1.2', 'edge_to': '192.168.1.1', 'edge_cost': 1}]
 */
-$(function() {
+$(function () {
 
   $("div.PopUpFormBackupNonBackupNets").hide();
   $("div.PopUpFormNewOSPFCostSet").hide();
   $("div.PopUpFormUnsymmetricPaths").hide();
   $(".general_view_edge_menu").hide(100);
-  $("a.close").click(function(e)
-    {
-        e.preventDefault();
-        $(this).closest("div.PopUpFormBackupNonBackupNets").fadeToggle();
-        // Clear content
-        document.getElementById('backuped_num').innerHTML = '';
-        document.getElementById('backuped_networks_id').innerHTML = '';
-        document.getElementById('nonbackuped_networks_id').innerHTML = '';
-        $('.PopUpFormBackupNonBackupNets').css({
-          height: "300px"
-        })
-        $(this).closest("div.PopUpFormNewOSPFCostSet").fadeToggle();
-        $(this).closest("div.PopUpFormUnsymmetricPaths").fadeToggle();
-    });
-  $('input:checkbox#assignHostToGroupBtn').click(function(e)
-  {
+  $("a.close").click(function (e) {
+    e.preventDefault();
+    $(this).closest("div.PopUpFormBackupNonBackupNets").fadeToggle();
+    // Clear content
+    document.getElementById('backuped_num').innerHTML = '';
+    document.getElementById('backuped_networks_id').innerHTML = '';
+    document.getElementById('nonbackuped_networks_id').innerHTML = '';
+    $('.PopUpFormBackupNonBackupNets').css({
+      height: "300px"
+    })
+    $(this).closest("div.PopUpFormNewOSPFCostSet").fadeToggle();
+    $(this).closest("div.PopUpFormUnsymmetricPaths").fadeToggle();
+  });
+  $('input:checkbox#assignHostToGroupBtn').click(function (e) {
     if (document.getElementById('assignHostToGroupBtn').checked) {
       assignHostToGroup();
     }
@@ -35,50 +33,45 @@ $(function() {
       resetHostGroupMembership();
     }
   });
-  $('input:checkbox#hideLinkCostBtn').click(function(e)
-  {
+  $('input:checkbox#hideLinkCostBtn').click(function (e) {
     if (document.getElementById('hideLinkCostBtn').checked) {
       ClearPaintedGraph();
     }
     else {
-      mark_all_edges_for_dyn_filtering(conf={"labelFrom": "","labelTo": ""});
+      mark_all_edges_for_dyn_filtering(conf = { "labelFrom": "", "labelTo": "" });
     }
   });
-  $('input:checkbox#ckboxL1IsisLevel').click(function(e)
-  {
+  $('input:checkbox#ckboxL1IsisLevel').click(function (e) {
     if (document.getElementById('ckboxL1IsisLevel').checked) {
-      unhide_edges_by_edge_attribute(edge_attribute_name='isis_level', level_number=1);
-      color_isis_edges_by_edge_attribute(edge_attribute_name='isis_level', edge_attribute_value=1);
+      unhide_edges_by_edge_attribute(edge_attribute_name = 'isis_level', level_number = 1);
+      color_isis_edges_by_edge_attribute(edge_attribute_name = 'isis_level', edge_attribute_value = 1);
     }
     else {
-      hide_edges_by_edge_attribute(edge_attribute_name='isis_level', edge_attribute_value=1);
+      hide_edges_by_edge_attribute(edge_attribute_name = 'isis_level', edge_attribute_value = 1);
     }
   });
-  $('input:checkbox#ckboxL2IsisLevel').click(function(e)
-    {
-      if (document.getElementById('ckboxL2IsisLevel').checked) {
-        unhide_edges_by_edge_attribute(edge_attribute_name='isis_level', level_number=2);
-        color_isis_edges_by_edge_attribute(edge_attribute_name='isis_level', edge_attribute_value=2);
-      }
-      else {
-        hide_edges_by_edge_attribute(edge_attribute_name='isis_level', edge_attribute_value=2);
-      }
-    });
-  $('input:checkbox#ckboxIsisNarrowEdge').click(function(e)
-    {
-      if (document.getElementById('ckboxIsisNarrowEdge').checked) {
-        unhide_edges_by_edge_attribute(edge_attribute_name='isnarrow', level_number=true);
-        color_isis_edges_by_edge_attribute(edge_attribute_name='isnarrow', edge_attribute_value=true);
-      }
-      else {
-        hide_edges_by_edge_attribute(edge_attribute_name='isnarrow', edge_attribute_value=true);
-      }
-    });
-  $('input:button#saveNodesPositionsBtn').click(function(e)
-  {
+  $('input:checkbox#ckboxL2IsisLevel').click(function (e) {
+    if (document.getElementById('ckboxL2IsisLevel').checked) {
+      unhide_edges_by_edge_attribute(edge_attribute_name = 'isis_level', level_number = 2);
+      color_isis_edges_by_edge_attribute(edge_attribute_name = 'isis_level', edge_attribute_value = 2);
+    }
+    else {
+      hide_edges_by_edge_attribute(edge_attribute_name = 'isis_level', edge_attribute_value = 2);
+    }
+  });
+  $('input:checkbox#ckboxIsisNarrowEdge').click(function (e) {
+    if (document.getElementById('ckboxIsisNarrowEdge').checked) {
+      unhide_edges_by_edge_attribute(edge_attribute_name = 'isnarrow', level_number = true);
+      color_isis_edges_by_edge_attribute(edge_attribute_name = 'isnarrow', edge_attribute_value = true);
+    }
+    else {
+      hide_edges_by_edge_attribute(edge_attribute_name = 'isnarrow', edge_attribute_value = true);
+    }
+  });
+  $('input:button#saveNodesPositionsBtn').click(function (e) {
     save_nodes_position();
   });
-  $('select').change( function() {
+  $('select').change(function () {
     var value = $(this).val();
     var new_value = true;
     if (!document.querySelectorAll("input[name=choosen_vendor_device]:checked").length) {
@@ -86,8 +79,7 @@ $(function() {
     }
     var choosen_vendor_name = document.querySelectorAll("input[name=choosen_vendor_device]:checked")[0].id; //Cisco, juniper Quagga or None
     console.log('choosen_vendor_name', choosen_vendor_name);
-    if (value == 'add_from_file')
-    {
+    if (value == 'add_from_file') {
       console.log(value);
       //document.getElementById("devinputGroupFile02").removeAttribute("hidden");
       document.getElementById("inputOSPFFileID").click();
@@ -108,55 +100,52 @@ function do_load_diagram_btn() {
   // remember the time of diagram from what we loaded
   loaded_diagram_graph_time = graph_time_options.options[graph_time_options.selectedIndex].value;
   $.ajax({
-      url: "/upload-yaml-diagram",
-      type: "post",
-      data: {"graph_time": loaded_diagram_graph_time},
-      success:  function callbackFunc(response)
-          {
-          do_fill_yaml_text(response.yaml_file_str);
-          _load_graph_from_yaml_diagram_page(loaded_diagram_graph_time);
-          }
-    })
+    url: "/upload-yaml-diagram",
+    type: "post",
+    data: { "graph_time": loaded_diagram_graph_time },
+    success: function callbackFunc(response) {
+      do_fill_yaml_text(response.yaml_file_str);
+      _load_graph_from_yaml_diagram_page(loaded_diagram_graph_time);
+    }
+  })
 }
 
 function do_save_diagram_btn() {
   let yaml_str = document.getElementById("yamlTextAreaStr").value;
-    $.ajax({
-        url: "/upload-yaml-diagram",
-        type: "post",
-        data: {"yaml_str": yaml_str, "do_save": true},
-        success:  function callbackFunc(response)
-            {
-            do_fill_yaml_text(response.yaml_file_str);
-            _load_graph_from_yaml_diagram_page(response.graph_time);
-            // delete old temp diagrams, when we pressed Show button
-            delete_old_yaml_graph(all=true);
-            }
-    })
+  $.ajax({
+    url: "/upload-yaml-diagram",
+    type: "post",
+    data: { "yaml_str": yaml_str, "do_save": true },
+    success: function callbackFunc(response) {
+      do_fill_yaml_text(response.yaml_file_str);
+      _load_graph_from_yaml_diagram_page(response.graph_time);
+      // delete old temp diagrams, when we pressed Show button
+      delete_old_yaml_graph(all = true);
+    }
+  })
 }
 
 function do_show_diagram_button_btn() {
   let yaml_str = document.getElementById("yamlTextAreaStr").value;
-    $.ajax({
-        url: "/upload-yaml-diagram",
-        type: "post",
-        data: {"yaml_str": yaml_str, "loaded_from_diagram_graph_time": loaded_diagram_graph_time},
-        success:  function callbackFunc(response)
-          {
-            do_fill_yaml_text(response.yaml_file_str);
-            _load_graph_from_yaml_diagram_page(response.graph_time);
-            //console.log(`${response.graph_time} with comparance ${loaded_diagram_graph_time}`);
-            // delete old temp diagrams, when we pressed Show button
-            delete_old_yaml_graph();
-            if (response.error_code != '') {
-              show_instant_notification(response.error_code, delay=10000, warning=true);
-            }
-          },
-        error: function callbackFunc(response) {
-              let err_response = response.responseJSON;
-              show_instant_notification(err_response.error_code, delay=12500, warning=true);
-          }
-    })
+  $.ajax({
+    url: "/upload-yaml-diagram",
+    type: "post",
+    data: { "yaml_str": yaml_str, "loaded_from_diagram_graph_time": loaded_diagram_graph_time },
+    success: function callbackFunc(response) {
+      do_fill_yaml_text(response.yaml_file_str);
+      _load_graph_from_yaml_diagram_page(response.graph_time);
+      //console.log(`${response.graph_time} with comparance ${loaded_diagram_graph_time}`);
+      // delete old temp diagrams, when we pressed Show button
+      delete_old_yaml_graph();
+      if (response.error_code != '') {
+        show_instant_notification(response.error_code, delay = 10000, warning = true);
+      }
+    },
+    error: function callbackFunc(response) {
+      let err_response = response.responseJSON;
+      show_instant_notification(err_response.error_code, delay = 12500, warning = true);
+    }
+  })
 }
 
 function removeOldYamlTempGraphs() {
@@ -164,14 +153,13 @@ function removeOldYamlTempGraphs() {
   remove only old Yaml graphs when Show graph button pressed
   */
   $.ajax({
-      url: "/ospf_host_to_group_mapping",
-      type: "post",
-      data: {'graph_time': dynamic_graph_time, 'jsonify': true},
-      success:  function callbackFunc(response)
-            {
-              color_host_by_group(response.host_to_group_id_map);
-            }
-          })
+    url: "/ospf_host_to_group_mapping",
+    type: "post",
+    data: { 'graph_time': dynamic_graph_time, 'jsonify': true },
+    success: function callbackFunc(response) {
+      color_host_by_group(response.host_to_group_id_map);
+    }
+  })
 }
 
 function resetHostGroupMembership() {
@@ -180,7 +168,7 @@ function resetHostGroupMembership() {
     filter: function (item) {
       return (item.group);
     }
-    });
+  });
   for (var n in assigned_nodes_to_group_w_attr_ll) {
     node_attr = assigned_nodes_to_group_w_attr_ll[n];
     node_attr.color = options.nodes.color;
@@ -196,14 +184,13 @@ function assignHostToGroup() {
   var graph_time_options = document.getElementById("dynamic_graph_time");
   var dynamic_graph_time = graph_time_options.options[graph_time_options.selectedIndex].value;
   $.ajax({
-      url: "/ospf_host_to_group_mapping",
-      type: "post",
-      data: {'graph_time': dynamic_graph_time, 'jsonify': true},
-      success:  function callbackFunc(response)
-            {
-              color_host_by_group(response.host_to_group_id_map);
-            }
-          })
+    url: "/ospf_host_to_group_mapping",
+    type: "post",
+    data: { 'graph_time': dynamic_graph_time, 'jsonify': true },
+    success: function callbackFunc(response) {
+      color_host_by_group(response.host_to_group_id_map);
+    }
+  })
 }
 
 function save_nodes_position() {
@@ -213,12 +200,11 @@ function save_nodes_position() {
   $.ajax({
     url: "/save_nodes_position",
     type: "post",
-    data: {"graph_id": graph_id, "nodes_positions_json": JSON.stringify(network.getPositions())},
-    success:  function callbackFunc(response)
-            {
-              show_instant_notification(response.msg, delay=2500);
-            },
-    error: function(xhr, status, error) {
+    data: { "graph_id": graph_id, "nodes_positions_json": JSON.stringify(network.getPositions()) },
+    success: function callbackFunc(response) {
+      show_instant_notification(response.msg, delay = 2500);
+    },
+    error: function (xhr, status, error) {
       // Handle error responses (403 for permission denied, 404 for not found, etc.)
       var errorMsg = "Failed to save node positions";
       if (xhr.responseJSON && xhr.responseJSON.msg) {
@@ -228,7 +214,7 @@ function save_nodes_position() {
       } else if (xhr.status === 404) {
         errorMsg = "Graph not found or access denied";
       }
-      show_instant_notification(errorMsg, delay=5000, warning=true);
+      show_instant_notification(errorMsg, delay = 5000, warning = true);
     }
   })
 }
@@ -237,7 +223,7 @@ $(function() {
 
     $("div.PopUpFormBackupNonBackupNets").hide();
     //$(".edge_id").text(edge_id);
-		// fill the table 
+    // fill the table 
     $.each(data,function(i,item){
       $("#location tbody").append(
           "<tr>"
@@ -272,80 +258,77 @@ function js_delete_selected_host_groups() {
   $.ajax({
     url: "/delete_selected_host_groups",
     type: "post",
-    data: {'selected_host_groups_ll_json': JSON.stringify(array)}
+    data: { 'selected_host_groups_ll_json': JSON.stringify(array) }
   })
 }
 
-function bind(ip, gr_id)
-    {
-    var grset_id = document.getElementById('groupset_'+gr_id);
-    var host_ip = document.getElementById('ip_'+ip);
-    var g_id_matched = document.getElementById('slct_'+ip).value;
-    $.ajax({
-        url: "/save_single_host_group_mapping",
-      type: "post",
-      data: {'groupset_id': grset_id['value'], "host_id": host_ip['value'], 'group_id': g_id_matched}
-    })
-  }
+function bind(ip, gr_id) {
+  var grset_id = document.getElementById('groupset_' + gr_id);
+  var host_ip = document.getElementById('ip_' + ip);
+  var g_id_matched = document.getElementById('slct_' + ip).value;
+  $.ajax({
+    url: "/save_single_host_group_mapping",
+    type: "post",
+    data: { 'groupset_id': grset_id['value'], "host_id": host_ip['value'], 'group_id': g_id_matched }
+  })
+}
 
-function bind_master_vrf(ip, gr_id)
-  {
-  var grset_id = document.getElementById('groupset_'+gr_id);
-  var host_ip = document.getElementById('ip_'+ip);
-  var _select_options = document.getElementById('slct_master_'+ip);
+function bind_master_vrf(ip, gr_id) {
+  var grset_id = document.getElementById('groupset_' + gr_id);
+  var host_ip = document.getElementById('ip_' + ip);
+  var _select_options = document.getElementById('slct_master_' + ip);
   let master_device_id = _select_options.options[_select_options.selectedIndex].value;
   $.ajax({
-      url: "/save_single_host_group_mapping",
+    url: "/save_single_host_group_mapping",
     type: "post",
-    data: {'groupset_id': grset_id['value'], "host_id": host_ip['value'], 'master_device_id': master_device_id}
+    data: { 'groupset_id': grset_id['value'], "host_id": host_ip['value'], 'master_device_id': master_device_id }
   })
 }
 
 
-  function NetworkReactionOnFailureClick (event) {
+function NetworkReactionOnFailureClick(event) {
 
-    let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-    
-    if (pressed_button == 'GeneralView') {
-      $(GeneralView).button('toggle');
-      ResetGraph_and_Variables();
-    }
-    $(NetworkReactionOnFailure).button('toggle');
-    print_element_descriptions_NetworkReaction();
-  }
+  let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
 
-  function do_save_graph_scale (gravitationalConstant = -10000, springLength = 150) {
-    /*
-    In order to change properties of VIS graph, for dense or sparse topologies
-    */
-    let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-    
-    if (pressed_button == 'GeneralView' || pressed_button == 'NetworkReactionOnFailure')
-    {
-      // the graph has been uploaded, we can change Scale
-      let phy_scale_settings = {physics:{barnesHut:{gravitationalConstant: gravitationalConstant, springLength: springLength}}};
-      network.setOptions(phy_scale_settings);
-      // save these settings for future use
-      $.ajax({
-        url: "/save_graph_physics_scale",
-        type: "post",
-        data: {"graph_id": graph_id, "graph_physics_scale_settings_json": JSON.stringify(phy_scale_settings)}
-      })
-    }
-    else {
-      $.ajax(alert("Please upload a Graph in order to change Scale"));
-    }
-  }
-  function GeneralView2Click (event) {
-    let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-
-    if (pressed_button == 'NetworkReactionOnFailure') {
-      $(NetworkReactionOnFailure).button('toggle');
-      ResetGraph_and_Variables();
-    }
+  if (pressed_button == 'GeneralView') {
     $(GeneralView).button('toggle');
-    print_element_descriptions_GeneralView();
-    }
+    ResetGraph_and_Variables();
+  }
+  $(NetworkReactionOnFailure).button('toggle');
+  print_element_descriptions_NetworkReaction();
+}
+
+function do_save_graph_scale(gravitationalConstant = -10000, springLength = 150) {
+  /*
+  In order to change properties of VIS graph, for dense or sparse topologies
+  */
+  let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+
+  if (pressed_button == 'GeneralView' || pressed_button == 'NetworkReactionOnFailure') {
+    // the graph has been uploaded, we can change Scale
+    let phy_scale_settings = { physics: { barnesHut: { gravitationalConstant: gravitationalConstant, springLength: springLength } } };
+    network.setOptions(phy_scale_settings);
+    // save these settings for future use
+    $.ajax({
+      url: "/save_graph_physics_scale",
+      type: "post",
+      data: { "graph_id": graph_id, "graph_physics_scale_settings_json": JSON.stringify(phy_scale_settings) }
+    })
+  }
+  else {
+    $.ajax(alert("Please upload a Graph in order to change Scale"));
+  }
+}
+function GeneralView2Click(event) {
+  let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+
+  if (pressed_button == 'NetworkReactionOnFailure') {
+    $(NetworkReactionOnFailure).button('toggle');
+    ResetGraph_and_Variables();
+  }
+  $(GeneralView).button('toggle');
+  print_element_descriptions_GeneralView();
+}
 
 
 
@@ -358,33 +341,31 @@ function security_csrf_token_value() {
 function add_auth_source_api_net() {
   auth_source_api_net = document.getElementById('auth_source_api_net').value;
   $.ajax({
-      url: "/add-auth-source-api-net",
-      type: "post",
-      data: {'auth_source_api_net': auth_source_api_net},
-      headers: {'X-CSRF-Token': security_csrf_token_value()},
-      success:  function callbackFunc(response)
-          {
+    url: "/add-auth-source-api-net",
+    type: "post",
+    data: { 'auth_source_api_net': auth_source_api_net },
+    headers: { 'X-CSRF-Token': security_csrf_token_value() },
+    success: function callbackFunc(response) {
 
-          update_source_net_table(response.auth_source_api_net_ll);
-          show_instant_notification(response.msg);
-          }
-          })
+      update_source_net_table(response.auth_source_api_net_ll);
+      show_instant_notification(response.msg);
+    }
+  })
 }
 
 
 function delete_auth_source_ip_net(source_net) {
   $.ajax({
-      url: "/delete-auth-source-ip-net",
-      type: "post",
-      data: {'source_net': source_net},
-      headers: {'X-CSRF-Token': security_csrf_token_value()},
-      success:  function callbackFunc(response)
-          {
+    url: "/delete-auth-source-ip-net",
+    type: "post",
+    data: { 'source_net': source_net },
+    headers: { 'X-CSRF-Token': security_csrf_token_value() },
+    success: function callbackFunc(response) {
 
-          update_source_net_table(response.auth_source_api_net_ll);
+      update_source_net_table(response.auth_source_api_net_ll);
 
-          }
-          })
+    }
+  })
 }
 
 function update_hostname_on_graph() {
@@ -401,16 +382,15 @@ function update_hostname_on_graph() {
   // paint a button from yellow to grey
   let update_hostname_on_graph_btn = document.getElementById('update_hostname_on_graph');
   return $.ajax({
-      url: "/update_hostname_on_graph",
-      type: "post",
-      data: {'choosen_graph_time': choosen_graph_time},
-      success:  function callbackFunc(response)
-            {
-              if (update_hostname_on_graph_btn) {
-                update_hostname_on_graph_btn.className = "btn btn-secondary btn-lg btn-block";
-              }
-            }
-          })
+    url: "/update_hostname_on_graph",
+    type: "post",
+    data: { 'choosen_graph_time': choosen_graph_time },
+    success: function callbackFunc(response) {
+      if (update_hostname_on_graph_btn) {
+        update_hostname_on_graph_btn.className = "btn btn-secondary btn-lg btn-block";
+      }
+    }
+  })
 }
 
 function save_hostname(_ip, _graph_id) {
@@ -421,10 +401,10 @@ function save_hostname(_ip, _graph_id) {
     update_hostname_on_graph_btn.className = "btn btn-warning btn-lg btn-block";
   }
   return $.ajax({
-      url: "/save_hostname",
-      type: "post",
-      data: {'ip': _ip, 'hostname': _hostname, 'graph_id': _graph_id}
-          })
+    url: "/save_hostname",
+    type: "post",
+    data: { 'ip': _ip, 'hostname': _hostname, 'graph_id': _graph_id }
+  })
 }
 
 function _setHostCsvImportStatus(msg, color) {
@@ -436,13 +416,13 @@ function _setHostCsvImportStatus(msg, color) {
 
 function _parseHostnameImportText(csvText) {
   let idToHostname = {};
-  let lines = String(csvText || '').trim().split(/\r?\n/).filter(function(line) { return line.trim(); });
+  let lines = String(csvText || '').trim().split(/\r?\n/).filter(function (line) { return line.trim(); });
   for (let i = 0; i < lines.length; i++) {
     let rawLine = lines[i].trim();
     if (!rawLine || rawLine.startsWith('#')) continue;
     let cols = rawLine.indexOf(',') >= 0
-      ? rawLine.split(',').map(function(c) { return c.trim(); })
-      : rawLine.split(/\s+/, 2).map(function(c) { return c.trim(); });
+      ? rawLine.split(',').map(function (c) { return c.trim(); })
+      : rawLine.split(/\s+/, 2).map(function (c) { return c.trim(); });
     if (cols.length < 2) continue;
     let c0 = (cols[0] || '').trim();
     let c1 = (cols[1] || '').trim();
@@ -450,7 +430,7 @@ function _parseHostnameImportText(csvText) {
     let c0l = c0.toLowerCase();
     let c1l = c1.toLowerCase();
     if (c0l === 'router_id' || c0l === 'device_ip_address' || c0l === 'hostname_prefix' ||
-        c0l === 'hostname' || c0l === 'id' || c1l === 'hostname' || c1l === 'device_name' || c1l === 'country') {
+      c0l === 'hostname' || c0l === 'id' || c1l === 'hostname' || c1l === 'device_name' || c1l === 'country') {
       continue;
     }
     if (_looksLikeIpv4(c0) && c1) {
@@ -475,7 +455,7 @@ function _getSavedHostnameMapFromLocalStorage() {
 
 function _mergeHostnameMapIntoLocalStorage(hostMap) {
   let merged = Object.assign({}, _getSavedHostnameMapFromLocalStorage(), hostMap || {});
-  try { localStorage.setItem('_topolograph_hostname_map', JSON.stringify(merged)); } catch (err) {}
+  try { localStorage.setItem('_topolograph_hostname_map', JSON.stringify(merged)); } catch (err) { }
   return merged;
 }
 
@@ -484,7 +464,7 @@ function import_hostname_csv_file(inputEl) {
   if (!file) return;
   let reader = new FileReader();
   _setHostCsvImportStatus('Reading ' + file.name + '…', '#6c757d');
-  reader.onload = function(e) {
+  reader.onload = function (e) {
     _importHostnameCsvText(e.target.result, file.name);
   };
   reader.readAsText(file);
@@ -500,7 +480,7 @@ function _importHostnameCsvText(csvText, filename) {
   let requests = [];
   let matched = 0;
   let updated = 0;
-  routerIds.forEach(function(routerId) {
+  routerIds.forEach(function (routerId) {
     let inputEl = document.getElementById(`comment_${routerId}`);
     if (!inputEl) return;
     matched++;
@@ -520,11 +500,11 @@ function _importHostnameCsvText(csvText, filename) {
   _mergeHostnameMapIntoLocalStorage(idToHostname);
   _setHostCsvImportStatus('Saving ' + matched + ' hostname mappings from ' + filename + '…', '#6c757d');
   let persistence = requests.length ? $.when.apply($, requests) : $.Deferred().resolve().promise();
-  persistence.always(function() {
+  persistence.always(function () {
     _setHostCsvImportStatus('Saved ' + matched + ' hostname mappings from ' + filename + '. Syncing graph…', '#17a2b8');
     let syncRequest = update_hostname_on_graph();
     if (syncRequest && typeof syncRequest.always === 'function') {
-      syncRequest.always(function() {
+      syncRequest.always(function () {
         _setHostCsvImportStatus('✅ Imported ' + filename + ': ' + matched + ' matched, ' + updated + ' updated, graph sync requested.', '#28a745');
       });
     } else {
@@ -536,12 +516,12 @@ function _importHostnameCsvText(csvText, filename) {
 function update_source_net_table(all_auth_source_net_ll) {
   document.getElementById("allAuthorisedIpAddressRange").innerHTML = "";
   var t = "";
-  for (var i = 0; i < all_auth_source_net_ll.length; i++){
-      let tr = "<tr>";
-      tr += `<td class="source_net_row_table">`+ all_auth_source_net_ll[i] +"</td>";
-      tr += `<td class="source_net_row_table"><input type="submit" value="Delete" onclick="delete_auth_source_ip_net('` + all_auth_source_net_ll[i] + `')" class="btn btn-primary"></td>`;
-      tr += "</tr>";
-      t += tr;
+  for (var i = 0; i < all_auth_source_net_ll.length; i++) {
+    let tr = "<tr>";
+    tr += `<td class="source_net_row_table">` + all_auth_source_net_ll[i] + "</td>";
+    tr += `<td class="source_net_row_table"><input type="submit" value="Delete" onclick="delete_auth_source_ip_net('` + all_auth_source_net_ll[i] + `')" class="btn btn-primary"></td>`;
+    tr += "</tr>";
+    t += tr;
   }
   document.getElementById("allAuthorisedIpAddressRange").innerHTML = t;
 }
@@ -549,8 +529,8 @@ function update_source_net_table(all_auth_source_net_ll) {
 
 function set_date_on_datetime_picker(datepicker_id, date_obj) {
   const formattedDateValue = $.datepicker.formatDate('yy-mm-dd', date_obj) + ' ' +
-                           ('0' + date_obj.getHours()).slice(-2) + ':' +
-                           ('0' + date_obj.getMinutes()).slice(-2);
+    ('0' + date_obj.getHours()).slice(-2) + ':' +
+    ('0' + date_obj.getMinutes()).slice(-2);
   $(datepicker_id).val(formattedDateValue);
 }
 
@@ -563,13 +543,13 @@ function set_min_date_on_datetime_picker(datepicker_id, date_obj) {
 
 function upload_network_heatmap() {
   // upload graph
-  upload_ospf_lsdb(with_heatmap=true);
+  upload_ospf_lsdb(with_heatmap = true);
 }
 
-function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic_graph_time='') {
+function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic_graph_time = '') {
   // get selected value from dropdown menu
   var selectElement = document.getElementById("dynamic_graph_time");
-  if (dynamic_graph_time=='') {
+  if (dynamic_graph_time == '') {
     var dynamic_graph_time = selectElement.options[selectElement.selectedIndex].value;
   }
   else {
@@ -584,10 +564,9 @@ function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic
     }
   }
   // clear previous graphs
-  if (typeof edges !== 'undefined')
-    {
-      ResetGraph_and_Variables(for_ospfwatcher = for_ospfwatcher);
-    }
+  if (typeof edges !== 'undefined') {
+    ResetGraph_and_Variables(for_ospfwatcher = for_ospfwatcher);
+  }
   // revert back out StopStart Physics button
   if (document.getElementById('btnStopPhysics') !== null) {
     //document.getElementById('btnStopPhysicsImg').src = "/static/stop_button.png";
@@ -599,139 +578,138 @@ function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic
     document.getElementById('DesignMode').setAttribute('onclick', `location.href="/yaml-diagram?graph_time=${dynamic_graph_time}"`)
   }
   $.ajax({
-      url: "/upload-ospf-lsdb-from-js",
-      type: "post",
-      data: {'dynamic_graph_time': dynamic_graph_time, 'with_heatmap': with_heatmap, 'for_ospfwatcher': for_ospfwatcher},
-      success:  function callbackFunc(response)
-          {
-          
-          graph_id = response.graph_id;
-          // set value to global variable
-          nodes_attr_dd_in_ll = response.nodes_attr_dd_in_ll;
-          edges_attr_dd_in_ll = response.edges_attr_dd_in_ll;
-          let graph_physics_scale_settings = JSON.parse(response.graph_physics_scale_settings_dd_json);
-          init_visjs_graph(response.nodes_attr_dd_in_ll, response.edges_attr_dd_in_ll, graph_physics_scale_settings);
-          // ── Country filter: apply colours & build panel after graph settles ──
-          var finalizeGraphLoad = function(appliedHostnameSync, appliedCountrySync) {
-            if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
-            if (typeof applyCountryColors === 'function') { applyCountryColors(); }
-            if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
-            if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }       // EN-F4
-            if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
-            if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
-            if (typeof _countryHydrationLooksReady === 'function' && _countryHydrationLooksReady()) {
-              if (typeof _markCountryHydrationReady === 'function') {
-                _markCountryHydrationReady(dynamic_graph_time, {
-                  source: 'upload_ospf_lsdb',
-                  countrySync: !!appliedCountrySync,
-                  hostnameSync: !!appliedHostnameSync
-                });
-              }
-            } else if (typeof _markCountryHydrationPending === 'function') {
-              _markCountryHydrationPending(dynamic_graph_time, {
-                source: 'upload_ospf_lsdb',
-                countrySync: !!appliedCountrySync,
-                hostnameSync: !!appliedHostnameSync,
-                waitingForClassifiedData: true
-              });
-            }
-          };
-          var syncHostnameMappingsAfterCountryHydration = function(appliedCountrySync) {
-            if (typeof _syncHostnameMappingsFromServer === 'function') {
-              _syncHostnameMappingsFromServer(dynamic_graph_time).then(function(appliedHostnameSync) {
-                finalizeGraphLoad(appliedHostnameSync, appliedCountrySync);
-              }, function() {
-                finalizeGraphLoad(false, appliedCountrySync);
-              });
-            } else {
-              finalizeGraphLoad(false, appliedCountrySync);
-            }
-          };
-          var afterCountrySync = function(appliedCountrySync) {
-            if (appliedCountrySync || typeof _recoverCountryMetadataFromPeerGraphs !== 'function') {
-              syncHostnameMappingsAfterCountryHydration(appliedCountrySync);
-              return;
-            }
-            _recoverCountryMetadataFromPeerGraphs(dynamic_graph_time).then(function(appliedPeerRecovery) {
-              syncHostnameMappingsAfterCountryHydration(!!appliedPeerRecovery);
-            }, function() {
-              syncHostnameMappingsAfterCountryHydration(false);
+    url: "/upload-ospf-lsdb-from-js",
+    type: "post",
+    data: { 'dynamic_graph_time': dynamic_graph_time, 'with_heatmap': with_heatmap, 'for_ospfwatcher': for_ospfwatcher },
+    success: function callbackFunc(response) {
+
+      graph_id = response.graph_id;
+      // set value to global variable
+      nodes_attr_dd_in_ll = response.nodes_attr_dd_in_ll;
+      edges_attr_dd_in_ll = response.edges_attr_dd_in_ll;
+      let graph_physics_scale_settings = JSON.parse(response.graph_physics_scale_settings_dd_json);
+      init_visjs_graph(response.nodes_attr_dd_in_ll, response.edges_attr_dd_in_ll, graph_physics_scale_settings);
+      // ── Country filter: apply colours & build panel after graph settles ──
+      var finalizeGraphLoad = function (appliedHostnameSync, appliedCountrySync) {
+        if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
+        if (typeof applyCountryColors === 'function') { applyCountryColors(); }
+        if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
+        if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }       // EN-F4
+        if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
+        if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
+        if (typeof _countryHydrationLooksReady === 'function' && _countryHydrationLooksReady()) {
+          if (typeof _markCountryHydrationReady === 'function') {
+            _markCountryHydrationReady(dynamic_graph_time, {
+              source: 'upload_ospf_lsdb',
+              countrySync: !!appliedCountrySync,
+              hostnameSync: !!appliedHostnameSync
             });
-          };
-          if (typeof _syncCountryMetadataFromServer === 'function') {
-            _syncCountryMetadataFromServer(dynamic_graph_time).then(afterCountrySync, function() {
-              afterCountrySync(false);
-            });
-          } else {
-            afterCountrySync(false);
           }
-          // mark General View as pressed button
-          let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-          // we mark button pressed if only button has not been marked as pressed
-          if (!pressed_button | pressed_button.length == 0 && !for_ospfwatcher) {
-            load_graph_buttonOnClick();
-            }
-          stub_nets_attr_dd_ll = response.stub_nets_attr_dd_ll; // [{'10.10.10.0': '1.1.1.1'}, {}] network: ospf_rid
-          nodeNameToNodeRidMap = response.nodeNameToNodeRidMap;
-          if (!for_ospfwatcher) {
-            show_spt_dropdown_menu(); // Focus/From ... To
-            print_element_descriptions_GeneralView(with_heatmap);
-            
-            if (response.isIsIs) {
-              document.getElementById('ckboxL1IsisLevelLabel').innerHTML = `L1 (${response.l1_edges_num} edges)`;
-              document.getElementById('ckboxL2IsisLevelLabel').innerHTML = `L2 (${response.l2_edges_num} edges)`;
-              const is_l1_active_btn = document.getElementById('ckboxL1IsisLevel');
-              if (is_l1_active_btn !== null && response.l1_edges_num == 0) {is_l1_active_btn.setAttribute('disabled', true);}
-              const is_l2_active_btn = document.getElementById('ckboxL2IsisLevel');
-              if (is_l2_active_btn !== null && response.l2_edges_num == 0) { is_l2_active_btn.setAttribute('disabled', true);}
-              // Narrow
-              const narrow_edge_btn = document.getElementById('ckboxIsisNarrowEdge');
-              if (narrow_edge_btn !== null && response.edge_narrow_num != 0) {
-                document.getElementById('ckboxIsisNarrowEdgeLabel').innerHTML = `Narrow (${response.edge_narrow_num} edges)`;
-                show('IsisNarrowEdgeDiv');
-              }
+        } else if (typeof _markCountryHydrationPending === 'function') {
+          _markCountryHydrationPending(dynamic_graph_time, {
+            source: 'upload_ospf_lsdb',
+            countrySync: !!appliedCountrySync,
+            hostnameSync: !!appliedHostnameSync,
+            waitingForClassifiedData: true
+          });
+        }
+      };
+      var syncHostnameMappingsAfterCountryHydration = function (appliedCountrySync) {
+        if (typeof _syncHostnameMappingsFromServer === 'function') {
+          _syncHostnameMappingsFromServer(dynamic_graph_time).then(function (appliedHostnameSync) {
+            finalizeGraphLoad(appliedHostnameSync, appliedCountrySync);
+          }, function () {
+            finalizeGraphLoad(false, appliedCountrySync);
+          });
+        } else {
+          finalizeGraphLoad(false, appliedCountrySync);
+        }
+      };
+      var afterCountrySync = function (appliedCountrySync) {
+        if (appliedCountrySync || typeof _recoverCountryMetadataFromPeerGraphs !== 'function') {
+          syncHostnameMappingsAfterCountryHydration(appliedCountrySync);
+          return;
+        }
+        _recoverCountryMetadataFromPeerGraphs(dynamic_graph_time).then(function (appliedPeerRecovery) {
+          syncHostnameMappingsAfterCountryHydration(!!appliedPeerRecovery);
+        }, function () {
+          syncHostnameMappingsAfterCountryHydration(false);
+        });
+      };
+      if (typeof _syncCountryMetadataFromServer === 'function') {
+        _syncCountryMetadataFromServer(dynamic_graph_time).then(afterCountrySync, function () {
+          afterCountrySync(false);
+        });
+      } else {
+        afterCountrySync(false);
+      }
+      // mark General View as pressed button
+      let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+      // we mark button pressed if only button has not been marked as pressed
+      if (!pressed_button | pressed_button.length == 0 && !for_ospfwatcher) {
+        load_graph_buttonOnClick();
+      }
+      stub_nets_attr_dd_ll = response.stub_nets_attr_dd_ll; // [{'10.10.10.0': '1.1.1.1'}, {}] network: ospf_rid
+      nodeNameToNodeRidMap = response.nodeNameToNodeRidMap;
+      if (!for_ospfwatcher) {
+        show_spt_dropdown_menu(); // Focus/From ... To
+        print_element_descriptions_GeneralView(with_heatmap);
 
-              show('L1IsisLevelDiv');
-              show('L2IsisLevelDiv');
-            } else { // after isis load OSPF and ISIS buttons left
-              document.querySelectorAll('div.input-group.PopUpCommonFormHideLinkCostSaveNodesPositions').forEach(function(element) { element.style.display = 'none'; }); 
-            }
-            show('networkFullScreenDiv');
-            show('messagepop4'); // Groups
-            show('hideLinkCostDevId');
-            mark_checked('hideLinkCostBtn'); // when pres Load new graph, but this button is set unchecked
-            show('saveNodesPositionsDiv');
-
-            add_radio_button_listener(); //Once we unchecked `Print Minimum Shortest Tree (MST) for the node` we should clear all radion buttons
+        if (response.isIsIs) {
+          document.getElementById('ckboxL1IsisLevelLabel').innerHTML = `L1 (${response.l1_edges_num} edges)`;
+          document.getElementById('ckboxL2IsisLevelLabel').innerHTML = `L2 (${response.l2_edges_num} edges)`;
+          const is_l1_active_btn = document.getElementById('ckboxL1IsisLevel');
+          if (is_l1_active_btn !== null && response.l1_edges_num == 0) { is_l1_active_btn.setAttribute('disabled', true); }
+          const is_l2_active_btn = document.getElementById('ckboxL2IsisLevel');
+          if (is_l2_active_btn !== null && response.l2_edges_num == 0) { is_l2_active_btn.setAttribute('disabled', true); }
+          // Narrow
+          const narrow_edge_btn = document.getElementById('ckboxIsisNarrowEdge');
+          if (narrow_edge_btn !== null && response.edge_narrow_num != 0) {
+            document.getElementById('ckboxIsisNarrowEdgeLabel').innerHTML = `Narrow (${response.edge_narrow_num} edges)`;
+            show('IsisNarrowEdgeDiv');
           }
-          if (for_ospfwatcher){
-            if (response.isIsIs) {
-              const is_l1_active_btn = document.getElementById('is_l1_active');
-              if (is_l1_active_btn !== null) {is_l1_active_btn.removeAttribute('disabled');is_l1_active_btn.setAttribute('checked', '');}
-              const is_l2_active_btn = document.getElementById('is_l2_active');
-              if (is_l2_active_btn !== null) { is_l2_active_btn.removeAttribute('disabled');is_l2_active_btn.setAttribute('checked', '');}
-            }
-            // fill time to datetimepicker on Monitoring page
-            const startDateStr = response.start_time_iso; // "2022-12-11T08:38:00"
-            // const startDate = new Date(startDateStr);
-            const startDate = new Date(getLocalTimeFromUTC(startDateStr));
-            // Example: update datetimepicker with new minDateTime
-            set_min_date_on_datetime_picker(datepicker_id='#StartLogTime', date_obj=startDate)
-            set_date_on_datetime_picker(datepicker_id='#StartLogTime', date_obj=startDate)
 
-            const endDateStr = response.end_time_iso; // "2022-12-11T08:38:00"
-            // const endDate = new Date(endDateStr);
-            const endDate = new Date(getLocalTimeFromUTC(endDateStr));
-            set_date_on_datetime_picker(datepicker_id='#EndLogTime', date_obj=endDate)
+          show('L1IsisLevelDiv');
+          show('L2IsisLevelDiv');
+        } else { // after isis load OSPF and ISIS buttons left
+          document.querySelectorAll('div.input-group.PopUpCommonFormHideLinkCostSaveNodesPositions').forEach(function (element) { element.style.display = 'none'; });
+        }
+        show('networkFullScreenDiv');
+        show('messagepop4'); // Groups
+        show('hideLinkCostDevId');
+        mark_checked('hideLinkCostBtn'); // when pres Load new graph, but this button is set unchecked
+        show('saveNodesPositionsDiv');
 
-            upload_monitoring_stat();
-          }
-          return graph_id;
-          },
-          error: function(jqXHR, textStatus, errorThrown) {
-            show_instant_notification("An error occurred while building the graph. Please contact the administrator using the details provided in the Links tab.", delay=10000, warning=true);
-          }
-          })
+        add_radio_button_listener(); //Once we unchecked `Print Minimum Shortest Tree (MST) for the node` we should clear all radion buttons
+      }
+      if (for_ospfwatcher) {
+        if (response.isIsIs) {
+          const is_l1_active_btn = document.getElementById('is_l1_active');
+          if (is_l1_active_btn !== null) { is_l1_active_btn.removeAttribute('disabled'); is_l1_active_btn.setAttribute('checked', ''); }
+          const is_l2_active_btn = document.getElementById('is_l2_active');
+          if (is_l2_active_btn !== null) { is_l2_active_btn.removeAttribute('disabled'); is_l2_active_btn.setAttribute('checked', ''); }
+        }
+        // fill time to datetimepicker on Monitoring page
+        const startDateStr = response.start_time_iso; // "2022-12-11T08:38:00"
+        // const startDate = new Date(startDateStr);
+        const startDate = new Date(getLocalTimeFromUTC(startDateStr));
+        // Example: update datetimepicker with new minDateTime
+        set_min_date_on_datetime_picker(datepicker_id = '#StartLogTime', date_obj = startDate)
+        set_date_on_datetime_picker(datepicker_id = '#StartLogTime', date_obj = startDate)
+
+        const endDateStr = response.end_time_iso; // "2022-12-11T08:38:00"
+        // const endDate = new Date(endDateStr);
+        const endDate = new Date(getLocalTimeFromUTC(endDateStr));
+        set_date_on_datetime_picker(datepicker_id = '#EndLogTime', date_obj = endDate)
+
+        upload_monitoring_stat();
+      }
+      return graph_id;
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      show_instant_notification("An error occurred while building the graph. Please contact the administrator using the details provided in the Links tab.", delay = 10000, warning = true);
+    }
+  })
 }
 
 function delete_ospf_lsdb() {
@@ -741,46 +719,43 @@ function delete_ospf_lsdb() {
   var dynamic_graph_time = graph_time_options.options[graph_time_options.selectedIndex].value;
 
   $.ajax({
-      url: "/delete-ospf-lsdb",
-      type: "post",
-      data: {'dynamic_graph_time': dynamic_graph_time},
-      success:  function callbackFunc(response)
-          {
-            //$.ajax(alert(`Graph ${dynamic_graph_time} has been removed from DB. Please refresh page.`));
-            // reload page
-            document.location.reload(true);
-          }
-          })
+    url: "/delete-ospf-lsdb",
+    type: "post",
+    data: { 'dynamic_graph_time': dynamic_graph_time },
+    success: function callbackFunc(response) {
+      //$.ajax(alert(`Graph ${dynamic_graph_time} has been removed from DB. Please refresh page.`));
+      // reload page
+      document.location.reload(true);
+    }
+  })
 }
 
-function delete_old_yaml_graph(all=false) {
+function delete_old_yaml_graph(all = false) {
 
   $.ajax({
-      url: "/delete-old-yaml-diagram",
-      type: "post",
-      data: {"all": all},
-    })
+    url: "/delete-old-yaml-diagram",
+    type: "post",
+    data: { "all": all },
+  })
 }
 
 function get_term_node_id_by_network(network) {
   $.ajax({
-      url: "/get_term_node_id_by_network",
-      type: "post",
-      async: false, // wait answer before continue
-      data: {'network': network, 'graph_id': graph_id},
-      success:  function callbackFunc(response)
-          {
-            return response.node_id;
-          }
-          })
+    url: "/get_term_node_id_by_network",
+    type: "post",
+    async: false, // wait answer before continue
+    data: { 'network': network, 'graph_id': graph_id },
+    success: function callbackFunc(response) {
+      return response.node_id;
+    }
+  })
 }
 
 // #####################
-function get_edge_from_spt_outcome(graph_id, src_node, dst_node, spt_src_node, spt_dst_node, selected_edge_id)
-  {
-    /*
-    when we under General View, built a SPT and press on the edge along SPT. We show backup path of such edge
-    */
+function get_edge_from_spt_outcome(graph_id, src_node, dst_node, spt_src_node, spt_dst_node, selected_edge_id) {
+  /*
+  when we under General View, built a SPT and press on the edge along SPT. We show backup path of such edge
+  */
   if (src_node && dst_node) {
     var removed_edges_ll = [src_node, dst_node];
     removed_links_from_spt_path_ll_in_ll.push([src_node, dst_node]);
@@ -788,221 +763,222 @@ function get_edge_from_spt_outcome(graph_id, src_node, dst_node, spt_src_node, s
   }
 
   $.ajax({
-      url: "/get_edge_from_spt_remove_outcome_new",
+    url: "/get_edge_from_spt_remove_outcome_new",
     type: "post",
-    data: {'graph_id': graph_id, "src_node": spt_src_node, "dst_node": spt_dst_node, 
-    "removed_links_from_spt_path_ll_in_ll_json": JSON.stringify(removed_links_from_spt_path_ll_in_ll), 
-    "removed_edge_id_from_spt_path_ll_in_ll_json": JSON.stringify(removed_edge_id_from_spt_path_ll_in_ll),
-    "changed_edge_cost_dd_json": JSON.stringify(changed_edge_cost_dd)
-  },
-      success:  function callbackFunc(response)
-        {
-        /*
-        node_dd_in_ll = node_dd_in_ll,
-        unbackup_paths_nodes_name_as_ll_in_ll = unbackup_paths_nodes_name_as_ll_in_ll,
-        to_unflat_ecmp_edges_id_ll = to_unflat_ecmp_edges_id_ll,
-        cost_and_spt_path_node_names_ll_in_ll = cost_and_spt_path_node_names_ll_in_ll,
-        unused_cost_and_spt_path_ll_ll = unused_cost_and_spt_path_ll_ll,
-        used_cost_and_spt_path_ll_ll = used_cost_and_spt_path_ll_ll,
-        cost_and_backup_paths_node_names_ll_in_ll = cost_and_backup_paths_node_names_ll_in_ll
-        */
-        unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
-        remove_unnumbered_edge(response.node_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
-        paint_js_edges_node_order_is_matter(response.node_dd_in_ll, {'width': 8, color: {color:'#0073e6', opacity: 0.7, hover: '#1a8cff'}, 'comment': 'backup_path_edge', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node}, paint_over_existed=true);
-        // 0073e6 - dark blue
+    data: {
+      'graph_id': graph_id, "src_node": spt_src_node, "dst_node": spt_dst_node,
+      "removed_links_from_spt_path_ll_in_ll_json": JSON.stringify(removed_links_from_spt_path_ll_in_ll),
+      "removed_edge_id_from_spt_path_ll_in_ll_json": JSON.stringify(removed_edge_id_from_spt_path_ll_in_ll),
+      "changed_edge_cost_dd_json": JSON.stringify(changed_edge_cost_dd)
+    },
+    success: function callbackFunc(response) {
+      /*
+      node_dd_in_ll = node_dd_in_ll,
+      unbackup_paths_nodes_name_as_ll_in_ll = unbackup_paths_nodes_name_as_ll_in_ll,
+      to_unflat_ecmp_edges_id_ll = to_unflat_ecmp_edges_id_ll,
+      cost_and_spt_path_node_names_ll_in_ll = cost_and_spt_path_node_names_ll_in_ll,
+      unused_cost_and_spt_path_ll_ll = unused_cost_and_spt_path_ll_ll,
+      used_cost_and_spt_path_ll_ll = used_cost_and_spt_path_ll_ll,
+      cost_and_backup_paths_node_names_ll_in_ll = cost_and_backup_paths_node_names_ll_in_ll
+      */
+      unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
+      remove_unnumbered_edge(response.node_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+      paint_js_edges_node_order_is_matter(response.node_dd_in_ll, { 'width': 8, color: { color: '#0073e6', opacity: 0.7, hover: '#1a8cff' }, 'comment': 'backup_path_edge', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node }, paint_over_existed = true);
+      // 0073e6 - dark blue
 
-        // we mark edge as deleted if edge is a part of SPT. If we under OSPF edge cost planning and select non SPT colored link in order to change ospf cost - we mark it as deleted. It's not a true
-        if (selected_edge_id) {
-          mark_edge_as_deleted(selected_edge_id);}
+      // we mark edge as deleted if edge is a part of SPT. If we under OSPF edge cost planning and select non SPT colored link in order to change ospf cost - we mark it as deleted. It's not a true
+      if (selected_edge_id) {
+        mark_edge_as_deleted(selected_edge_id);
+      }
 
-        // clear old description about SPT paths
-        add_spt_description(Array(), clear=true);
-        // clear old description
-        add_backup_path_description(Array(), clear=true);
-        add_spt_description(response.used_cost_and_spt_path_ll_ll, not_used=false, clear=false, backup_path_from_spt_path=true);
-        add_spt_description(response.unused_cost_and_spt_path_ll_ll, not_used=true, clear=false);
-        add_backup_path_description(response.cost_and_backup_paths_node_names_ll_in_ll);
-        }
+      // clear old description about SPT paths
+      add_spt_description(Array(), clear = true);
+      // clear old description
+      add_backup_path_description(Array(), clear = true);
+      add_spt_description(response.used_cost_and_spt_path_ll_ll, not_used = false, clear = false, backup_path_from_spt_path = true);
+      add_spt_description(response.unused_cost_and_spt_path_ll_ll, not_used = true, clear = false);
+      add_backup_path_description(response.cost_and_backup_paths_node_names_ll_in_ll);
+    }
   })
 }
 function mark_edge_as_deleted(selected_edge_id) {
-    /*
-    selected_edge_attr:
-    arrows: {from: true, to: false}
-    color: {color: "#1a8cff", opacity: 0.7, hover: "#1a8cff"}
-    comment: "spt_path_edge"
-    from: "123.10.10.10"
-    id: "123.10.10.10_to_123.30.30.30_38"
-    new_edge: false
-    parent_edge_id: "123.10.10.10_to_123.30.30.30"
-    spt_dst_node: "123.10.10.10"
-    spt_src_node: "123.123.31.31"
-    title: "<p>123.10.10.10-<b>1</b>->123.30.30.30</p><p>123.30.30.30-<b>10</b>->123.10.10.10</p>"
-    to: "123.30.30.30"
-    width: 8
-    */
-    var arr = [];
-    var deleted_edge_color_dd = {'width': 3, color: {color: '#ff0000', opacity: 0.7, highlight:'#ff0000', hover: '#ff0000'}, 'dashes': true, 'comment': 'deleted_spt_path_edge'};
-    // ff0000 - red
-    var edge_attr_from_graph = edges.get(selected_edge_id);
-    if (edge_attr_from_graph) {
-      Object.assign(edge_attr_from_graph, deleted_edge_color_dd);
-      edge_attr_from_graph.parent_edge_id = selected_edge_id;
-      arr.push(edge_attr_from_graph);
+  /*
+  selected_edge_attr:
+  arrows: {from: true, to: false}
+  color: {color: "#1a8cff", opacity: 0.7, hover: "#1a8cff"}
+  comment: "spt_path_edge"
+  from: "123.10.10.10"
+  id: "123.10.10.10_to_123.30.30.30_38"
+  new_edge: false
+  parent_edge_id: "123.10.10.10_to_123.30.30.30"
+  spt_dst_node: "123.10.10.10"
+  spt_src_node: "123.123.31.31"
+  title: "<p>123.10.10.10-<b>1</b>->123.30.30.30</p><p>123.30.30.30-<b>10</b>->123.10.10.10</p>"
+  to: "123.30.30.30"
+  width: 8
+  */
+  var arr = [];
+  var deleted_edge_color_dd = { 'width': 3, color: { color: '#ff0000', opacity: 0.7, highlight: '#ff0000', hover: '#ff0000' }, 'dashes': true, 'comment': 'deleted_spt_path_edge' };
+  // ff0000 - red
+  var edge_attr_from_graph = edges.get(selected_edge_id);
+  if (edge_attr_from_graph) {
+    Object.assign(edge_attr_from_graph, deleted_edge_color_dd);
+    edge_attr_from_graph.parent_edge_id = selected_edge_id;
+    arr.push(edge_attr_from_graph);
     data.edges.update(arr);
-    }
   }
+}
 
 function mark_edges_id_as_deleted(edge_id_ll) {
-    /*
-    edge_id_ll = ["123.14.14.14_to_123.123.111.111", "123.14.14.14_to_123.123.110.110"]
-    */
-    var arr = [];
-    var deleted_edge_color_dd = {'width': 3, color: {color: '#ff0000', opacity: 0.7, highlight:'#ff0000', hover: '#ff0000'}, 'dashes': true, 'comment': 'deleted_edge'};
-    // ff0000 - red
+  /*
+  edge_id_ll = ["123.14.14.14_to_123.123.111.111", "123.14.14.14_to_123.123.110.110"]
+  */
+  var arr = [];
+  var deleted_edge_color_dd = { 'width': 3, color: { color: '#ff0000', opacity: 0.7, highlight: '#ff0000', hover: '#ff0000' }, 'dashes': true, 'comment': 'deleted_edge' };
+  // ff0000 - red
 
-    for (var n in edge_id_ll) {
-      var edge_id = edge_id_ll[n];
-      // console.log('we are going to remove', edge_id);
-      var edge_attr_from_graph = edges.get(edge_id);
-      if (edge_attr_from_graph) {
-        edge_attr_from_graph.parent_edge_id = edge_attr_from_graph.id;
-        // console.log('Yes, we remove it', edge_attr_from_graph);
-        Object.assign(edge_attr_from_graph, deleted_edge_color_dd);
-        arr.push(edge_attr_from_graph);
-      }
- 
-    data.edges.update(arr);
+  for (var n in edge_id_ll) {
+    var edge_id = edge_id_ll[n];
+    // console.log('we are going to remove', edge_id);
+    var edge_attr_from_graph = edges.get(edge_id);
+    if (edge_attr_from_graph) {
+      edge_attr_from_graph.parent_edge_id = edge_attr_from_graph.id;
+      // console.log('Yes, we remove it', edge_attr_from_graph);
+      Object.assign(edge_attr_from_graph, deleted_edge_color_dd);
+      arr.push(edge_attr_from_graph);
     }
+
+    data.edges.update(arr);
   }
+}
 
 function accept_node_for_spt_return_spt() {
-    let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+  let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
 
-    /*
-    If we accept a node for SPT there are several options:
-    If just only `Print Minimum Shortest Tree (MST) for the node` is enabled - we change the behaviour from right clicked menu:
-      if you choose get SPT from node - we print all SPT paths from this node
-      the same logic with TO this node
+  /*
+  If we accept a node for SPT there are several options:
+  If just only `Print Minimum Shortest Tree (MST) for the node` is enabled - we change the behaviour from right clicked menu:
+    if you choose get SPT from node - we print all SPT paths from this node
+    the same logic with TO this node
 
-      if `Print Minimum Shortest Tree (MST) for the node` and IN or From radio button is choosed - we will print MST if just we hover over node
-    */
-    if ((spt_src_node && !spt_dst_node) && (document.getElementById("do_print_MST").checked === true)) {
-      mst_node_id = spt_src_node;
-      accept_node_for_mst_return_mst(direction = 'OUT');
-      spt_src_node = false;
-      mst_node_id = false;
-      return
-    }
-    if ((!spt_src_node && spt_dst_node) && (document.getElementById("do_print_MST").checked === true)) {
-      mst_node_id = spt_dst_node;
-      accept_node_for_mst_return_mst(direction = 'IN');
-      spt_dst_node = false;
-      mst_node_id = false;
-      return
-    }
-    if ((spt_src_node && spt_dst_node) && (spt_src_node != spt_dst_node) && (pressed_button == "GeneralView")) {
-      $.ajax({
-          url: "/get_spt_path",
-	        type: "post",
-	        data: {'graph_id': graph_id, "src_node": spt_src_node, "dst_node": spt_dst_node, "changed_edge_cost_dd_json": JSON.stringify(changed_edge_cost_dd)},
-            success:  function callbackFunc(response){
-            
-            // if we changed some edges - it's better to clear graph from network reaction arrows and then paint SPT paths
-            if (changed_edge_cost_dd) {
-              ClearPaintedGraph();
-            }
-            unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
-
-            remove_unnumbered_edge(response.node_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
-            //paint_js_edges_node_order_is_matter(response.node_dd_in_ll, {'width': 8, color: {color:'#1a8cff', opacity: 0.7, hover: '#1a8cff'}, 'comment': 'updown_traffic_node', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node});
-            //change comment
-
-            paint_js_edges_node_order_is_matter(response.node_dd_in_ll, {'width': 8, color: {color:'#1a8cff', opacity: 0.7, hover: '#1a8cff'}, 'comment': 'spt_path_edge', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node});
-            // 3399ff - blue
-            //change comment
-            //paint_js_edges_node_order_is_matter(response.unbackup_paths_nodes_name_as_ll_in_ll, {'width': 4, color: {color: '#ff0000', opacity: 0.7, hover: '#ff0000'}, 'comment': 'updown_traffic_node', title: 'unbackuped edge'}, paint_over_existed=true, rewrite_color=true);
-            paint_js_edges_node_order_is_matter(response.unbackup_paths_nodes_name_as_ll_in_ll, {'width': 4, color: {color: '#ff0000', opacity: 0.7, hover: '#ff0000'}, 'comment': 'spt_path_edge', title: 'unbackuped edge'}, paint_over_existed=false, rewrite_color=true);
-            // ff0000 - red
-
-            spt_src_node = false;
-            spt_dst_node = false;
-
-            // add notion that you can press colored link
-            add_spt_warning_description();
-            add_spt_description(response.cost_and_spt_path_node_names_ll_in_ll);
-            // we focus on src node and want to fit the network with normal size
-            network.fit();
-          }
-      });
-    }
-    if ((spt_src_node && spt_dst_node) && (spt_src_node != spt_dst_node) && (pressed_button == "NetworkReactionOnFailure")) {
-      $.ajax(alert("Please select General View for building SPT"))
-    }
+    if `Print Minimum Shortest Tree (MST) for the node` and IN or From radio button is choosed - we will print MST if just we hover over node
+  */
+  if ((spt_src_node && !spt_dst_node) && (document.getElementById("do_print_MST").checked === true)) {
+    mst_node_id = spt_src_node;
+    accept_node_for_mst_return_mst(direction = 'OUT');
+    spt_src_node = false;
+    mst_node_id = false;
+    return
   }
+  if ((!spt_src_node && spt_dst_node) && (document.getElementById("do_print_MST").checked === true)) {
+    mst_node_id = spt_dst_node;
+    accept_node_for_mst_return_mst(direction = 'IN');
+    spt_dst_node = false;
+    mst_node_id = false;
+    return
+  }
+  if ((spt_src_node && spt_dst_node) && (spt_src_node != spt_dst_node) && (pressed_button == "GeneralView")) {
+    $.ajax({
+      url: "/get_spt_path",
+      type: "post",
+      data: { 'graph_id': graph_id, "src_node": spt_src_node, "dst_node": spt_dst_node, "changed_edge_cost_dd_json": JSON.stringify(changed_edge_cost_dd) },
+      success: function callbackFunc(response) {
+
+        // if we changed some edges - it's better to clear graph from network reaction arrows and then paint SPT paths
+        if (changed_edge_cost_dd) {
+          ClearPaintedGraph();
+        }
+        unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
+
+        remove_unnumbered_edge(response.node_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+        //paint_js_edges_node_order_is_matter(response.node_dd_in_ll, {'width': 8, color: {color:'#1a8cff', opacity: 0.7, hover: '#1a8cff'}, 'comment': 'updown_traffic_node', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node});
+        //change comment
+
+        paint_js_edges_node_order_is_matter(response.node_dd_in_ll, { 'width': 8, color: { color: '#1a8cff', opacity: 0.7, hover: '#1a8cff' }, 'comment': 'spt_path_edge', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node });
+        // 3399ff - blue
+        //change comment
+        //paint_js_edges_node_order_is_matter(response.unbackup_paths_nodes_name_as_ll_in_ll, {'width': 4, color: {color: '#ff0000', opacity: 0.7, hover: '#ff0000'}, 'comment': 'updown_traffic_node', title: 'unbackuped edge'}, paint_over_existed=true, rewrite_color=true);
+        paint_js_edges_node_order_is_matter(response.unbackup_paths_nodes_name_as_ll_in_ll, { 'width': 4, color: { color: '#ff0000', opacity: 0.7, hover: '#ff0000' }, 'comment': 'spt_path_edge', title: 'unbackuped edge' }, paint_over_existed = false, rewrite_color = true);
+        // ff0000 - red
+
+        spt_src_node = false;
+        spt_dst_node = false;
+
+        // add notion that you can press colored link
+        add_spt_warning_description();
+        add_spt_description(response.cost_and_spt_path_node_names_ll_in_ll);
+        // we focus on src node and want to fit the network with normal size
+        network.fit();
+      }
+    });
+  }
+  if ((spt_src_node && spt_dst_node) && (spt_src_node != spt_dst_node) && (pressed_button == "NetworkReactionOnFailure")) {
+    $.ajax(alert("Please select General View for building SPT"))
+  }
+}
 
 
 function accept_node_for_mst_return_mst(direction = 'IN') {
-    let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+  let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
 
-    if ((mst_node_id) && (pressed_button == "GeneralView") && (document.getElementById("do_print_MST").checked === true)) {
+  if ((mst_node_id) && (pressed_button == "GeneralView") && (document.getElementById("do_print_MST").checked === true)) {
 
-      // make fog only number of edges is high doesn't work. it's annoying to make topology as in the fog and clear
-      // document.getElementById('mynetwork').style.opacity = 0.2; // make topology in the fog
+    // make fog only number of edges is high doesn't work. it's annoying to make topology as in the fog and clear
+    // document.getElementById('mynetwork').style.opacity = 0.2; // make topology in the fog
 
-      $.ajax({
-          url: "/get_mst_path",
-	        type: "post",
-	        data: {'graph_id': graph_id, "mst_node_id": mst_node_id, "all_paths_direction": direction},
-            success:  function callbackFunc(response){
-            
-            unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
+    $.ajax({
+      url: "/get_mst_path",
+      type: "post",
+      data: { 'graph_id': graph_id, "mst_node_id": mst_node_id, "all_paths_direction": direction },
+      success: function callbackFunc(response) {
 
-            remove_unnumbered_edge(response.node_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
-            //paint_js_edges_node_order_is_matter(response.node_dd_in_ll, {'width': 8, color: {color:'#1a8cff', opacity: 0.7, hover: '#1a8cff'}, 'comment': 'updown_traffic_node', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node});
-            //change comment
-            paint_js_edges_node_order_is_matter(response.node_dd_in_ll, {'width': 8, color: {color:'#1a8cff', opacity: 0.7, hover: '#1a8cff'}, 'comment': 'spt_path_edge', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node});
-            // 3399ff - blue
-            //change comment
+        unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
 
-            mst_node_id = false;
-          }
-      });
-    }
-    if ((mst_node_id) && (pressed_button == "NetworkReactionOnFailure")) {
-      $.ajax(alert("Please select General View for building MST"))
-    }
+        remove_unnumbered_edge(response.node_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+        //paint_js_edges_node_order_is_matter(response.node_dd_in_ll, {'width': 8, color: {color:'#1a8cff', opacity: 0.7, hover: '#1a8cff'}, 'comment': 'updown_traffic_node', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node});
+        //change comment
+        paint_js_edges_node_order_is_matter(response.node_dd_in_ll, { 'width': 8, color: { color: '#1a8cff', opacity: 0.7, hover: '#1a8cff' }, 'comment': 'spt_path_edge', 'spt_src_node': spt_src_node, 'spt_dst_node': spt_dst_node });
+        // 3399ff - blue
+        //change comment
+
+        mst_node_id = false;
+      }
+    });
+  }
+  if ((mst_node_id) && (pressed_button == "NetworkReactionOnFailure")) {
+    $.ajax(alert("Please select General View for building MST"))
+  }
 }
 
 function accept_node_for_MstInOutDiff_return_diff() {
   let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
 
   if ((mst_node_id) && (pressed_button == "GeneralView") && (document.getElementById("do_print_MST").checked === true)) {
-    
+
     // make fog only number of edges is high doesn't work. it's annoying to make topology as in the fog and clear
     // document.getElementById('mynetwork').style.opacity = 0.2; // make topology in the fog
 
     $.ajax({
-        url: "/get_unsym_paths",
-        type: "post",
-        data: {'graph_id': graph_id, "mst_node_name": mst_node_id},
-          success:  function callbackFunc(response){
+      url: "/get_unsym_paths",
+      type: "post",
+      data: { 'graph_id': graph_id, "mst_node_name": mst_node_id },
+      success: function callbackFunc(response) {
 
-          //unflat_ecmp(response.to_unflat_ecmp_edges_id_ll); we add new edge and do not mark ecmp's edge
-          if (response.node_dd_in_ll.length + response.node_dd_out_ll.length == 0) {
-            $.ajax(alert("Graph doesn't have unsymmetric paths"))
-          }
-          remove_unnumbered_edge(response.node_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
-          remove_unnumbered_edge(response.node_dd_out_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
-          //change comment
-          paint_js_edges_node_order_is_matter(response.node_dd_in_ll);
-          paint_js_edges_node_order_is_matter(response.node_dd_out_ll);
-
-          // 3399ff - blue
-          //change comment
-
-          mst_node_id = false;
+        //unflat_ecmp(response.to_unflat_ecmp_edges_id_ll); we add new edge and do not mark ecmp's edge
+        if (response.node_dd_in_ll.length + response.node_dd_out_ll.length == 0) {
+          $.ajax(alert("Graph doesn't have unsymmetric paths"))
         }
+        remove_unnumbered_edge(response.node_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+        remove_unnumbered_edge(response.node_dd_out_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+        //change comment
+        paint_js_edges_node_order_is_matter(response.node_dd_in_ll);
+        paint_js_edges_node_order_is_matter(response.node_dd_out_ll);
+
+        // 3399ff - blue
+        //change comment
+
+        mst_node_id = false;
+      }
     });
   }
   if ((mst_node_id) && (pressed_button == "NetworkReactionOnFailure")) {
@@ -1011,56 +987,51 @@ function accept_node_for_MstInOutDiff_return_diff() {
 }
 
 function accept_node_for_node_failure_prediction() {
-    //var pressed_button = document.querySelectorAll("input[name=options]:checked")[0].id; //Genereal View, Network reaction or Diff Graph
-    let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+  //var pressed_button = document.querySelectorAll("input[name=options]:checked")[0].id; //Genereal View, Network reaction or Diff Graph
+  let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
 
-    
-    if (pressed_button == "NetworkReactionOnFailure") {
-      $.ajax({
-          url: "/get_node_id_for_network_reaction",
-	        type: "post",
-	        data: {'graph_id': graph_id, "node_shutdown_choosed_node_name": node_shutdown_choosed_node_name},
-            success:  function callbackFunc(response){
-            
-            unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
 
-            remove_unnumbered_edge(response.down_all_edge_attr_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+  if (pressed_button == "NetworkReactionOnFailure") {
+    $.ajax({
+      url: "/get_node_id_for_network_reaction",
+      type: "post",
+      data: { 'graph_id': graph_id, "node_shutdown_choosed_node_name": node_shutdown_choosed_node_name },
+      success: function callbackFunc(response) {
 
-            remove_unnumbered_edge(response.up_all_edge_attr_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
-            if (!response.down_all_edge_attr_dd_in_ll.length && !response.up_all_edge_attr_dd_in_ll.length && !response.down_traffic_nodes_name_ll.length && !response.up_traffic_nodes_name_ll.length)
-              {
-                show('node_failure_prediction_description'); // change display settings in order to see text
-                // as tests are showed that no difference between betweenneess if we remove edge Node from the Graph
-                document.getElementById('node_failure_prediction_description').innerHTML = 'It seems that you shutdown border node';
-              }
-            else 
-              {
-                paint_network_reaction_results(response.down_all_edge_attr_dd_in_ll, response.up_all_edge_attr_dd_in_ll, response.down_traffic_nodes_name_ll, response.up_traffic_nodes_name_ll);
-              }
-            // request all edges, even after unflatting ECMP and mark them deleted
-            var connected_edges = network.getConnectedEdges(node_shutdown_choosed_node_name);
-            mark_edges_id_as_deleted(connected_edges);
-            // for painting deleted edges
-            var connected_js_edges_id = Array();
-            if (connected_edges)
-            {
-              for (var n in connected_edges) 
-                {
-                  connected_js_edges_id.push(connected_edges[n]);
-                }
-            }
-            removed_js_edge_ids_ll.push(...connected_js_edges_id); // for painting deleted edges
-            if (response.edges_id_w_min_cost_ll)
-            {
-              removed_edge_ids_ll.push(...response.edges_id_w_min_cost_ll); // for backend calculation
-            }
+        unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
 
-            node_shutdown_choosed_node_name = false;
+        remove_unnumbered_edge(response.down_all_edge_attr_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
 
-            // add description about unbackuped/ backuped networks
-
+        remove_unnumbered_edge(response.up_all_edge_attr_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+        if (!response.down_all_edge_attr_dd_in_ll.length && !response.up_all_edge_attr_dd_in_ll.length && !response.down_traffic_nodes_name_ll.length && !response.up_traffic_nodes_name_ll.length) {
+          show('node_failure_prediction_description'); // change display settings in order to see text
+          // as tests are showed that no difference between betweenneess if we remove edge Node from the Graph
+          document.getElementById('node_failure_prediction_description').innerHTML = 'It seems that you shutdown border node';
+        }
+        else {
+          paint_network_reaction_results(response.down_all_edge_attr_dd_in_ll, response.up_all_edge_attr_dd_in_ll, response.down_traffic_nodes_name_ll, response.up_traffic_nodes_name_ll);
+        }
+        // request all edges, even after unflatting ECMP and mark them deleted
+        var connected_edges = network.getConnectedEdges(node_shutdown_choosed_node_name);
+        mark_edges_id_as_deleted(connected_edges);
+        // for painting deleted edges
+        var connected_js_edges_id = Array();
+        if (connected_edges) {
+          for (var n in connected_edges) {
+            connected_js_edges_id.push(connected_edges[n]);
           }
-      })
+        }
+        removed_js_edge_ids_ll.push(...connected_js_edges_id); // for painting deleted edges
+        if (response.edges_id_w_min_cost_ll) {
+          removed_edge_ids_ll.push(...response.edges_id_w_min_cost_ll); // for backend calculation
+        }
+
+        node_shutdown_choosed_node_name = false;
+
+        // add description about unbackuped/ backuped networks
+
+      }
+    })
   }
 }
 
@@ -1070,13 +1041,12 @@ function get_central_nodes() {
   $.ajax({
     url: "/get_central_nodes",
     type: "post",
-    data: {'graph_time': graph_time},
-    success:  function callbackFunc(response)
-        {
-          central_node_names_ll = response._1_central_node_names_ll;
-          color_nodes(response._1_central_node_names_ll, {size: 30, color: '#ff0000', 'comment': '_1_central_node'}); // ff0000 - red
-        }
-    })
+    data: { 'graph_time': graph_time },
+    success: function callbackFunc(response) {
+      central_node_names_ll = response._1_central_node_names_ll;
+      color_nodes(response._1_central_node_names_ll, { size: 30, color: '#ff0000', 'comment': '_1_central_node' }); // ff0000 - red
+    }
+  })
 }
 
 
@@ -1087,27 +1057,27 @@ function get_the_most_loaded_graph_elements() {
   let the_most_loaded_nodes_options = document.getElementById("most_loaded_nodes_slct_id");
   let the_most_loaded_nodes_number = the_most_loaded_nodes_options.options[the_most_loaded_nodes_options.selectedIndex].value;
 
-  let colloringMap = {1: {size: 30, color: '#ff0000', 'comment': 'most_loaded_node'},
-                      2: {size: 30, color: '#ff7700', 'comment': 'most_loaded_node'}, 
-                      3: {size: 30, color: '#ffa200', 'comment': 'most_loaded_node'}, 
-                      4: {size: 30, color: '#ffd000', 'comment': 'most_loaded_node'}, 
-                      5: {size: 30, color: '#c8ff00', 'comment': 'most_loaded_node'}, 
+  let colloringMap = {
+    1: { size: 30, color: '#ff0000', 'comment': 'most_loaded_node' },
+    2: { size: 30, color: '#ff7700', 'comment': 'most_loaded_node' },
+    3: { size: 30, color: '#ffa200', 'comment': 'most_loaded_node' },
+    4: { size: 30, color: '#ffd000', 'comment': 'most_loaded_node' },
+    5: { size: 30, color: '#c8ff00', 'comment': 'most_loaded_node' },
   }
   // #ff7700 red-orange
   // #ffa200 light orange
   // #ffd000 yellow
   // #c8ff00 light green
-    $.ajax({
-        url: "/get_the_most_loaded_graph_elements",
-        type: "post",
-        data: {"graph_time": graph_time, "the_most_loaded_nodes_number": the_most_loaded_nodes_number, "node_shutdown_choosed_node_name": node_shutdown_choosed_node_name},
-        success:  function callbackFunc(response)
-          {
-            for (const [top_i, node_names_ll] of Object.entries(response.topNumToGraphElementIdsllMap)) {
-              color_nodes(node_names_ll, colloringMap[top_i]);
-            }
-          }
-    })
+  $.ajax({
+    url: "/get_the_most_loaded_graph_elements",
+    type: "post",
+    data: { "graph_time": graph_time, "the_most_loaded_nodes_number": the_most_loaded_nodes_number, "node_shutdown_choosed_node_name": node_shutdown_choosed_node_name },
+    success: function callbackFunc(response) {
+      for (const [top_i, node_names_ll] of Object.entries(response.topNumToGraphElementIdsllMap)) {
+        color_nodes(node_names_ll, colloringMap[top_i]);
+      }
+    }
+  })
 }
 
 function get_the_most_loaded_edges() {
@@ -1117,27 +1087,27 @@ function get_the_most_loaded_edges() {
   let the_most_loaded_edges_options = document.getElementById("most_loaded_edges_slct_id");
   let the_most_loaded_edges_number = the_most_loaded_edges_options.options[the_most_loaded_edges_options.selectedIndex].value;
 
-  let colloringMap = {1: {width: 10, color: {color: '#ff0000'}, 'comment': 'most_loaded_edge'},
-                      2: {width: 8, color: {color: '#ff7700'}, 'comment': 'most_loaded_edge'}, 
-                      3: {width: 6, color: {color: '#ffa200'}, 'comment': 'most_loaded_edge'}, 
-                      4: {width: 4, color: {color: '#ffd000'}, 'comment': 'most_loaded_edge'}, 
-                      5: {width: 2, color: {color: '#c8ff00'}, 'comment': 'most_loaded_edge'}, 
+  let colloringMap = {
+    1: { width: 10, color: { color: '#ff0000' }, 'comment': 'most_loaded_edge' },
+    2: { width: 8, color: { color: '#ff7700' }, 'comment': 'most_loaded_edge' },
+    3: { width: 6, color: { color: '#ffa200' }, 'comment': 'most_loaded_edge' },
+    4: { width: 4, color: { color: '#ffd000' }, 'comment': 'most_loaded_edge' },
+    5: { width: 2, color: { color: '#c8ff00' }, 'comment': 'most_loaded_edge' },
   }
   // #ff7700 red-orange
   // #ffa200 light orange
   // #ffd000 yellow
   // #c8ff00 light green
-    $.ajax({
-        url: "/get_the_most_loaded_graph_elements",
-        type: "post",
-        data: {"graph_time": graph_time, "the_most_loaded_edges_number": the_most_loaded_edges_number},
-        success:  function callbackFunc(response)
-          {
-            for (const [top_i, edge_attr_dd_in_ll] of Object.entries(response.topNumToGraphElementIdsllMap)) {
-              paint_js_edges_node_order_is_matter(edge_attr_dd_in_ll, colloringMap[top_i], paint_over_existed=true, rewrite_color=true) // logic of rewrite color is reverted!:()
-            }
-          }
-    })
+  $.ajax({
+    url: "/get_the_most_loaded_graph_elements",
+    type: "post",
+    data: { "graph_time": graph_time, "the_most_loaded_edges_number": the_most_loaded_edges_number },
+    success: function callbackFunc(response) {
+      for (const [top_i, edge_attr_dd_in_ll] of Object.entries(response.topNumToGraphElementIdsllMap)) {
+        paint_js_edges_node_order_is_matter(edge_attr_dd_in_ll, colloringMap[top_i], paint_over_existed = true, rewrite_color = true) // logic of rewrite color is reverted!:()
+      }
+    }
+  })
 }
 
 function get_single_point_of_failure_node_ll() {
@@ -1146,18 +1116,17 @@ function get_single_point_of_failure_node_ll() {
   $.ajax({
     url: "/get_single_point_of_failure_node_ll",
     type: "post",
-    data: {'graph_time': graph_time},
-    success:  function callbackFunc(response)
-        {
-          single_point_of_failure_node_name_ll = response.single_point_of_failure_node_name_ll;
-          if (single_point_of_failure_node_name_ll.length > 0) {
-            color_nodes(response.single_point_of_failure_node_name_ll, {size: 30, color: '#ff0000'}); // ff0000 - red
-          } else {
-            show_instant_notification("Network is fault tolerant", delay=12500);
-          }
-          color_nodes(response.fault_tolerant_node_name_ll, {size: 10, color: '#00ea27'}); // #00ea27 - green
-        }
-    })
+    data: { 'graph_time': graph_time },
+    success: function callbackFunc(response) {
+      single_point_of_failure_node_name_ll = response.single_point_of_failure_node_name_ll;
+      if (single_point_of_failure_node_name_ll.length > 0) {
+        color_nodes(response.single_point_of_failure_node_name_ll, { size: 30, color: '#ff0000' }); // ff0000 - red
+      } else {
+        show_instant_notification("Network is fault tolerant", delay = 12500);
+      }
+      color_nodes(response.fault_tolerant_node_name_ll, { size: 10, color: '#00ea27' }); // #00ea27 - green
+    }
+  })
 }
 
 function get_fault_tolerant_node_ll() {
@@ -1166,382 +1135,385 @@ function get_fault_tolerant_node_ll() {
   $.ajax({
     url: "/get_fault_tolerant_node_ll",
     type: "post",
-    data: {'graph_time': graph_time},
-    success:  function callbackFunc(response)
-        {
-          fault_tolerant_node_name_ll = response.fault_tolerant_node_name_ll;
-          if (fault_tolerant_node_name_ll.length > 0) {
-            color_nodes(response.fault_tolerant_node_name_ll, {size: 10, color: '#00ea27'}); // #00ea27 - green
-          } else {
-            show_instant_notification("Network is not fault tolerant", delay=12500);
-          }
-        }
-    })
+    data: { 'graph_time': graph_time },
+    success: function callbackFunc(response) {
+      fault_tolerant_node_name_ll = response.fault_tolerant_node_name_ll;
+      if (fault_tolerant_node_name_ll.length > 0) {
+        color_nodes(response.fault_tolerant_node_name_ll, { size: 10, color: '#00ea27' }); // #00ea27 - green
+      } else {
+        show_instant_notification("Network is not fault tolerant", delay = 12500);
+      }
+    }
+  })
 }
 
-function add_spt_warning_description(clear=false){
-    if (clear) {
-      document.getElementById('spt_path_warning').innerHTML = '';
-      hide('spt_path_warning');
+function add_spt_warning_description(clear = false) {
+  if (clear) {
+    document.getElementById('spt_path_warning').innerHTML = '';
+    hide('spt_path_warning');
+  }
+  else {
+    warning_message_str = document.getElementById('spt_path_warning').innerHTML;
+    // we add warning message only once, when string is empty
+    if (!warning_message_str) {
+      document.getElementById('spt_path_warning').innerHTML += '<ins>Press on colored link in order to simulate link outage</ins>. Note, there is a limit on graph size for ECMP calculation, check doc to increase it.'
+    }
+    show('spt_path_warning'); // change display settings in order to see text
+  }
+}
+function hide(id) {
+  /* set style display option in order to hide empty rows*/
+  elem_obj = document.getElementById(id)
+  if (elem_obj !== null) {
+    elem_obj.style.display = "none";
+  }
+}
+function show(id) {
+  /* set style display option in order to hide empty rows*/
+  elem_obj = document.getElementById(id)
+  if (elem_obj !== null) {
+    elem_obj.style.display = "";
+  }
+}
+function mark_checked(id) {
+  /* set checked == true for input type checkbox*/
+  elem_obj = document.getElementById(id)
+  if (elem_obj !== null) {
+    elem_obj.checked = true;
+  }
+}
+function add_spt_description(cost_and_spt_ll_ll, not_used = false, clear = true, backup_path_from_spt_path = false) {
+  /*
+  cost_and_spt_ll_ll = [[40, [1,2,3]], [40, [1,4,3]]]
+  */
+  if (clear) {
+    elem_obj = document.getElementById('spt_path_description')
+    if (elem_obj !== null) {
+      elem_obj.innerHTML = "";
+      hide('spt_path_description');
+    }
+  }
+  show('spt_path_description'); // change display settings in order to see text
+  for (var n in cost_and_spt_ll_ll) {
+    var cost_and_path_ll = cost_and_spt_ll_ll[n];
+    if (!not_used) {
+      if (!backup_path_from_spt_path) {
+        var _color = "#3399ff";
+      } else {
+        var _color = darken_new_color;
+      }
+      document.getElementById('spt_path_description').innerHTML += `<p style="color:${_color};">The shortest path cost: <b>` + JSON.stringify(cost_and_path_ll[0], null, 4) + '</b> path: ' + JSON.stringify(cost_and_path_ll[1].toString(), null, 4) + '</p>';
     }
     else {
-      warning_message_str = document.getElementById('spt_path_warning').innerHTML;
-      // we add warning message only once, when string is empty
-      if (!warning_message_str) {
-        document.getElementById('spt_path_warning').innerHTML += '<ins>Press on colored link in order to simulate link outage</ins>. Note, there is a limit on graph size for ECMP calculation, check doc to increase it.'}
-        show('spt_path_warning'); // change display settings in order to see text
+      document.getElementById('spt_path_description').innerHTML += '<p><del>The shortest path cost: <b>' + JSON.stringify(cost_and_path_ll[0], null, 4) + '</b> path: ' + JSON.stringify(cost_and_path_ll[1].toString(), null, 4) + '</del></p>';
     }
   }
-  function hide(id){
-    /* set style display option in order to hide empty rows*/
-    elem_obj = document.getElementById(id)
-    if (elem_obj !== null) {
-      elem_obj.style.display = "none";}
-  }
-  function show(id){
-    /* set style display option in order to hide empty rows*/
-    elem_obj = document.getElementById(id)
-    if (elem_obj !== null) {
-      elem_obj.style.display = "";}
-  }
-  function mark_checked(id){
-    /* set checked == true for input type checkbox*/
-    elem_obj = document.getElementById(id)
-    if (elem_obj !== null) {
-      elem_obj.checked = true;}
-  }
-  function add_spt_description(cost_and_spt_ll_ll, not_used=false, clear=true, backup_path_from_spt_path=false){
-    /*
-    cost_and_spt_ll_ll = [[40, [1,2,3]], [40, [1,4,3]]]
-    */
-    if (clear) {
-      elem_obj = document.getElementById('spt_path_description')
-      if (elem_obj !== null) {
-        elem_obj.innerHTML = "";
-        hide('spt_path_description');
-      }
-    }
-    show('spt_path_description'); // change display settings in order to see text
-    for (var n in cost_and_spt_ll_ll) {
-      var cost_and_path_ll = cost_and_spt_ll_ll[n];
-      if (!not_used) 
-        {
-          if (!backup_path_from_spt_path) {
-            var _color = "#3399ff";
-          } else {
-            var _color = darken_new_color;
-          }
-          document.getElementById('spt_path_description').innerHTML += `<p style="color:${_color};">The shortest path cost: <b>` + JSON.stringify(cost_and_path_ll[0], null, 4) + '</b> path: '+JSON.stringify(cost_and_path_ll[1].toString(), null, 4) + '</p>';
-        }
-      else {
-        document.getElementById('spt_path_description').innerHTML += '<p><del>The shortest path cost: <b>' + JSON.stringify(cost_and_path_ll[0], null, 4) + '</b> path: '+JSON.stringify(cost_and_path_ll[1].toString(), null, 4) + '</del></p>';
-      }
-    }
-  }
+}
 
-function add_backup_path_description(cost_and_backup_path_ll_ll, not_used=false, clear=true){
-    /*
-    cost_and_backup_path_ll_ll = [[40, [1,2,3]], [40, [1,4,3]]]
-    */
-    elem_obj = document.getElementById('backup_path_description');
-    if (clear) {
-      if (elem_obj !== null) {
-        elem_obj.innerHTML = '';
-        hide('backup_path_description');
-      }
-    }
+function add_backup_path_description(cost_and_backup_path_ll_ll, not_used = false, clear = true) {
+  /*
+  cost_and_backup_path_ll_ll = [[40, [1,2,3]], [40, [1,4,3]]]
+  */
+  elem_obj = document.getElementById('backup_path_description');
+  if (clear) {
     if (elem_obj !== null) {
-      show('backup_path_description'); // change display settings in order to see text
-    }
-    for (var n in cost_and_backup_path_ll_ll) {
-      var cost_and_path_ll = cost_and_backup_path_ll_ll[n];
-      if (!not_used) 
-        {
-          document.getElementById('backup_path_description').innerHTML += `<p style="color:${darken_new_color};">Backup path cost: <b>` + JSON.stringify(cost_and_path_ll[0], null, 4) + '</b> path: '+JSON.stringify(cost_and_path_ll[1].toString(), null, 4) + '</p>';
-        }
-      else {
-        document.getElementById('backup_path_description').innerHTML += '<p><del>Backup path cost: <b>' + JSON.stringify(cost_and_path_ll[0], null, 4) + '</b> path: '+JSON.stringify(cost_and_path_ll[1].toString(), null, 4) + '</del></p>';
-      }
+      elem_obj.innerHTML = '';
+      hide('backup_path_description');
     }
   }
+  if (elem_obj !== null) {
+    show('backup_path_description'); // change display settings in order to see text
+  }
+  for (var n in cost_and_backup_path_ll_ll) {
+    var cost_and_path_ll = cost_and_backup_path_ll_ll[n];
+    if (!not_used) {
+      document.getElementById('backup_path_description').innerHTML += `<p style="color:${darken_new_color};">Backup path cost: <b>` + JSON.stringify(cost_and_path_ll[0], null, 4) + '</b> path: ' + JSON.stringify(cost_and_path_ll[1].toString(), null, 4) + '</p>';
+    }
+    else {
+      document.getElementById('backup_path_description').innerHTML += '<p><del>Backup path cost: <b>' + JSON.stringify(cost_and_path_ll[0], null, 4) + '</b> path: ' + JSON.stringify(cost_and_path_ll[1].toString(), null, 4) + '</del></p>';
+    }
+  }
+}
 
 function LightenColor(color, percent) {
-    var num = parseInt(color.replace("#",""),16),
+  var num = parseInt(color.replace("#", ""), 16),
     amt = Math.round(2.55 * percent),
     R = (num >> 16) + amt,
     B = (num >> 8 & 0x00FF) + amt,
     G = (num & 0x0000FF) + amt;
-    return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (B<255?B<1?0:B:255)*0x100 + (G<255?G<1?0:G:255)).toString(16).slice(1);
+  return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (B < 255 ? B < 1 ? 0 : B : 255) * 0x100 + (G < 255 ? G < 1 ? 0 : G : 255)).toString(16).slice(1);
 };
 
 
-function paint_js_edges_node_order_is_matter(edge_attr_dd_in_ll, config, paint_over_existed = false, rewrite_color=false){
-    /*
-    edge_attr_dd_in_ll = [{'from': '10.2.2.10', 'to': '10.50.50.8', 'id': '', 'uni_bi_directed': 'bidirected', 'edge_spt_stat': 'bw old:12.0 new:24.0, rate:0.50'}, {}]
-    */
-    var arr = [];
-    var new_edges_arr = [];
-    for (var n in edge_attr_dd_in_ll) {
-      var edge_attr = edge_attr_dd_in_ll[n];
-      var smooth_attr = {enabled:true, type: 'curvedCW', roundness: 0.2};
-      //console.log('before color changing edge, config', edge_attr, config);
-      Object.assign(edge_attr, config); //config has style of edge, edge_attr has attrubutes for building edge in the graph
+function paint_js_edges_node_order_is_matter(edge_attr_dd_in_ll, config, paint_over_existed = false, rewrite_color = false) {
+  /*
+  edge_attr_dd_in_ll = [{'from': '10.2.2.10', 'to': '10.50.50.8', 'id': '', 'uni_bi_directed': 'bidirected', 'edge_spt_stat': 'bw old:12.0 new:24.0, rate:0.50'}, {}]
+  */
+  var arr = [];
+  var new_edges_arr = [];
+  for (var n in edge_attr_dd_in_ll) {
+    var edge_attr = edge_attr_dd_in_ll[n];
+    var smooth_attr = { enabled: true, type: 'curvedCW', roundness: 0.2 };
+    //console.log('before color changing edge, config', edge_attr, config);
+    Object.assign(edge_attr, config); //config has style of edge, edge_attr has attrubutes for building edge in the graph
 
-      var edge_attr_from_graph = edges.get(edge_attr.id);
-      var parent_edge_attr_from_graph = edges.get(edge_attr.parent_edge_id);
+    var edge_attr_from_graph = edges.get(edge_attr.id);
+    var parent_edge_attr_from_graph = edges.get(edge_attr.parent_edge_id);
 
 
-      // in case when we delete unnumbered edges `1.1.1.1_to_1.1.1.2` and change it by `1.1.1.1_to_1.1.1.2_99` and set parent_edge_id to `1.1.1.1_to_1.1.1.2`
-      // if we find edges with parent_edge_id like new edge has parent_edge_id - so we should make curve 
-      // Case - down_edge_attr - grey, up_edge_attr - blue over one link
-      
-      let is_there_painted_edge = edges.get({
-        filter: function (item) {
-          return (item.parent_edge_id == edge_attr.parent_edge_id);
-        }
-      });
-      if (is_there_painted_edge.length > 0){
-        // when we delete unnumbered edges - we get null in edge_attr_from_graph
-        if (edge_attr_from_graph !== null) {
-          if (edge_attr_from_graph.id != edge_attr.id) {
-            edge_attr.new_edge = true; 
-          }
-        }
-        else {
-          edge_attr.new_edge = true; 
+    // in case when we delete unnumbered edges `1.1.1.1_to_1.1.1.2` and change it by `1.1.1.1_to_1.1.1.2_99` and set parent_edge_id to `1.1.1.1_to_1.1.1.2`
+    // if we find edges with parent_edge_id like new edge has parent_edge_id - so we should make curve 
+    // Case - down_edge_attr - grey, up_edge_attr - blue over one link
+
+    let is_there_painted_edge = edges.get({
+      filter: function (item) {
+        return (item.parent_edge_id == edge_attr.parent_edge_id);
+      }
+    });
+    if (is_there_painted_edge.length > 0) {
+      // when we delete unnumbered edges - we get null in edge_attr_from_graph
+      if (edge_attr_from_graph !== null) {
+        if (edge_attr_from_graph.id != edge_attr.id) {
+          edge_attr.new_edge = true;
         }
       }
-      if (parent_edge_attr_from_graph && typeof parent_edge_attr_from_graph.title !== 'undefined'){
-        // PARENT EDGE HAS ALREADY PAINTED
-        //console.log('found PARENT EDGE HAS ALREADY PAINTED');
-        smooth_attr.roundness += 0.1;
-        }
-      
-      //else {console.log('PARENT EDGE HAS NOT PAINTED')};
-      
-      // Title update If edge already has a title - we add new info to it. If not - assign
-      if (edge_attr_from_graph && typeof edge_attr_from_graph.title !== 'undefined') {
-        if (typeof edge_attr.title !== 'undefined') {
-          // existed edge and new config has a title
-          // console.log('Title update, existed, old title', edge_attr.title, edge_attr_from_graph.title);
-          edge_attr.title += edge_attr_from_graph.title}
-        }
-      //console.log('Title', edge_attr.title)
-
-      if (edge_attr_from_graph && edge_attr_from_graph.comment) {
-        // add new edge or not, paint new edge or existed edge
-        let old_color = edge_attr_from_graph.color.color;
-        if (!paint_over_existed)
-          {
-          edge_attr.new_edge = true; 
-          edge_attr.id += n.toString();
-          }
-        if (!rewrite_color)
-          {
-          darken_new_color = LightenColor(old_color, -30);
-          edge_attr.color.color = darken_new_color;
-          }
-        }
-      if (edge_attr.new_edge == true) {  
-        // we need to add new edge
-        edge_attr.smooth = smooth_attr;
-        new_edges_arr.push(edge_attr);
-        if (parent_edge_attr_from_graph) {
-          parent_edge_attr_from_graph.has_already_painted = true;
-          data.edges.update(parent_edge_attr_from_graph);}
-        }
       else {
-        //console.log('update this edge', edge_attr); 
-        arr.push(edge_attr);
-        }
+        edge_attr.new_edge = true;
+      }
     }
-    //console.log('arr, new_edges_arr', arr, new_edges_arr);
-    data.edges.add(new_edges_arr);
-    data.edges.update(arr);
+    if (parent_edge_attr_from_graph && typeof parent_edge_attr_from_graph.title !== 'undefined') {
+      // PARENT EDGE HAS ALREADY PAINTED
+      //console.log('found PARENT EDGE HAS ALREADY PAINTED');
+      smooth_attr.roundness += 0.1;
+    }
+
+    //else {console.log('PARENT EDGE HAS NOT PAINTED')};
+
+    // Title update If edge already has a title - we add new info to it. If not - assign
+    if (edge_attr_from_graph && typeof edge_attr_from_graph.title !== 'undefined') {
+      if (typeof edge_attr.title !== 'undefined') {
+        // existed edge and new config has a title
+        // console.log('Title update, existed, old title', edge_attr.title, edge_attr_from_graph.title);
+        edge_attr.title += edge_attr_from_graph.title
+      }
+    }
+    //console.log('Title', edge_attr.title)
+
+    if (edge_attr_from_graph && edge_attr_from_graph.comment) {
+      // add new edge or not, paint new edge or existed edge
+      let old_color = edge_attr_from_graph.color.color;
+      if (!paint_over_existed) {
+        edge_attr.new_edge = true;
+        edge_attr.id += n.toString();
+      }
+      if (!rewrite_color) {
+        darken_new_color = LightenColor(old_color, -30);
+        edge_attr.color.color = darken_new_color;
+      }
+    }
+    if (edge_attr.new_edge == true) {
+      // we need to add new edge
+      edge_attr.smooth = smooth_attr;
+      new_edges_arr.push(edge_attr);
+      if (parent_edge_attr_from_graph) {
+        parent_edge_attr_from_graph.has_already_painted = true;
+        data.edges.update(parent_edge_attr_from_graph);
+      }
+    }
+    else {
+      //console.log('update this edge', edge_attr); 
+      arr.push(edge_attr);
+    }
+  }
+  //console.log('arr, new_edges_arr', arr, new_edges_arr);
+  data.edges.add(new_edges_arr);
+  data.edges.update(arr);
 }
 
 function get_right_edge(node_ids_ll, edge_dataset, config) {
-    var arr = [];
-    var new_edges_arr = [];
-    for (var n in node_ids_ll) {
-      var has_already_painted_edge_str_order = false;
-      var has_already_painted_edge_back_order = false;
-      var has_already_painted_edge = false;
+  var arr = [];
+  var new_edges_arr = [];
+  for (var n in node_ids_ll) {
+    var has_already_painted_edge_str_order = false;
+    var has_already_painted_edge_back_order = false;
+    var has_already_painted_edge = false;
 
+    var edge_id = edge_dataset.get({
+      //stright order
+      filter: function (item) {
+        return (item.from == node_ids_ll[n][0] && item.to == node_ids_ll[n][1]);
+      }
+    });
+    /*
+    from: "123.15.15.15"
+    id: "123.15.15.15_to_123.123.111.111"
+    title: "<p>123.123.111.111-<b>10</b>->123.15.15.15</p><p>123.15.15.15-<b>10</b>->123.123.111.111</p>"
+    to: "123.123.111.111"
+    weight: 10
+    width: 1
+    */
+    if (edge_id.length == 0) {
+      // we didn't find the edge ID with required from Node ID TO node id
       var edge_id = edge_dataset.get({
-        //stright order
-          filter: function (item) {
-            return (item.from == node_ids_ll[n][0] && item.to == node_ids_ll[n][1]);
-          }
-        });
-        /*
-        from: "123.15.15.15"
-        id: "123.15.15.15_to_123.123.111.111"
-        title: "<p>123.123.111.111-<b>10</b>->123.15.15.15</p><p>123.15.15.15-<b>10</b>->123.123.111.111</p>"
-        to: "123.123.111.111"
-        weight: 10
-        width: 1
-        */
-      if (edge_id.length == 0) {
-        // we didn't find the edge ID with required from Node ID TO node id
-        var edge_id = edge_dataset.get({
-          //reverse order
-            filter: function (item) {
-              return (item.to == node_ids_ll[n][0] && item.from == node_ids_ll[n][1]);
-            }
-          });
-
-        var has_already_painted_edge_back_order = (edge_dataset.get(edge_id[0].id).comment === undefined) ? false: true;
+        //reverse order
+        filter: function (item) {
+          return (item.to == node_ids_ll[n][0] && item.from == node_ids_ll[n][1]);
         }
-        //if (!has_already_painted_edge_back_order) {config.arrows = { from: true }}
-      else {
-        //stright order. we found Edge ID with the same corelation of src and dst node
-        var has_already_painted_edge_str_order = (edge_dataset.get(edge_id[0].id).comment === undefined) ? false: true;};
-        //if (!has_already_painted_edge_back_order) {config.arrows = {to: true}} // we edit current edge if it hasn't been edit before
-      edge_id = edge_id[0].id;
-      // if from A to B traffic dicrease, but from B to A increase. Then we add new edge
-      var has_already_painted_edge = (edge_dataset.get(edge_id).comment === undefined) ? false: true;
-      //console.log('has_already_painted_edge ', has_already_painted_edge);
-      if (has_already_painted_edge) {
+      });
 
-        new_edge_id = edge_id + String(n)
-        var new_edge_conf = {};
-        Object.assign(new_edge_conf, config);
-        new_edge_conf.id = new_edge_id;
-        new_edge_conf.smooth = {enabled:true, type: 'curvedCW', roundness: 0.2};
-        new_edge_conf.parent_edge_id = edge_id[0].id;
-        //data.edges.add({'id': new_edge_id, })
-        //config.background = { enabled: true, color: 'rgba(111,111,111,0.5)', size:20, dashes: [20,10] };
-        //config.smooth = {"enabled": true};
-        /* it doesn't need to do it
-        if (has_already_painted_edge_str_order)
-        {new_edge_conf.from = node_ids_ll[n][0]; new_edge_conf.to = node_ids_ll[n][1];
-          new_edge_conf.arrows = {to: true};
-        console.log('update edge config stright order: ', new_edge_conf)}
-        else {
-          new_edge_conf.to = node_ids_ll[n][0];
-          new_edge_conf.from = node_ids_ll[n][1];
-          new_edge_conf.arrows = { from: true };
-          console.log('update edge config reverse order: ', new_edge_conf)};
-        */
-        new_edges_arr.push(new_edge_conf)
-        //data.edges.add(new_edge_conf);
-      };
-      // add if only we checked that thre is no any comment on the edges
-      if (!has_already_painted_edge){
+      var has_already_painted_edge_back_order = (edge_dataset.get(edge_id[0].id).comment === undefined) ? false : true;
+    }
+    //if (!has_already_painted_edge_back_order) {config.arrows = { from: true }}
+    else {
+      //stright order. we found Edge ID with the same corelation of src and dst node
+      var has_already_painted_edge_str_order = (edge_dataset.get(edge_id[0].id).comment === undefined) ? false : true;
+    };
+    //if (!has_already_painted_edge_back_order) {config.arrows = {to: true}} // we edit current edge if it hasn't been edit before
+    edge_id = edge_id[0].id;
+    // if from A to B traffic dicrease, but from B to A increase. Then we add new edge
+    var has_already_painted_edge = (edge_dataset.get(edge_id).comment === undefined) ? false : true;
+    //console.log('has_already_painted_edge ', has_already_painted_edge);
+    if (has_already_painted_edge) {
+
+      new_edge_id = edge_id + String(n)
+      var new_edge_conf = {};
+      Object.assign(new_edge_conf, config);
+      new_edge_conf.id = new_edge_id;
+      new_edge_conf.smooth = { enabled: true, type: 'curvedCW', roundness: 0.2 };
+      new_edge_conf.parent_edge_id = edge_id[0].id;
+      //data.edges.add({'id': new_edge_id, })
+      //config.background = { enabled: true, color: 'rgba(111,111,111,0.5)', size:20, dashes: [20,10] };
+      //config.smooth = {"enabled": true};
+      /* it doesn't need to do it
+      if (has_already_painted_edge_str_order)
+      {new_edge_conf.from = node_ids_ll[n][0]; new_edge_conf.to = node_ids_ll[n][1];
+        new_edge_conf.arrows = {to: true};
+      console.log('update edge config stright order: ', new_edge_conf)}
+      else {
+        new_edge_conf.to = node_ids_ll[n][0];
+        new_edge_conf.from = node_ids_ll[n][1];
+        new_edge_conf.arrows = { from: true };
+        console.log('update edge config reverse order: ', new_edge_conf)};
+      */
+      new_edges_arr.push(new_edge_conf)
+      //data.edges.add(new_edge_conf);
+    };
+    // add if only we checked that thre is no any comment on the edges
+    if (!has_already_painted_edge) {
       var obj = {};
       Object.assign(obj, config);
       obj.id = edge_id;
-      arr.push(obj);}
-    }
-
-    data.edges.update(arr);
-    data.edges.add(new_edges_arr);
-  }
-
-function remove_unnumbered_edge(node_dd_in_ll, ecmp_unflat_edge_id_ll) {
-    // This function remove edge with ID 1.1.1.1_2.2.2.2 in order to replace it with ordered edge 1.1.1.1_2.2.2.2_88 88 is edge id from igraph
-
-    /*
-    ecmp_unflat_edge_id_ll: "123.10.10.10_to_123.123.100.100"
-    */
-    var arr = [];
-    for (var n in node_dd_in_ll) {
-      //console.log("node_dd_in_ll edge", node_dd_in_ll[n]);
-      unnumbered_edge_attr_from_graph = edges.get(node_dd_in_ll[n].parent_edge_id);
-      if (!ecmp_unflat_edge_id_ll.includes(node_dd_in_ll[n].parent_edge_id)) {
-        // once we delete edge from the graph - we copy Title from this edge to the new one
-        // Title = "<p>123.123.101.101-<b>10</b>->123.13.13.13</p><p>123.13.13.13-<b>10</b>->123.123.101.101</p>"
-        // if `title` attribute exists and it's not equal to Null
-        if (unnumbered_edge_attr_from_graph && unnumbered_edge_attr_from_graph.title && typeof unnumbered_edge_attr_from_graph.title !== 'undefined') {
-        //if (unnumbered_edge_attr_from_graph && unnumbered_edge_attr_from_graph.title && unnumbered_edge_attr_from_graph.title !== undefined) {
-          let title = unnumbered_edge_attr_from_graph.title;
-          // if we already have title - update it. If not - attach
-          if (node_dd_in_ll[n].title) {
-            node_dd_in_ll[n].title += title;
-          }
-          else {
-            node_dd_in_ll[n].title = title;
-          }
-        }
-        /*
-        NEW SPT edge
-        arrows: {from: true, to: false}
-        color: {color: "#1a8cff", opacity: 0.7, hover: "#1a8cff"}
-        comment: "updown_traffic_node"
-        from: "123.30.30.30"
-        id: "123.30.30.30_to_123.123.31.31_51"
-        new_edge: false
-        parent_edge_id: "123.30.30.30_to_123.123.31.31"
-        spt_dst_node: "123.10.10.10"
-        spt_src_node: "123.123.31.31"
-        to: "123.123.31.31"
-        width: 8
-        */
-        if (unnumbered_edge_attr_from_graph) {
-          edges.remove(unnumbered_edge_attr_from_graph.id);
-        }
-      }
-    }
-  }
-
-function unflat_ecmp(edge_id_ll) {
-    /*
-    ["123.10.10.10_to_123.123.100.100"]
-    */
-    var arr = [];
-    for (var n in edge_id_ll) {
-      ecmp_single_line_edge_id = edges.get(edge_id_ll[n])
-      if (ecmp_single_line_edge_id && ecmp_single_line_edge_id.inside_ecmp_edges_ll) {
-        /*
-        added edges: []
-        arrows: {from: false, to: true}
-        from: "123.10.10.10"
-        id: "123.10.10.10_to_123.123.100.100_0"
-        label: "15"
-        title: "<p>123.10.10.10-<b>15</b>->123.123.100.100</p>123.10.10.10_to_123.123.100.100_0"
-        to: "123.123.100.100"
-        weight: 15
-        width: 1
-        */
-        data.edges.remove(ecmp_single_line_edge_id.id);
-        //edges.add(e.inside_ecmp_edges_ll);
-        for (var m in ecmp_single_line_edge_id.inside_ecmp_edges_ll) {
-          var obj = {smooth: {enabled:true, type: 'curvedCW', roundness: 0.1*m}, 'ecmp_parent_edge_id': ecmp_single_line_edge_id.id}; //ecmp_parent_edge_id is used for getting edge_id in NetworkReactionOnFailure in ECMP
-          Object.assign(obj, ecmp_single_line_edge_id.inside_ecmp_edges_ll[m]);
-          arr.push(obj);
-        }
-      }
-    }
-    data.edges.add(arr);
-  }
-
-function reset_up_edge_stype(edge_dataset) {
-    var arr = [];
-    var default_edge_attr = options.edges;
-    var ids = edge_dataset.get({
-        filter: function (item) {
-          return (item.comment == 'updown_traffic_node');
-        }
-      });
-    for (var n in ids) {
-      //console.log('n: ', n, ids[n]);
-      edge_id = ids[n].id;
-      var obj = {};
-      Object.assign(obj, default_edge_attr);
-      obj.id = edge_id;
       arr.push(obj);
     }
-    data.edges.update(arr);
   }
+
+  data.edges.update(arr);
+  data.edges.add(new_edges_arr);
+}
+
+function remove_unnumbered_edge(node_dd_in_ll, ecmp_unflat_edge_id_ll) {
+  // This function remove edge with ID 1.1.1.1_2.2.2.2 in order to replace it with ordered edge 1.1.1.1_2.2.2.2_88 88 is edge id from igraph
+
+  /*
+  ecmp_unflat_edge_id_ll: "123.10.10.10_to_123.123.100.100"
+  */
+  var arr = [];
+  for (var n in node_dd_in_ll) {
+    //console.log("node_dd_in_ll edge", node_dd_in_ll[n]);
+    unnumbered_edge_attr_from_graph = edges.get(node_dd_in_ll[n].parent_edge_id);
+    if (!ecmp_unflat_edge_id_ll.includes(node_dd_in_ll[n].parent_edge_id)) {
+      // once we delete edge from the graph - we copy Title from this edge to the new one
+      // Title = "<p>123.123.101.101-<b>10</b>->123.13.13.13</p><p>123.13.13.13-<b>10</b>->123.123.101.101</p>"
+      // if `title` attribute exists and it's not equal to Null
+      if (unnumbered_edge_attr_from_graph && unnumbered_edge_attr_from_graph.title && typeof unnumbered_edge_attr_from_graph.title !== 'undefined') {
+        //if (unnumbered_edge_attr_from_graph && unnumbered_edge_attr_from_graph.title && unnumbered_edge_attr_from_graph.title !== undefined) {
+        let title = unnumbered_edge_attr_from_graph.title;
+        // if we already have title - update it. If not - attach
+        if (node_dd_in_ll[n].title) {
+          node_dd_in_ll[n].title += title;
+        }
+        else {
+          node_dd_in_ll[n].title = title;
+        }
+      }
+      /*
+      NEW SPT edge
+      arrows: {from: true, to: false}
+      color: {color: "#1a8cff", opacity: 0.7, hover: "#1a8cff"}
+      comment: "updown_traffic_node"
+      from: "123.30.30.30"
+      id: "123.30.30.30_to_123.123.31.31_51"
+      new_edge: false
+      parent_edge_id: "123.30.30.30_to_123.123.31.31"
+      spt_dst_node: "123.10.10.10"
+      spt_src_node: "123.123.31.31"
+      to: "123.123.31.31"
+      width: 8
+      */
+      if (unnumbered_edge_attr_from_graph) {
+        edges.remove(unnumbered_edge_attr_from_graph.id);
+      }
+    }
+  }
+}
+
+function unflat_ecmp(edge_id_ll) {
+  /*
+  ["123.10.10.10_to_123.123.100.100"]
+  */
+  var arr = [];
+  for (var n in edge_id_ll) {
+    ecmp_single_line_edge_id = edges.get(edge_id_ll[n])
+    if (ecmp_single_line_edge_id && ecmp_single_line_edge_id.inside_ecmp_edges_ll) {
+      /*
+      added edges: []
+      arrows: {from: false, to: true}
+      from: "123.10.10.10"
+      id: "123.10.10.10_to_123.123.100.100_0"
+      label: "15"
+      title: "<p>123.10.10.10-<b>15</b>->123.123.100.100</p>123.10.10.10_to_123.123.100.100_0"
+      to: "123.123.100.100"
+      weight: 15
+      width: 1
+      */
+      data.edges.remove(ecmp_single_line_edge_id.id);
+      //edges.add(e.inside_ecmp_edges_ll);
+      for (var m in ecmp_single_line_edge_id.inside_ecmp_edges_ll) {
+        var obj = { smooth: { enabled: true, type: 'curvedCW', roundness: 0.1 * m }, 'ecmp_parent_edge_id': ecmp_single_line_edge_id.id }; //ecmp_parent_edge_id is used for getting edge_id in NetworkReactionOnFailure in ECMP
+        Object.assign(obj, ecmp_single_line_edge_id.inside_ecmp_edges_ll[m]);
+        arr.push(obj);
+      }
+    }
+  }
+  data.edges.add(arr);
+}
+
+function reset_up_edge_stype(edge_dataset) {
+  var arr = [];
+  var default_edge_attr = options.edges;
+  var ids = edge_dataset.get({
+    filter: function (item) {
+      return (item.comment == 'updown_traffic_node');
+    }
+  });
+  for (var n in ids) {
+    //console.log('n: ', n, ids[n]);
+    edge_id = ids[n].id;
+    var obj = {};
+    Object.assign(obj, default_edge_attr);
+    obj.id = edge_id;
+    arr.push(obj);
+  }
+  data.edges.update(arr);
+}
 
 function color_host_by_group(host_to_group_id_map) {
   var arr = [];
 
-  for (const [host_id, group_id_str] of Object.entries(host_to_group_id_map)){
+  for (const [host_id, group_id_str] of Object.entries(host_to_group_id_map)) {
     var existing_node_attr = nodes.get(host_id);
 
-    Object.assign(existing_node_attr, {'group': group_id_str});
+    Object.assign(existing_node_attr, { 'group': group_id_str });
     //obj.id = existing_node_attr.id;
     arr.push(existing_node_attr);
   }
@@ -1549,29 +1521,29 @@ function color_host_by_group(host_to_group_id_map) {
 }
 
 function color_nodes(node_id_ll, conf) {
-    var arr = [];
+  var arr = [];
 
-    for (var n in node_id_ll) {
-      //var node_id = node_ids_ll[n].id;
-      var existing_node_attr = nodes.get(node_id_ll[n]);
-      if (existing_node_attr !== null) {
-        if (existing_node_attr.hasOwnProperty("x") && existing_node_attr["x"] == null) {
-          delete existing_node_attr["x"]
-        }
-        if (existing_node_attr.hasOwnProperty("y") && existing_node_attr["y"] == null) {
-          delete existing_node_attr["x"]
-        }
-        //var obj = {};
-        //var existing_node_attr = {};
-        //var newColor = '#' + Math.floor((Math.random() * 255 * 255 * 255)).toString(16);
-        //var conf = {color: {background: newColor}};
-        Object.assign(existing_node_attr, conf);
-        //obj.id = existing_node_attr.id;
-        arr.push(existing_node_attr);
+  for (var n in node_id_ll) {
+    //var node_id = node_ids_ll[n].id;
+    var existing_node_attr = nodes.get(node_id_ll[n]);
+    if (existing_node_attr !== null) {
+      if (existing_node_attr.hasOwnProperty("x") && existing_node_attr["x"] == null) {
+        delete existing_node_attr["x"]
       }
+      if (existing_node_attr.hasOwnProperty("y") && existing_node_attr["y"] == null) {
+        delete existing_node_attr["x"]
+      }
+      //var obj = {};
+      //var existing_node_attr = {};
+      //var newColor = '#' + Math.floor((Math.random() * 255 * 255 * 255)).toString(16);
+      //var conf = {color: {background: newColor}};
+      Object.assign(existing_node_attr, conf);
+      //obj.id = existing_node_attr.id;
+      arr.push(existing_node_attr);
     }
-    nodes.update(arr);
   }
+  nodes.update(arr);
+}
 
 function reset_color_nodes(node_id_ll) {
   /*
@@ -1591,312 +1563,303 @@ function reset_color_nodes(node_id_ll) {
   nodes.update(arr);
 }
 
-function get_edge_cost(graph_id, src_node, dst_node, edge_dataset, node_dataset)
-        {
-        $.ajax({
-            url: "/get_edge_remove_outcome",
-	        type: "post",
-	        data: {'graph_id': graph_id, "src_node": src_node, "dst_node": dst_node},
-            success:  function callbackFunc(response)
-  {
+function get_edge_cost(graph_id, src_node, dst_node, edge_dataset, node_dataset) {
+  $.ajax({
+    url: "/get_edge_remove_outcome",
+    type: "post",
+    data: { 'graph_id': graph_id, "src_node": src_node, "dst_node": dst_node },
+    success: function callbackFunc(response) {
       //updateEdgesForIds(response.up_traffic_node_ids_tuple_in_ll, {'width': 10, color: 'blue'});
-      get_right_edge(response.up_traffic_node_ids_tuple_in_ll, edge_dataset, {'width': 10, color: '#3399ff', 'comment': 'updown_traffic_node'});
+      get_right_edge(response.up_traffic_node_ids_tuple_in_ll, edge_dataset, { 'width': 10, color: '#3399ff', 'comment': 'updown_traffic_node' });
       // 3399ff - blue
-      get_right_edge(response.down_traffic_node_ids_tuple_in_ll, edge_dataset, {'width': 10, color: '#808080', 'comment': 'updown_traffic_node'});
+      get_right_edge(response.down_traffic_node_ids_tuple_in_ll, edge_dataset, { 'width': 10, color: '#808080', 'comment': 'updown_traffic_node' });
       // 808080 - grey
-      get_right_edge([[src_node, dst_node]], edge_dataset, {color: '#ff0000', 'dashes': true, 'comment': 'updown_traffic_node'});
+      get_right_edge([[src_node, dst_node]], edge_dataset, { color: '#ff0000', 'dashes': true, 'comment': 'updown_traffic_node' });
       // ff0000 - red
-      color_nodes(response.down_traffic_nodes_name_ll, {color: '#808080'});
+      color_nodes(response.down_traffic_nodes_name_ll, { color: '#808080' });
       // 808080 - grey
+    }
+  })
+}
+
+function get_edge_details(graph_id, edge_id) {
+  $.ajax({
+    url: "/get_edge_details",
+    type: "post",
+    data: { 'graph_id': graph_id, "edge_id": edge_id },
+    // success:  function callbackFunc(response)
+    // {
+    //   console.log(response);
+    // },
+    error: function (XMLHttpRequest, textStatus, errorThrown) {
+      //textStatus = error
+      //errorThrown = NOT FOUND
+      console.log(`${errorThrown}, ${XMLHttpRequest.responseText}`)
+    }
+  })
+}
+
+function get_edge_details_by_igraph_edge_id(js_edge_attr, choosed_js_edge_attr = false) {
+  let igraph_edges_id_ll = js_edge_attr.igraph_edges_id_ll;
+
+  if (choosed_js_edge_attr.comment == "spt_path_edge" || choosed_js_edge_attr.comment == 'backup_path_edge') {
+    spt_src_node_ospf_plan = choosed_js_edge_attr.spt_src_node; // global variables
+    spt_dst_node_ospf_plan = choosed_js_edge_attr.spt_dst_node; // global variables
   }
-        })
-	}
 
-  function get_edge_details(graph_id, edge_id)
-    {
-      $.ajax({
-          url: "/get_edge_details",
-        type: "post",
-        data: {'graph_id': graph_id, "edge_id": edge_id},
-          // success:  function callbackFunc(response)
-          // {
-          //   console.log(response);
-          // },
-          error: function(XMLHttpRequest, textStatus, errorThrown) {
-            //textStatus = error
-            //errorThrown = NOT FOUND
-          console.log(`${errorThrown}, ${XMLHttpRequest.responseText}`)
+  else {
+    // okay, it's not a link along SPT path, but probably we pressed on general link ider GeneralView with have already built SPT path
+    is_any_spt_path_edges_dd_ll = edges.get({
+      filter: function (item) {
+        return (item.comment == "spt_path_edge");
+      }
+    });
+    if (is_any_spt_path_edges_dd_ll.length > 0) {
+      // we found SPT path - so we can take any edge attr and get spt_src_node and spt_dst_node
+      edge_attr_along_spt = is_any_spt_path_edges_dd_ll[0];
+      spt_src_node_ospf_plan = edge_attr_along_spt.spt_src_node; // global variables
+      spt_dst_node_ospf_plan = edge_attr_along_spt.spt_dst_node; // global variables
+    }
+  }
+
+  // inside ecmp links - igraph_edges_id_ll is an integer
+  $.ajax({
+    url: "/get_edge_details_by_igraph_edge_id",
+    type: "post",
+    data: { 'graph_id': graph_id, "igraph_edges_id_ll": JSON.stringify(igraph_edges_id_ll) },
+    success: function callbackFunc(response) {
+      // response edge_attr_dd_ll: [{'from': '10.10.10.1', 'to': '10.10.10.2', 'weight': 1000, 'igraph_edge_id': 3}]
+      $("#old_new_edge_cost_table_id tbody").text('') // clear table
+      $.each(response.edge_attr_dd_ll, function (i, item) {
+        /* in case when we have already changes ospf cost on a link - and get directed colored link. Then we right-clicked on this edge once again and get '1.1.1.1_1.1.1.2_123' edge_id
+        So in order to get all igraph edges IDs - we recover this info from edge_attr, but edge_attr keeps only original ospf cost (you remember we changed one of them and save it in changed_edge_cost_dd dictionary). 
+        That's why we should get actual (what we changed earlier) cost
+        */
+        let _edge_ospf_cost = changed_edge_cost_dd[item.igraph_edge_id]; // is there we changed cost on this edge?
+        if (typeof _edge_ospf_cost == 'undefined') {
+          // if no - use that what used in edge attr
+          _edge_ospf_cost = item.weight;
         }
+        $("#old_new_edge_cost_table_id tbody").append(
+          "<tr>"
+          + `<td id=node_from_${item.igraph_edge_id}>` + item.from + "</td>"
+          + `<td id=node_to_${item.igraph_edge_id}>` + item.to + "</td>"
+          + `<td id=old_${item.igraph_edge_id}>` + _edge_ospf_cost + "</td>"
+          + "<td>" + `<input type='text' class='row_input' id=${item.igraph_edge_id} oninput="get_network_reaction_on_ospf_edge_plan(${item.igraph_edge_id}, '${js_edge_attr.id}')" name='answer1' class='answer'>` + "</td>"
+          + "</tr>")
       })
     }
+  })
+}
+function isNumeric(num) {
+  return !isNaN(num)
+}
+function get_network_reaction_on_ospf_edge_plan(edge_id_w_new_weight, js_edge_id) {
+  // receive an input with new OSPF edge cost. Should recalculate OSPF once again
+  let new_ospf_edge_weight = document.getElementById(edge_id_w_new_weight).value;
 
-  function get_edge_details_by_igraph_edge_id(js_edge_attr, choosed_js_edge_attr = false)
-    {
-      let igraph_edges_id_ll = js_edge_attr.igraph_edges_id_ll;
+  let src_node = document.getElementById(`node_from_${edge_id_w_new_weight}`).innerText;
+  let dst_node = document.getElementById(`node_to_${edge_id_w_new_weight}`).innerText;
+  // conver to int.
+  let new_ospf_cost = parseInt(new_ospf_edge_weight, 10);
+  // check new ospf link weight with original one. if they are equal - remove this edge as `changed`
+  //original_weight = parseInt(changed_js_edge_cost_dd[js_edge_id]['original_js_edge_weight'], 10);
+  // original_weight = changed_js_edge_cost_dd.hasOwnProperty(js_edge_id) ? parseInt(changed_js_edge_cost_dd[js_edge_id]['original_js_edge_weight']) : -1;
+  let _original_weight = document.getElementById(`old_${edge_id_w_new_weight}`).innerText;
+  let original_weight = changed_js_edge_cost_dd.hasOwnProperty(js_edge_id) ? changed_js_edge_cost_dd[js_edge_id]['original_js_edge_weight'] : parseInt(_original_weight, 10);
+  if (isNumeric(new_ospf_cost) && new_ospf_cost > 0) {
 
-      if (choosed_js_edge_attr.comment == "spt_path_edge" || choosed_js_edge_attr.comment == 'backup_path_edge') {
-          spt_src_node_ospf_plan = choosed_js_edge_attr.spt_src_node; // global variables
-          spt_dst_node_ospf_plan = choosed_js_edge_attr.spt_dst_node; // global variables
-      }
-
-      else {
-        // okay, it's not a link along SPT path, but probably we pressed on general link ider GeneralView with have already built SPT path
-        is_any_spt_path_edges_dd_ll = edges.get({
-          filter: function (item) {
-            return (item.comment == "spt_path_edge");
-          }
-        });
-        if (is_any_spt_path_edges_dd_ll.length > 0) {
-          // we found SPT path - so we can take any edge attr and get spt_src_node and spt_dst_node
-          edge_attr_along_spt = is_any_spt_path_edges_dd_ll[0];
-          spt_src_node_ospf_plan = edge_attr_along_spt.spt_src_node; // global variables
-          spt_dst_node_ospf_plan = edge_attr_along_spt.spt_dst_node; // global variables
-        }
-      }
-
-      // inside ecmp links - igraph_edges_id_ll is an integer
-      $.ajax({
-          url: "/get_edge_details_by_igraph_edge_id",
-        type: "post",
-        data: {'graph_id': graph_id, "igraph_edges_id_ll": JSON.stringify(igraph_edges_id_ll)},
-          success:  function callbackFunc(response)
-          {
-            // response edge_attr_dd_ll: [{'from': '10.10.10.1', 'to': '10.10.10.2', 'weight': 1000, 'igraph_edge_id': 3}]
-            $("#old_new_edge_cost_table_id tbody").text('') // clear table
-            $.each(response.edge_attr_dd_ll,function(i,item){
-              /* in case when we have already changes ospf cost on a link - and get directed colored link. Then we right-clicked on this edge once again and get '1.1.1.1_1.1.1.2_123' edge_id
-              So in order to get all igraph edges IDs - we recover this info from edge_attr, but edge_attr keeps only original ospf cost (you remember we changed one of them and save it in changed_edge_cost_dd dictionary). 
-              That's why we should get actual (what we changed earlier) cost
-              */
-              let _edge_ospf_cost = changed_edge_cost_dd[item.igraph_edge_id]; // is there we changed cost on this edge?
-              if (typeof _edge_ospf_cost == 'undefined') {
-                // if no - use that what used in edge attr
-                _edge_ospf_cost = item.weight;
-              } 
-              $("#old_new_edge_cost_table_id tbody").append(
-                  "<tr>"
-                      +`<td id=node_from_${item.igraph_edge_id}>`+item.from+"</td>"
-                      +`<td id=node_to_${item.igraph_edge_id}>`+item.to+"</td>"
-                      +`<td id=old_${item.igraph_edge_id}>`+_edge_ospf_cost+"</td>"
-                      +"<td>"+`<input type='text' class='row_input' id=${item.igraph_edge_id} oninput="get_network_reaction_on_ospf_edge_plan(${item.igraph_edge_id}, '${js_edge_attr.id}')" name='answer1' class='answer'>`+"</td>"
-                  +"</tr>" )
-            })
-          }
-      })
+    if (new_ospf_cost == original_weight) {
+      delete changed_edge_cost_dd[edge_id_w_new_weight];
+      delete changed_js_edge_cost_dd[js_edge_id];
     }
-    function isNumeric(num){
-      return !isNaN(num)
-    }
-    function get_network_reaction_on_ospf_edge_plan(edge_id_w_new_weight, js_edge_id) {
-      // receive an input with new OSPF edge cost. Should recalculate OSPF once again
-      let new_ospf_edge_weight = document.getElementById(edge_id_w_new_weight).value;
+    else {
+      // Save changed ospf cost. fill the dict with all changed edges. {10: 1}, 10 - igraph edge id, 1 ospf weight
+      changed_edge_cost_dd[edge_id_w_new_weight] = new_ospf_cost;
 
-      let src_node = document.getElementById(`node_from_${edge_id_w_new_weight}`).innerText;
-      let dst_node = document.getElementById(`node_to_${edge_id_w_new_weight}`).innerText;
-      // conver to int.
-      let new_ospf_cost = parseInt(new_ospf_edge_weight, 10);
-      // check new ospf link weight with original one. if they are equal - remove this edge as `changed`
-      //original_weight = parseInt(changed_js_edge_cost_dd[js_edge_id]['original_js_edge_weight'], 10);
-      // original_weight = changed_js_edge_cost_dd.hasOwnProperty(js_edge_id) ? parseInt(changed_js_edge_cost_dd[js_edge_id]['original_js_edge_weight']) : -1;
-      let _original_weight = document.getElementById(`old_${edge_id_w_new_weight}`).innerText;
-      let original_weight = changed_js_edge_cost_dd.hasOwnProperty(js_edge_id) ? changed_js_edge_cost_dd[js_edge_id]['original_js_edge_weight'] : parseInt(_original_weight, 10) ;
-      if (isNumeric(new_ospf_cost) && new_ospf_cost > 0) {
-
-        if (new_ospf_cost== original_weight) {
-          delete changed_edge_cost_dd[edge_id_w_new_weight];
-          delete changed_js_edge_cost_dd[js_edge_id];
-        }
-        else {
-          // Save changed ospf cost. fill the dict with all changed edges. {10: 1}, 10 - igraph edge id, 1 ospf weight
-          changed_edge_cost_dd[edge_id_w_new_weight] = new_ospf_cost;
-          
-          if (js_edge_id in changed_js_edge_cost_dd) {
-            // 10.1.1.1_to_10.1.1.2: {'js_edge_new_weight': 1}
-            changed_js_edge_cost_dd[js_edge_id]['js_edge_new_weight'] = new_ospf_cost;
-          }
-          else {
-            // this edge is changing first time, so save original ospf cost
-            /*
-            from: "10.0.0.7"
-            id: "10.0.0.7_to_10.2.2.10"
-            igraph_edges_id_ll: (2) [0, 3]
-            title: "<p>10.0.0.7-<b>1000</b>->10.2.2.10</p><p>10.2.2.10-<b>1000</b>->10.0.0.7</p>"
-            to: "10.2.2.10"
-            weight: 1000
-            width: 1
-            */
-            ////original_weight = edges.get(js_edge_id)['weight'];
-            // 10.1.1.1_to_10.1.1.2: {'original_js_edge_weight': 1}
-            changed_js_edge_cost_dd[js_edge_id] = {'original_js_edge_weight': original_weight};
-            // 10.1.1.1_to_10.1.1.2: {'js_edge_new_weight': 1, 'original_js_edge_weight': 1, 'igraph_edge_id': 123}
-            changed_js_edge_cost_dd[js_edge_id]['js_edge_new_weight'] = new_ospf_cost;
-            changed_js_edge_cost_dd[js_edge_id]['igraph_edge_id'] = edge_id_w_new_weight;
-          }
-        }
-
-        // when we built SPT path and changed painted edge - we rebuild SPT with new changed edge. 
-        // If right clicked on general edge - paint edge outcome with new changed ospf cost
-        /*
-        SPT edge = js_edge_attr =
-        arrows: {from: true, to: false}
-        color: {color: "#1a8cff", opacity: 0.7, hover: "#1a8cff"}
-        comment: "spt_path_edge"
-        from: "123.123.101.101"
-        id: "123.123.101.101_to_123.123.110.110_29"
-        igraph_edges_id_ll: [29]
-        new_edge: false
-        parent_edge_id: "123.123.101.101_to_123.123.110.110"
-        spt_dst_node: "123.123.101.101"
-        spt_src_node: "123.15.15.15"
-        title: "<p>123.123.101.101-<b>10</b>->123.123.110.110</p><p>123.123.110.110-<b>10</b>->123.123.101.101</p>"
-        to: "123.123.110.110"
-        width: 8
-        */
-        //js_edge_attr = data.edges.get(js_edge_id);
-        /*
-        27/09 changes
-        if (spt_src_node_ospf_plan && spt_dst_node_ospf_plan) {
-          spt_src_node = spt_src_node_ospf_plan;
-          spt_dst_node = spt_dst_node_ospf_plan;
-          // rebuild SPT with new changed OSPF costs. Do not forget to clear backup path info
-          add_backup_path_description(Array());
-          //accept_node_for_spt_return_spt();
-          get_edge_from_spt_outcome(graph_id, src_node = false, dst_node = false, spt_src_node = spt_src_node, spt_dst_node=spt_dst_node, js_edge_id=false) 
-          // src_node and dst_node is needed in order to simulate shutdown this edge, js_edge_id is needed in order to mark selected edge as deleted
-        }
-        else {
-          get_edge_remove_outcome(graph_id, selected_edge_attr = Array(), plan_when_changed_ospf_cost = true);
-        }
-        */
-        let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-        if (pressed_button == 'GeneralView') {
-          // under General View if we pres on general edge - we rebuild SPT
-          if (spt_src_node_ospf_plan && spt_dst_node_ospf_plan) {
-            spt_src_node = spt_src_node_ospf_plan;
-            spt_dst_node = spt_dst_node_ospf_plan;
-            // rebuild SPT with new changed OSPF costs. Do not forget to clear backup path info
-            add_backup_path_description(Array());
-            //accept_node_for_spt_return_spt();
-            get_edge_from_spt_outcome(graph_id, src_node = false, dst_node = false, spt_src_node = spt_src_node, spt_dst_node=spt_dst_node, js_edge_id=false) 
-            // src_node and dst_node is needed in order to simulate shutdown this edge, js_edge_id is needed in order to mark selected edge as deleted
-          }
-          else {
-            // we dont save changed edge because user under wrong TAB
-            delete changed_edge_cost_dd[edge_id_w_new_weight];
-            delete changed_js_edge_cost_dd[js_edge_id];
-            $.ajax(alert('Please build a path from some source to destination or jump to Network Reaction On failure Tab in order to see general network reaction without any SPT paths'))
-          }
-        }
-        else {
-          get_edge_remove_outcome(graph_id, selected_edge_attr = Array(), plan_when_changed_ospf_cost = true);
-        }
+      if (js_edge_id in changed_js_edge_cost_dd) {
+        // 10.1.1.1_to_10.1.1.2: {'js_edge_new_weight': 1}
+        changed_js_edge_cost_dd[js_edge_id]['js_edge_new_weight'] = new_ospf_cost;
       }
       else {
-        // when we delete what we have wrote before
-        //changed_edge_cost_dd[edge_id_w_new_weight] = parseInt(old_ospf_edge_weight, 10);
+        // this edge is changing first time, so save original ospf cost
+        /*
+        from: "10.0.0.7"
+        id: "10.0.0.7_to_10.2.2.10"
+        igraph_edges_id_ll: (2) [0, 3]
+        title: "<p>10.0.0.7-<b>1000</b>->10.2.2.10</p><p>10.2.2.10-<b>1000</b>->10.0.0.7</p>"
+        to: "10.2.2.10"
+        weight: 1000
+        width: 1
+        */
+        ////original_weight = edges.get(js_edge_id)['weight'];
+        // 10.1.1.1_to_10.1.1.2: {'original_js_edge_weight': 1}
+        changed_js_edge_cost_dd[js_edge_id] = { 'original_js_edge_weight': original_weight };
+        // 10.1.1.1_to_10.1.1.2: {'js_edge_new_weight': 1, 'original_js_edge_weight': 1, 'igraph_edge_id': 123}
+        changed_js_edge_cost_dd[js_edge_id]['js_edge_new_weight'] = new_ospf_cost;
+        changed_js_edge_cost_dd[js_edge_id]['igraph_edge_id'] = edge_id_w_new_weight;
+      }
+    }
+
+    // when we built SPT path and changed painted edge - we rebuild SPT with new changed edge. 
+    // If right clicked on general edge - paint edge outcome with new changed ospf cost
+    /*
+    SPT edge = js_edge_attr =
+    arrows: {from: true, to: false}
+    color: {color: "#1a8cff", opacity: 0.7, hover: "#1a8cff"}
+    comment: "spt_path_edge"
+    from: "123.123.101.101"
+    id: "123.123.101.101_to_123.123.110.110_29"
+    igraph_edges_id_ll: [29]
+    new_edge: false
+    parent_edge_id: "123.123.101.101_to_123.123.110.110"
+    spt_dst_node: "123.123.101.101"
+    spt_src_node: "123.15.15.15"
+    title: "<p>123.123.101.101-<b>10</b>->123.123.110.110</p><p>123.123.110.110-<b>10</b>->123.123.101.101</p>"
+    to: "123.123.110.110"
+    width: 8
+    */
+    //js_edge_attr = data.edges.get(js_edge_id);
+    /*
+    27/09 changes
+    if (spt_src_node_ospf_plan && spt_dst_node_ospf_plan) {
+      spt_src_node = spt_src_node_ospf_plan;
+      spt_dst_node = spt_dst_node_ospf_plan;
+      // rebuild SPT with new changed OSPF costs. Do not forget to clear backup path info
+      add_backup_path_description(Array());
+      //accept_node_for_spt_return_spt();
+      get_edge_from_spt_outcome(graph_id, src_node = false, dst_node = false, spt_src_node = spt_src_node, spt_dst_node=spt_dst_node, js_edge_id=false) 
+      // src_node and dst_node is needed in order to simulate shutdown this edge, js_edge_id is needed in order to mark selected edge as deleted
+    }
+    else {
+      get_edge_remove_outcome(graph_id, selected_edge_attr = Array(), plan_when_changed_ospf_cost = true);
+    }
+    */
+    let pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+    if (pressed_button == 'GeneralView') {
+      // under General View if we pres on general edge - we rebuild SPT
+      if (spt_src_node_ospf_plan && spt_dst_node_ospf_plan) {
+        spt_src_node = spt_src_node_ospf_plan;
+        spt_dst_node = spt_dst_node_ospf_plan;
+        // rebuild SPT with new changed OSPF costs. Do not forget to clear backup path info
+        add_backup_path_description(Array());
+        //accept_node_for_spt_return_spt();
+        get_edge_from_spt_outcome(graph_id, src_node = false, dst_node = false, spt_src_node = spt_src_node, spt_dst_node = spt_dst_node, js_edge_id = false)
+        // src_node and dst_node is needed in order to simulate shutdown this edge, js_edge_id is needed in order to mark selected edge as deleted
+      }
+      else {
+        // we dont save changed edge because user under wrong TAB
         delete changed_edge_cost_dd[edge_id_w_new_weight];
         delete changed_js_edge_cost_dd[js_edge_id];
-        if (pressed_button == 'GeneralView') {
-          // under General View if we pres on general edge - we rebuild SPT
-          if (spt_src_node_ospf_plan && spt_dst_node_ospf_plan) {
-            spt_src_node = spt_src_node_ospf_plan;
-            spt_dst_node = spt_dst_node_ospf_plan;
-            // rebuild SPT with new changed OSPF costs. Do not forget to clear backup path info
-            add_backup_path_description(Array());
-            //accept_node_for_spt_return_spt();
-            get_edge_from_spt_outcome(graph_id, src_node = false, dst_node = false, spt_src_node = spt_src_node, spt_dst_node=spt_dst_node, js_edge_id=false) 
-            // src_node and dst_node is needed in order to simulate shutdown this edge, js_edge_id is needed in order to mark selected edge as deleted
-          }
-        }
-        else {
-          get_edge_remove_outcome(graph_id, selected_edge_attr = Array(), plan_when_changed_ospf_cost = true);
-        }
+        $.ajax(alert('Please build a path from some source to destination or jump to Network Reaction On failure Tab in order to see general network reaction without any SPT paths'))
       }
     }
+    else {
+      get_edge_remove_outcome(graph_id, selected_edge_attr = Array(), plan_when_changed_ospf_cost = true);
+    }
+  }
+  else {
+    // when we delete what we have wrote before
+    //changed_edge_cost_dd[edge_id_w_new_weight] = parseInt(old_ospf_edge_weight, 10);
+    delete changed_edge_cost_dd[edge_id_w_new_weight];
+    delete changed_js_edge_cost_dd[js_edge_id];
+    if (pressed_button == 'GeneralView') {
+      // under General View if we pres on general edge - we rebuild SPT
+      if (spt_src_node_ospf_plan && spt_dst_node_ospf_plan) {
+        spt_src_node = spt_src_node_ospf_plan;
+        spt_dst_node = spt_dst_node_ospf_plan;
+        // rebuild SPT with new changed OSPF costs. Do not forget to clear backup path info
+        add_backup_path_description(Array());
+        //accept_node_for_spt_return_spt();
+        get_edge_from_spt_outcome(graph_id, src_node = false, dst_node = false, spt_src_node = spt_src_node, spt_dst_node = spt_dst_node, js_edge_id = false)
+        // src_node and dst_node is needed in order to simulate shutdown this edge, js_edge_id is needed in order to mark selected edge as deleted
+      }
+    }
+    else {
+      get_edge_remove_outcome(graph_id, selected_edge_attr = Array(), plan_when_changed_ospf_cost = true);
+    }
+  }
+}
 // #####################
 
 // #123#################
-function get_node_details(graph_id, node_index)
-  {
+function get_node_details(graph_id, node_index) {
   /*
   backuped_nets: []
   linked_subnets: []
   not_available_nets: []
   */
   $.ajax({
-      url: "/get_node_details",
+    url: "/get_node_details",
     type: "post",
-    data: {'graph_id': graph_id, "node_index": node_index},
-      success:  function callbackFunc(response)
-        {
-        // clear description
-        document.getElementById('node_failure_prediction_description').innerHTML = '';
-        hide('node_failure_prediction_description');
+    data: { 'graph_id': graph_id, "node_index": node_index },
+    success: function callbackFunc(response) {
+      // clear description
+      document.getElementById('node_failure_prediction_description').innerHTML = '';
+      hide('node_failure_prediction_description');
 
-        $("#backuped_num").text(response.backuped_nets.length); // bold text statistic
-        $("#nonbackuped_num").text(response.not_available_nets.length); // bold text statistic
-        // clear previous networks
-        $("#backuped_networks_id").text('Backuped networks [HSRP neighbour]:');
-        $("#nonbackuped_networks_id").text('Non-backuped networks:');
-        if (response.backuped_nets.length > 0) {
-          //$("#backuped_networks_id").text('');
-          $.each(response.backuped_nets,function(i,item){
-            $("#backuped_networks_id").append('<li style="color: green">'+item + ' [' +response.hsrp_neighbor_subnet_map[item]+']' +'</li>\n')
-          })      
-        }
-        if (response.not_available_nets.length > 0) 
-          {
-            //$("#nonbackuped_networks_id").text('');
-            $.each(response.not_available_nets,function(i,item){
-            $("#nonbackuped_networks_id").append(
-              '<li style="color: red">'+item+'</li>\n')
-          })
-          }
-        $('.PopUpFormBackupNonBackupNets').css({
-          height: (220 + response.backuped_nets.length*23 + response.not_available_nets.length*23).toString() + "px"
+      $("#backuped_num").text(response.backuped_nets.length); // bold text statistic
+      $("#nonbackuped_num").text(response.not_available_nets.length); // bold text statistic
+      // clear previous networks
+      $("#backuped_networks_id").text('Backuped networks [HSRP neighbour]:');
+      $("#nonbackuped_networks_id").text('Non-backuped networks:');
+      if (response.backuped_nets.length > 0) {
+        //$("#backuped_networks_id").text('');
+        $.each(response.backuped_nets, function (i, item) {
+          $("#backuped_networks_id").append('<li style="color: green">' + item + ' [' + response.hsrp_neighbor_subnet_map[item] + ']' + '</li>\n')
         })
-        /*
-        if (response.backuped_nets.length > 0) 
-          {
-            document.getElementById('node_failure_prediction_description').innerHTML = '<h4>Backup networks: </h4>';
-            for (var n in response.backuped_nets) {
-              var backuped_net = response.backuped_nets[n];
-              console.log('backuped_net', backuped_net);
-              document.getElementById('node_failure_prediction_description').innerHTML += backuped_net + '\n';
-            }
-          }
-
-        if (response.linked_subnets.length > 0) 
-          {
-            document.getElementById('node_failure_prediction_description').innerHTML += '<h4>Linked networks: </h4>';
-            for (var n in response.linked_subnets) {
-              var linked_subnet = response.linked_subnets[n];
-              document.getElementById('node_failure_prediction_description').innerHTML += linked_subnet + '\n';
-            }
-          }
-      
-        if (response.not_available_nets.length > 0) 
-          {
-            document.getElementById('node_failure_prediction_description').innerHTML += '<h4>Not backuped networks: </h4>';
-            for (var n in response.not_available_nets) {
-              var not_available_net = response.not_available_nets[n];
-              document.getElementById('node_failure_prediction_description').innerHTML += not_available_net + '\n';
-            }
-          }
-        */
-        //nodes.update([{id: node_index, shape: 'box', label: "backuped nets: " + response.backuped_nets.length + "\nnot_available_nets: " + response.not_available_nets}]);
-        },
-      error: function(XMLHttpRequest, textStatus, errorThrown) {
-        $("a.close").click(function(e)
-          {
-              e.preventDefault();
-              $(this).closest("div.PopUpFormBackupNonBackupNets").fadeToggle();        
-          });
-          //textStatus = error
-          //errorThrown = NOT FOUND
-        console.log(`${errorThrown}, ${XMLHttpRequest.responseText}`)
       }
+      if (response.not_available_nets.length > 0) {
+        //$("#nonbackuped_networks_id").text('');
+        $.each(response.not_available_nets, function (i, item) {
+          $("#nonbackuped_networks_id").append(
+            '<li style="color: red">' + item + '</li>\n')
         })
+      }
+      $('.PopUpFormBackupNonBackupNets').css({
+        height: (220 + response.backuped_nets.length * 23 + response.not_available_nets.length * 23).toString() + "px"
+      })
+      /*
+      if (response.backuped_nets.length > 0) 
+        {
+          document.getElementById('node_failure_prediction_description').innerHTML = '<h4>Backup networks: </h4>';
+          for (var n in response.backuped_nets) {
+            var backuped_net = response.backuped_nets[n];
+            console.log('backuped_net', backuped_net);
+            document.getElementById('node_failure_prediction_description').innerHTML += backuped_net + '\n';
+          }
+        }
+
+      if (response.linked_subnets.length > 0) 
+        {
+          document.getElementById('node_failure_prediction_description').innerHTML += '<h4>Linked networks: </h4>';
+          for (var n in response.linked_subnets) {
+            var linked_subnet = response.linked_subnets[n];
+            document.getElementById('node_failure_prediction_description').innerHTML += linked_subnet + '\n';
+          }
+        }
+    
+      if (response.not_available_nets.length > 0) 
+        {
+          document.getElementById('node_failure_prediction_description').innerHTML += '<h4>Not backuped networks: </h4>';
+          for (var n in response.not_available_nets) {
+            var not_available_net = response.not_available_nets[n];
+            document.getElementById('node_failure_prediction_description').innerHTML += not_available_net + '\n';
+          }
+        }
+      */
+      //nodes.update([{id: node_index, shape: 'box', label: "backuped nets: " + response.backuped_nets.length + "\nnot_available_nets: " + response.not_available_nets}]);
+    },
+    error: function (XMLHttpRequest, textStatus, errorThrown) {
+      $("a.close").click(function (e) {
+        e.preventDefault();
+        $(this).closest("div.PopUpFormBackupNonBackupNets").fadeToggle();
+      });
+      //textStatus = error
+      //errorThrown = NOT FOUND
+      console.log(`${errorThrown}, ${XMLHttpRequest.responseText}`)
+    }
+  })
 }
 
 function do_stop_start_physics() {
@@ -1907,13 +1870,13 @@ function do_stop_start_physics() {
   else {
     var phy_scale_settings = {};
     if (network.physics.physicsEnabled == true) {
-      phy_scale_settings = {physics: {enabled: false}}
+      phy_scale_settings = { physics: { enabled: false } }
       network.setOptions(phy_scale_settings);
       document.getElementById('btnStopPhysics').innerHTML = '<img src=\'/static/start_button.png\'/>Unfreeze network';
       show_instant_notification("Physics was disabled. So move nodes one by one without affecting other nodes.");
     }
     else {
-      phy_scale_settings = {physics: {enabled: true}}
+      phy_scale_settings = { physics: { enabled: true } }
       network.setOptions(phy_scale_settings);
       //document.getElementById('btnStopPhysicsImg').src = "/static/stop_button.png";
       document.getElementById('btnStopPhysics').innerHTML = '<img src=\'/static/stop_button.png\'/>Freeze network';
@@ -1922,23 +1885,23 @@ function do_stop_start_physics() {
     $.ajax({
       url: "/do_stop_start_physics",
       type: "post",
-      data: {"graph_id": graph_id, "graph_physics_settings_json": JSON.stringify(phy_scale_settings)}
+      data: { "graph_id": graph_id, "graph_physics_settings_json": JSON.stringify(phy_scale_settings) }
     });
   }
 }
 
-function show_instant_notification(message, delay=4500, warning=false) {
+function show_instant_notification(message, delay = 4500, warning = false) {
   if (warning) {
     document.getElementById('btnStopStartPhysics').style.background = "#ff8c1a";
   }
   else {
     document.getElementById('btnStopStartPhysics').style.background = 'rgba(93, 230, 150, 0.871)';
   }
-  $( '#btnStopStartPhysics').text(message);
-  $( '#btnStopStartPhysics').show().delay(delay).fadeOut(2000);
+  $('#btnStopStartPhysics').text(message);
+  $('#btnStopStartPhysics').show().delay(delay).fadeOut(2000);
 }
 
-function get_backup_paths_in_ecmp__report(){
+function get_backup_paths_in_ecmp__report() {
   /*Not used */
   if (typeof graph_id === 'undefined') {
     alert('Please, choose a graph from previously uploaded and Load it firstly');
@@ -1947,24 +1910,24 @@ function get_backup_paths_in_ecmp__report(){
     $.ajax({
       url: "/get_backup_paths_in_ecmp__report",
       type: "post",
-      data: {'graph_id': graph_id},
-      success:  function callbackFunc(response)
-        {
-        paint_js_edges_node_order_is_matter(response.not_passed_ecmp_report_node_pair_js_ll, {'width': 8, color: {color:'#f0120f', opacity: 0.8, hover: '#d11210'}}, rewrite_color=true);
+      data: { 'graph_id': graph_id },
+      success: function callbackFunc(response) {
+        paint_js_edges_node_order_is_matter(response.not_passed_ecmp_report_node_pair_js_ll, { 'width': 8, color: { color: '#f0120f', opacity: 0.8, hover: '#d11210' } }, rewrite_color = true);
         // f0120f black red
         // d11210 a litle bit lighter. 
         if (response.not_passed_ecmp_report_node_pair_js_ll.length == 0) {
-          show_instant_notification('The check has been passed!')}
+          show_instant_notification('The check has been passed!')
+        }
         else {
           show_instant_notification(`There are ${response.not_passed_ecmp_report_node_pair_js_ll.length} ECMP link which did not pass this check. If one of ECMP link with lowest cost goes down - the backup path will be redirected via another hosts, not via this ECMP`)
         }
-        }
-        
-        })
-    }
+      }
+
+    })
+  }
 }
 
-function get_backup_paths_in_inter_area__report(neighbors_with_ecmp_only=false){
+function get_backup_paths_in_inter_area__report(neighbors_with_ecmp_only = false) {
   /*Not used */
   if (typeof graph_id === 'undefined') {
     alert('Please, choose a graph from previously uploaded and Load it firstly');
@@ -1973,29 +1936,29 @@ function get_backup_paths_in_inter_area__report(neighbors_with_ecmp_only=false){
     $.ajax({
       url: "/get_backup_paths_in_inter_area__report",
       type: "post",
-      data: {'graph_id': graph_id, 'neighbors_with_ecmp_only': neighbors_with_ecmp_only},
-      success:  function callbackFunc(response)
-        {
-          do_fill_table_with_not_passed_interarea_backup_paths(response.not_passed_report_node_obj_ll);
-          
-          if (response.all_groups_w_attr.length == 0) {
-            show_instant_notification('Please create groups in Devices Tab and assign devices to them!', 5500, warning=true)
+      data: { 'graph_id': graph_id, 'neighbors_with_ecmp_only': neighbors_with_ecmp_only },
+      success: function callbackFunc(response) {
+        do_fill_table_with_not_passed_interarea_backup_paths(response.not_passed_report_node_obj_ll);
+
+        if (response.all_groups_w_attr.length == 0) {
+          show_instant_notification('Please create groups in Devices Tab and assign devices to them!', 5500, warning = true)
+        }
+        else {
+          if (response.not_passed_report_node_obj_ll.length == 0) {
+            show_instant_notification('The check has been passed!')
           }
           else {
-            if (response.not_passed_report_node_obj_ll.length == 0) {
-              show_instant_notification('The check has been passed!')}
-            else {
-              show_instant_notification(`There are ${response.not_passed_report_node_obj_ll.length} backup paths, which go via third locations if primary link between two location goes down.`, 5500)
-              show('interarea_backup_paths_table');
-            }
+            show_instant_notification(`There are ${response.not_passed_report_node_obj_ll.length} backup paths, which go via third locations if primary link between two location goes down.`, 5500)
+            show('interarea_backup_paths_table');
           }
         }
-        
-        })
-    }
+      }
+
+    })
+  }
 }
 
-function get_unidir_and_unsym_edges(){
+function get_unidir_and_unsym_edges() {
   /*Not used */
   if (typeof graph_id === 'undefined') {
     alert('Please, choose a graph from previously uploaded and Load it firstly');
@@ -2004,44 +1967,43 @@ function get_unidir_and_unsym_edges(){
     $.ajax({
       url: "/get_unidir_and_unsym_edges",
       type: "post",
-      data: {'graph_id': graph_id},
-      success:  function callbackFunc(response)
-        {
-          if (response.unidir_edges_ll.length == 0 && response.unsym_end_router_edges_ll.length == 0 && response.unsym_edges_ll.length == 0) {
-            show_instant_notification("The graph does not have asymmetric edges/paths.", 5500);
-          }
+      data: { 'graph_id': graph_id },
+      success: function callbackFunc(response) {
+        if (response.unidir_edges_ll.length == 0 && response.unsym_end_router_edges_ll.length == 0 && response.unsym_edges_ll.length == 0) {
+          show_instant_notification("The graph does not have asymmetric edges/paths.", 5500);
+        }
         else {
-        paint_js_edges_node_order_is_matter(response.unidir_edges_ll, {'width': 8, color: {color:'#3000f5', opacity: 0.8, hover: '#3109d7'}}, rewrite_color=true);
-        // #3000f5 dark blue
-        // #ff8000 - orange
-        // #e67300 - dark orange
-        paint_js_edges_node_order_is_matter(response.unsym_end_router_edges_ll, {'width': 8, color: {color:'#2f7e11', opacity: 0.8, hover: '#1eb017'}}, rewrite_color=true);
-        // #dbe01a - between yellow and green
-        // black green - new variant #2f7e11
-        // 1eb017 - green
-        paint_js_edges_node_order_is_matter(response.unsym_edges_ll, {'width': 8, color: {color:'#f0120f', opacity: 0.8, hover: '#d11210'}}, rewrite_color=true);
-        // f0120f black red
-        // d11210 a litle bit lighter. So unsym edges are much more dangerous that unsym end router edges, so hover such edges with a little bit darker light, but end routers - a little bit lighter color
-        // show pop up message
-        show_instant_notification(`There are ${response.unidir_edges_ll.length} unidirectional and ${response.unsym_edges_ll.length + response.unsym_end_router_edges_ll.length} asymmetric edges`, delay=4500, warning=true)
-        // show button to print asymmetric edges as a table
-        show('unidir_and_asym_edges_table_btn');
-        var all_unsym_edges_ll = response.unsym_edges_ll;
-        all_unsym_edges_ll.push(...response.unsym_end_router_edges_ll)
-        do_fill_table_with_unidir_and_asym_edges(all_unsym_edges_ll);
+          paint_js_edges_node_order_is_matter(response.unidir_edges_ll, { 'width': 8, color: { color: '#3000f5', opacity: 0.8, hover: '#3109d7' } }, rewrite_color = true);
+          // #3000f5 dark blue
+          // #ff8000 - orange
+          // #e67300 - dark orange
+          paint_js_edges_node_order_is_matter(response.unsym_end_router_edges_ll, { 'width': 8, color: { color: '#2f7e11', opacity: 0.8, hover: '#1eb017' } }, rewrite_color = true);
+          // #dbe01a - between yellow and green
+          // black green - new variant #2f7e11
+          // 1eb017 - green
+          paint_js_edges_node_order_is_matter(response.unsym_edges_ll, { 'width': 8, color: { color: '#f0120f', opacity: 0.8, hover: '#d11210' } }, rewrite_color = true);
+          // f0120f black red
+          // d11210 a litle bit lighter. So unsym edges are much more dangerous that unsym end router edges, so hover such edges with a little bit darker light, but end routers - a little bit lighter color
+          // show pop up message
+          show_instant_notification(`There are ${response.unidir_edges_ll.length} unidirectional and ${response.unsym_edges_ll.length + response.unsym_end_router_edges_ll.length} asymmetric edges`, delay = 4500, warning = true)
+          // show button to print asymmetric edges as a table
+          show('unidir_and_asym_edges_table_btn');
+          var all_unsym_edges_ll = response.unsym_edges_ll;
+          all_unsym_edges_ll.push(...response.unsym_end_router_edges_ll)
+          do_fill_table_with_unidir_and_asym_edges(all_unsym_edges_ll);
+        }
       }
-    }
-        })
-    }
+    })
   }
+}
 
-function do_fill_table_with_unidir_and_asym_edges(unsym_edges_ll){
+function do_fill_table_with_unidir_and_asym_edges(unsym_edges_ll) {
   /*
   [{'from': '123.11.11.11', 'id': '123.11.11.11_to_123.31.31.31', 'router_from_edge_weight_ll': [1], 'router_to_edge_weight_ll': [10], 'to': '123.31.31.31'}, 
   {'from': '123.10.10.10', 'id': '123.10.10.10_to_123.30.30.30', 'router_from_edge_weight_ll': [10], 'router_to_edge_weight_ll': [1], 'to': '123.30.30.30'}] */
   document.getElementById('unidir_and_asym_edges_table_body').innerHTML = '';
   const table = document.getElementById("unidir_and_asym_edges_table_body");
-  unsym_edges_ll.forEach( unsym_edge_dd => {
+  unsym_edges_ll.forEach(unsym_edge_dd => {
     let row = table.insertRow();
     let router_from = row.insertCell(0);
     router_from.innerHTML = unsym_edge_dd.from;
@@ -2054,13 +2016,13 @@ function do_fill_table_with_unidir_and_asym_edges(unsym_edges_ll){
   });
 }
 
-function do_fill_table_with_not_passed_interarea_backup_paths(not_passed_report_node_obj_ll){
+function do_fill_table_with_not_passed_interarea_backup_paths(not_passed_report_node_obj_ll) {
   /*
   not_passed_report_node_obj f"{self.src_node_name}->{self.dst_node_name} now:{self.current_group_name_path} backup group:{self.backup_group_name_path}, backup_path:{self.backup_path_ll_in_ll}"
  */
   document.getElementById('interarea_backup_paths_table_body').innerHTML = '';
   const table = document.getElementById("interarea_backup_paths_table_body");
-  not_passed_report_node_obj_ll.forEach( node_obj => {
+  not_passed_report_node_obj_ll.forEach(node_obj => {
     let row = table.insertRow();
     let router_from = row.insertCell(0);
     router_from.innerHTML = node_obj.src_node_name;
@@ -2075,7 +2037,7 @@ function do_fill_table_with_not_passed_interarea_backup_paths(not_passed_report_
   });
 }
 
-function get_duplicated_terminated_networks(){
+function get_duplicated_terminated_networks() {
   /*Not used */
   if (typeof graph_id === 'undefined') {
     alert('Please, choose a graph from previously uploaded and Load it firstly');
@@ -2086,19 +2048,18 @@ function get_duplicated_terminated_networks(){
     $.ajax({
       url: "/get_duplicated_terminated_networks",
       type: "post",
-      data: {'graph_time': graph_time},
-      success:  function callbackFunc(response)
-        {
-          if (response.networks_attr_ll.length == 0) {
-            show_instant_notification("The graph does not have duplicated terminated subnets.", 5500);
-          }
+      data: { 'graph_time': graph_time },
+      success: function callbackFunc(response) {
+        if (response.networks_attr_ll.length == 0) {
+          show_instant_notification("The graph does not have duplicated terminated subnets.", 5500);
+        }
         else {
           show('duplicated_terminated_networks_table_btn');
           // show pop up message
-          show_instant_notification(`There are ${response.networks_attr_ll.length} duplicated networks`, delay=4500, warning=true)
+          show_instant_notification(`There are ${response.networks_attr_ll.length} duplicated networks`, delay = 4500, warning = true)
           document.getElementById('duplicated_terminated_networks_table_body').innerHTML = '';
           const table = document.getElementById("duplicated_terminated_networks_table_body");
-          response.networks_attr_ll.forEach( network_attr_dd => {
+          response.networks_attr_ll.forEach(network_attr_dd => {
             let row = table.insertRow();
             let cidr = row.insertCell(0);
             cidr.innerHTML = network_attr_dd.cidr;
@@ -2110,13 +2071,13 @@ function get_duplicated_terminated_networks(){
               terminated_nodes_ll.className = "table-danger";
             }
           });
+        }
       }
-    }
-        })
-    }
+    })
   }
+}
 
-function fadeout_duplicated_terminated_networks_table_table(){
+function fadeout_duplicated_terminated_networks_table_table() {
   // Show a table of duplicated stub networks
   let _btn = document.getElementById('show_duplicated_terminated_networks_table');
   if (_btn.value == 'Show report result') {
@@ -2130,10 +2091,10 @@ function fadeout_duplicated_terminated_networks_table_table(){
     hide('duplicated_terminated_networks_table_btn');
     hide('duplicated_terminated_networks_table');
   }
-  
+
 }
 
-function fadeout_unidir_and_asym_edges_table(){
+function fadeout_unidir_and_asym_edges_table() {
   // Show a table of asymmetric links is pressed and a table with asymetric links is going to show
   let _btn = document.getElementById('show_unidir_and_asym_edges_table');
   //if (_btn.value == 'Show a table of asymmetric links') {
@@ -2149,178 +2110,177 @@ function fadeout_unidir_and_asym_edges_table(){
     hide('unidir_and_asym_edges_table_btn');
     hide('unidir_and_asym_edges_table');
   }
-  
+
 }
 
-function get_unsym_paths(){
+function get_unsym_paths() {
   //Not used
   if (typeof graph_id === 'undefined') {
     alert('Please, choose a graph from previously uploaded and Load it firstly');
   }
   else {
-    show('loadingWheel' );
+    show('loadingWheel');
     document.getElementById('mynetwork').style.opacity = 0.2; // make topology in the fog
     // if we built SPT or MST earlier we have to clear painted edges first
     ClearPaintedGraph();
     $.ajax({
       url: "/get_unsym_paths",
       type: "post",
-      data: {'graph_id': graph_id},
-      success:  function callbackFunc(response)
-        {
-        hide('loadingWheel' );
+      data: { 'graph_id': graph_id },
+      success: function callbackFunc(response) {
+        hide('loadingWheel');
         document.getElementById('mynetwork').style.opacity = 1; // calculation has been finished. Take the fog off from topology
         if (response.unsym_edges_attr_dd_ll.length == 0) {
           show_instant_notification("The graph does not have asymmetric edges/paths.", 5500);
         }
-        else{
-        $( 'div.PopUpFormUnsymmetricPaths' ).fadeToggle();
-        show_instant_notification("For building SPTs and using NetworkReactionOnFailure Load Dynamic Graph again.", 5500, warning=true);
-        /* Works
-        //clear table
-        $("#unsym_table_w_node_names tbody").text('') // clear table
-        //$.each( response.ordered_unsym_edge_w_diff_edges_dd, function(node_name_as_key,item){
-        // unsym_edges_attr_dd_ll[0] = {'color': {'color': 'red'}, 'from': '123.10.10.10', 'mst_node_name_ll': ['123.10.10.10', '123.123.100.100', '123.11.11.11', '123.30.30.30', '123.123.31.31'], 'to': '123.30.30.30', 'unsym_edge': '0_9', 'width': 4}
-        $("#unsym_table_w_node_names tbody").append('<div class="container1" id="container1">')
-        $.each( response.unsym_edges_attr_dd_ll, function(ind){
-          var context = '<div class="container2">'
-          context += '<div name="header" class="header"><span>Expand</span>';
-          context +='</div>'
-          context +='<div name="content" class="content">'
-          $.each( response.unsym_edges_attr_dd_ll[ind].mst_node_name_dd_ll, function(ind2, mst_node_dd){
-            // Fill a table of MST Node
+        else {
+          $('div.PopUpFormUnsymmetricPaths').fadeToggle();
+          show_instant_notification("For building SPTs and using NetworkReactionOnFailure Load Dynamic Graph again.", 5500, warning = true);
+          /* Works
+          //clear table
+          $("#unsym_table_w_node_names tbody").text('') // clear table
+          //$.each( response.ordered_unsym_edge_w_diff_edges_dd, function(node_name_as_key,item){
+          // unsym_edges_attr_dd_ll[0] = {'color': {'color': 'red'}, 'from': '123.10.10.10', 'mst_node_name_ll': ['123.10.10.10', '123.123.100.100', '123.11.11.11', '123.30.30.30', '123.123.31.31'], 'to': '123.30.30.30', 'unsym_edge': '0_9', 'width': 4}
+          $("#unsym_table_w_node_names tbody").append('<div class="container1" id="container1">')
+          $.each( response.unsym_edges_attr_dd_ll, function(ind){
+            var context = '<div class="container2">'
+            context += '<div name="header" class="header"><span>Expand</span>';
+            context +='</div>'
+            context +='<div name="content" class="content">'
+            $.each( response.unsym_edges_attr_dd_ll[ind].mst_node_name_dd_ll, function(ind2, mst_node_dd){
+              // Fill a table of MST Node
+  
+              context +=`<label>`  
+              context +=`<input type="checkbox" name="edgesFilter" id=${mst_node_dd.filter} value=${mst_node_dd.filter} checked />`+ mst_node_dd.node_name
+              context +=`</label>`
+            })
+            context +='</div>'
+            context +='</div>'
+            $("#unsym_table_w_node_names tbody").append(
+              // Fill a table with unsymmetric edges
+              "<tr>"
+                +`<td>`
+                +`<label>`
+                //+`<input type="checkbox" name="edgesFilter" value=${response.unsym_edges_attr_dd_ll[ind].unsym_edge} checked />`+response.unsym_edges_attr_dd_ll[ind].from+`_`+response.unsym_edges_attr_dd_ll[ind].to
+                +`<input type="checkbox" name="edgesFilter" value=${response.unsym_edges_attr_dd_ll[ind].unsym_edge} checked />`+response.unsym_edges_attr_dd_ll[ind].from+`_`+response.unsym_edges_attr_dd_ll[ind].to
+                +`</label>`
+                +context
+                +`</td>`
+              +`</tr>`);
+  
+          });
+          */
 
-            context +=`<label>`  
-            context +=`<input type="checkbox" name="edgesFilter" id=${mst_node_dd.filter} value=${mst_node_dd.filter} checked />`+ mst_node_dd.node_name
-            context +=`</label>`
-          })
-          context +='</div>'
-          context +='</div>'
-          $("#unsym_table_w_node_names tbody").append(
-            // Fill a table with unsymmetric edges
-            "<tr>"
-              +`<td>`
-              +`<label>`
-              //+`<input type="checkbox" name="edgesFilter" value=${response.unsym_edges_attr_dd_ll[ind].unsym_edge} checked />`+response.unsym_edges_attr_dd_ll[ind].from+`_`+response.unsym_edges_attr_dd_ll[ind].to
-              +`<input type="checkbox" name="edgesFilter" value=${response.unsym_edges_attr_dd_ll[ind].unsym_edge} checked />`+response.unsym_edges_attr_dd_ll[ind].from+`_`+response.unsym_edges_attr_dd_ll[ind].to
-              +`</label>`
-              +context
-              +`</td>`
-            +`</tr>`);
+          //clear table
+          $("#list_w_unsym_node_names").text(''); // clear a list
+          $("#unsym_node_names").text(''); // clear a list
+          //edgesFilterValues_dd_ll [['123.10.10.10': True], ['123.11.11.11': True], ...] sorted MST Node names by number of diff edges    
+          $("#unsym_node_names").append(`<label><input type="checkbox" name="edgesFilter" value=unsym_edge checked /> All unsymmetric edges</label>`);
 
-        });
-        */
-        
-        //clear table
-        $("#list_w_unsym_node_names").text(''); // clear a list
-        $("#unsym_node_names").text(''); // clear a list
-        //edgesFilterValues_dd_ll [['123.10.10.10': True], ['123.11.11.11': True], ...] sorted MST Node names by number of diff edges    
-        $("#unsym_node_names").append(`<label><input type="checkbox" name="edgesFilter" value=unsym_edge checked /> All unsymmetric edges</label>`);
-        
-        $.each( response.edgesFilterValues_dd_ll, function(ind, node_name_and_flag_ll){
+          $.each(response.edgesFilterValues_dd_ll, function (ind, node_name_and_flag_ll) {
             let node_name_as_key = node_name_and_flag_ll[0];
             is_checked = node_name_and_flag_ll[1] ? 'checked' : ''
-            
+
             // mark checked node with green color
             if (is_checked == 'checked') {
-              color_nodes([node_name_as_key], conf={'size': 12, 'color': {'background': '#7BE141'}})
+              color_nodes([node_name_as_key], conf = { 'size': 12, 'color': { 'background': '#7BE141' } })
             }
 
             $("#list_w_unsym_node_names").append(
               // Fill a table with unsymmetric edges
               `<label>`
-              +`<input type="checkbox" name="edgesFilter" value=${node_name_as_key} ${is_checked} />`+node_name_as_key + ` (${response.rootNodeWithNumberOfUnsymEdgesStat_dd[node_name_as_key]})`
-              +`</label>`);
-            });
+              + `<input type="checkbox" name="edgesFilter" value=${node_name_as_key} ${is_checked} />` + node_name_as_key + ` (${response.rootNodeWithNumberOfUnsymEdgesStat_dd[node_name_as_key]})`
+              + `</label>`);
+          });
 
-        /*Change size of pop-up form. We adapt the size of form to number of result until scroll max-height. When we get so many results that we need to use scroll - we set background form to MAX size*/
-        let innerTextHeight = Object.keys(response.edgesFilterValues_dd).length*30;
-        const MaxInnerTextHeight = 200;
-        if (innerTextHeight<MaxInnerTextHeight) {
-          $('.PopUpFormUnsymmetricPaths').css({
-            height: (180 + innerTextHeight).toString() + "px"
-          })
-        } else {
-          $('.PopUpFormUnsymmetricPaths').css({
+          /*Change size of pop-up form. We adapt the size of form to number of result until scroll max-height. When we get so many results that we need to use scroll - we set background form to MAX size*/
+          let innerTextHeight = Object.keys(response.edgesFilterValues_dd).length * 30;
+          const MaxInnerTextHeight = 200;
+          if (innerTextHeight < MaxInnerTextHeight) {
+            $('.PopUpFormUnsymmetricPaths').css({
+              height: (180 + innerTextHeight).toString() + "px"
+            })
+          } else {
+            $('.PopUpFormUnsymmetricPaths').css({
               height: "550px"
             })
-        }
-
-        
-        //unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
-
-        let edgesFilterValues = response.edgesFilterValues_dd;
-        edgesFilterValues['links'] = true; // we add a key 'links' into filter dictionary for future filtering
-        // in order to see all edges - we should assign 'root_node_name' attribute to all edges before adding DIFF edges. DIFF edges - edges where Inconmming and Outgogin paths are differ
-        //mark_all_edges_for_dyn_filtering(conf={'root_node_name': 'links'});
-        mark_all_edges_for_dyn_filtering(conf={'unsym_edge': 'links'});
-        edgesFilterValues['unsym_edge'] = true; // we add a key 'unsym_edge' into filter dictionary in order to show and hide unsummetric edges
-        
-        // we use copy because we add new edges to the graph
-        const all_visjs_edges_w_attr = edges.get(); // could take long time???
-        let edges_copy = new vis.DataSet(all_visjs_edges_w_attr);
+          }
 
 
-        edges_copy.add(response.node_dd_in_ll);
-        edges_copy.add(response.node_dd_out_ll);
-        edges_copy.add(response.unsym_edges_attr_dd_ll);
+          //unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
+
+          let edgesFilterValues = response.edgesFilterValues_dd;
+          edgesFilterValues['links'] = true; // we add a key 'links' into filter dictionary for future filtering
+          // in order to see all edges - we should assign 'root_node_name' attribute to all edges before adding DIFF edges. DIFF edges - edges where Inconmming and Outgogin paths are differ
+          //mark_all_edges_for_dyn_filtering(conf={'root_node_name': 'links'});
+          mark_all_edges_for_dyn_filtering(conf = { 'unsym_edge': 'links' });
+          edgesFilterValues['unsym_edge'] = true; // we add a key 'unsym_edge' into filter dictionary in order to show and hide unsummetric edges
+
+          // we use copy because we add new edges to the graph
+          const all_visjs_edges_w_attr = edges.get(); // could take long time???
+          let edges_copy = new vis.DataSet(all_visjs_edges_w_attr);
 
 
-        // Get Multiple Choosed Web Form Option
-        const edgeFilters = document.getElementsByName("edgesFilter");
-        const MstNodesExpand = document.getElementsByName("header");
-            
-        
-        const edgesFilter = (edge) => {
-          //return edgesFilterValues[edge.root_node_name];
-          return edgesFilterValues[edge.unsym_edge];
+          edges_copy.add(response.node_dd_in_ll);
+          edges_copy.add(response.node_dd_out_ll);
+          edges_copy.add(response.unsym_edges_attr_dd_ll);
+
+
+          // Get Multiple Choosed Web Form Option
+          const edgeFilters = document.getElementsByName("edgesFilter");
+          const MstNodesExpand = document.getElementsByName("header");
+
+
+          const edgesFilter = (edge) => {
+            //return edgesFilterValues[edge.root_node_name];
+            return edgesFilterValues[edge.unsym_edge];
           };
-        const nodesView = new vis.DataView(nodes);
-        const edgesView = new vis.DataView(edges_copy, { filter: edgesFilter });
-        
-        edgeFilters.forEach((filter) => filter.addEventListener("change", (e) => {
-                      //console.log(e.currentTarget);
-                      const { value, checked } = e.target;
-                      edgesFilterValues[value] = checked;
-                      edgesView.refresh();
-                      // change network MST Node for better it finding
-                      // doesn't work const test = document.getElementById(value); // value == ID
-                      // doesn't work console.log($('#' + value).data('mstnodename'));
-                      const _mstNodeName = e.target.nextSibling.data; // 10.1.1.1 (8) - 10.1.1.1 - mst root node name, 8 - number of diff edges
-                      mstNodeName = _mstNodeName.split(" ")[0];
-                      if (checked == true) {
-                        //js_node_attr = nodes.get(mstNodeName);
-                        color_nodes([mstNodeName], conf={'size': 12, 'color': {'background': '#7BE141'}})
-                      } else {
-                        reset_color_nodes([mstNodeName]);
-                      }
-                    })
-              );
+          const nodesView = new vis.DataView(nodes);
+          const edgesView = new vis.DataView(edges_copy, { filter: edgesFilter });
 
-        MstNodesExpand.forEach((MstNodeList) => MstNodeList.addEventListener("click", (e) => {
-          const header = e.currentTarget;
-          const content = header.nextSibling;
-          //console.log(content);
-          //open up the content needed - toggle the slide- if visible, slide up, if not slidedown.
-          $( content).slideToggle(500);
-          //change text based on condition
-          $( header).text(function () {
-            return header.innerText === 'Collapse' ? "Expand" : "Collapse";
-        })
-          
-        })
-);
+          edgeFilters.forEach((filter) => filter.addEventListener("change", (e) => {
+            //console.log(e.currentTarget);
+            const { value, checked } = e.target;
+            edgesFilterValues[value] = checked;
+            edgesView.refresh();
+            // change network MST Node for better it finding
+            // doesn't work const test = document.getElementById(value); // value == ID
+            // doesn't work console.log($('#' + value).data('mstnodename'));
+            const _mstNodeName = e.target.nextSibling.data; // 10.1.1.1 (8) - 10.1.1.1 - mst root node name, 8 - number of diff edges
+            mstNodeName = _mstNodeName.split(" ")[0];
+            if (checked == true) {
+              //js_node_attr = nodes.get(mstNodeName);
+              color_nodes([mstNodeName], conf = { 'size': 12, 'color': { 'background': '#7BE141' } })
+            } else {
+              reset_color_nodes([mstNodeName]);
+            }
+          })
+          );
 
-        network = new vis.Network(container, { nodes: nodesView, edges: edgesView }, options=options);
-        // global var which indicate that what we see is DataView object. It used for clearing 
-        is_network_view = true;
+          MstNodesExpand.forEach((MstNodeList) => MstNodeList.addEventListener("click", (e) => {
+            const header = e.currentTarget;
+            const content = header.nextSibling;
+            //console.log(content);
+            //open up the content needed - toggle the slide- if visible, slide up, if not slidedown.
+            $(content).slideToggle(500);
+            //change text based on condition
+            $(header).text(function () {
+              return header.innerText === 'Collapse' ? "Expand" : "Collapse";
+            })
+
+          })
+          );
+
+          network = new vis.Network(container, { nodes: nodesView, edges: edgesView }, options = options);
+          // global var which indicate that what we see is DataView object. It used for clearing 
+          is_network_view = true;
+        }
       }
-      }
-      })
-    }
+    })
   }
+}
 
-function mark_all_edges_for_dyn_filtering( conf = {}) {
+function mark_all_edges_for_dyn_filtering(conf = {}) {
   // in order to see all edges - we should assign 'root_node_name' attribute to all edges before adding DIFF edges. DIFF edges - edges where Inconmming and Outgogin paths are differ
 
   let arr = Array();
@@ -2358,37 +2318,36 @@ function paint_graph_for_network_reaction_outcome(){
 }*/
 
 function paint_network_reaction_results(down_all_edge_attr_dd_in_ll, up_all_edge_attr_dd_in_ll, down_traffic_nodes_name_ll, up_traffic_nodes_name_ll, deleted_edge_as_src_dst_node_ll = Array())
-  // This function add curved Blue or Grey Lines in order to demonstray increasing or descresing data traffic over links after deleting particular edge
-  {
-      paint_js_edges_node_order_is_matter(down_all_edge_attr_dd_in_ll, {'width': 8, color: {color:'#808080', opacity: 0.7, hover: '#4d4d4d'}, 'comment': 'updown_traffic_node'});
-      // 808080 grey 
-      /*
-      up_all_edge_attr_dd_in_ll = [
-      arrows: {from: true, to: true}
-      color: {color: "#3399ff", opacity: 0.9, hover: "#1a8cff"}
-      comment: "updown_traffic_node"
-      from: "123.14.14.14"
-      id: "123.14.14.14_to_123.123.111.111_9"
-      new_edge: true
-      parent_edge_id: "123.14.14.14_to_123.123.111.111"
-      smooth: {enabled: true, type: "curvedCW", roundness: 0.30000000000000004}
-      title: "<p><p>123.14.14.14 -> 123.123.111.111 bw old:6.00 new:12.00, UP rate:100.00 </p>123.123.111.111 -> 123.14.14.14 bw old:6.00 new:12.00, UP rate:100.00 </p>"
-      to: "123.123.111.111"
-      value: 100
-      width: 8]
-      */
-      paint_js_edges_node_order_is_matter(up_all_edge_attr_dd_in_ll, {'width': 8, color: {color:'#3399ff', opacity: 0.9, hover: '#1a8cff'}, 'comment': 'updown_traffic_node'}, rewrite_color=true);
-      // 3399ff - blue
-      if (deleted_edge_as_src_dst_node_ll)
-      {
-        get_right_edge(deleted_edge_as_src_dst_node_ll, data.edges, {color: '#ff0000', 'dashes': true, arrows : { from: {enabled: true, scaleFactor : 1} , to: {enabled: true, scaleFactor : 1}}, 'comment': 'updown_traffic_node'});
-      }
-      // ff0000 - red
-      color_nodes(up_traffic_nodes_name_ll, {color: '#3399ff', 'comment': 'updown_traffic_node'}); // up_traffic_nodes_name_ll = ["123.11.11.11", "123.31.31.31"]
-      // 3399ff - blue
-      color_nodes(down_traffic_nodes_name_ll, {color: '#808080', 'comment': 'updown_traffic_node'}); // down_traffic_nodes_name_ll = ["123.10.10.10", "123.30.30.30"]
-      // 808080 grey 
+// This function add curved Blue or Grey Lines in order to demonstray increasing or descresing data traffic over links after deleting particular edge
+{
+  paint_js_edges_node_order_is_matter(down_all_edge_attr_dd_in_ll, { 'width': 8, color: { color: '#808080', opacity: 0.7, hover: '#4d4d4d' }, 'comment': 'updown_traffic_node' });
+  // 808080 grey 
+  /*
+  up_all_edge_attr_dd_in_ll = [
+  arrows: {from: true, to: true}
+  color: {color: "#3399ff", opacity: 0.9, hover: "#1a8cff"}
+  comment: "updown_traffic_node"
+  from: "123.14.14.14"
+  id: "123.14.14.14_to_123.123.111.111_9"
+  new_edge: true
+  parent_edge_id: "123.14.14.14_to_123.123.111.111"
+  smooth: {enabled: true, type: "curvedCW", roundness: 0.30000000000000004}
+  title: "<p><p>123.14.14.14 -> 123.123.111.111 bw old:6.00 new:12.00, UP rate:100.00 </p>123.123.111.111 -> 123.14.14.14 bw old:6.00 new:12.00, UP rate:100.00 </p>"
+  to: "123.123.111.111"
+  value: 100
+  width: 8]
+  */
+  paint_js_edges_node_order_is_matter(up_all_edge_attr_dd_in_ll, { 'width': 8, color: { color: '#3399ff', opacity: 0.9, hover: '#1a8cff' }, 'comment': 'updown_traffic_node' }, rewrite_color = true);
+  // 3399ff - blue
+  if (deleted_edge_as_src_dst_node_ll) {
+    get_right_edge(deleted_edge_as_src_dst_node_ll, data.edges, { color: '#ff0000', 'dashes': true, arrows: { from: { enabled: true, scaleFactor: 1 }, to: { enabled: true, scaleFactor: 1 } }, 'comment': 'updown_traffic_node' });
   }
+  // ff0000 - red
+  color_nodes(up_traffic_nodes_name_ll, { color: '#3399ff', 'comment': 'updown_traffic_node' }); // up_traffic_nodes_name_ll = ["123.11.11.11", "123.31.31.31"]
+  // 3399ff - blue
+  color_nodes(down_traffic_nodes_name_ll, { color: '#808080', 'comment': 'updown_traffic_node' }); // down_traffic_nodes_name_ll = ["123.10.10.10", "123.30.30.30"]
+  // 808080 grey 
+}
 
 function hide_edges_by_edge_attribute(edge_attribute_name, edge_attribute_value) {
   // set hidden: true for all edges with isis_level == 2
@@ -2396,7 +2355,7 @@ function hide_edges_by_edge_attribute(edge_attribute_name, edge_attribute_value)
   let arr = Array();
   edges.forEach(function (edge_attr) {
     if (edge_attr.hasOwnProperty(edge_attribute_name) && edge_attr[edge_attribute_name] == edge_attribute_value) {
-      Object.assign(edge_attr, {'hidden': true}); // #ffffff white
+      Object.assign(edge_attr, { 'hidden': true }); // #ffffff white
       arr.push(edge_attr);
     }
   })
@@ -2409,14 +2368,14 @@ function unhide_edges_by_edge_attribute(edge_attribute_name, edge_attribute_valu
   let arr = Array();
   edges.forEach(function (edge_attr) {
     if (edge_attr.hasOwnProperty(edge_attribute_name) && edge_attr[edge_attribute_name] == edge_attribute_value) {
-        Object.assign(edge_attr, {'hidden': false});
+      Object.assign(edge_attr, { 'hidden': false });
       arr.push(edge_attr);
     }
   })
   data.edges.update(arr);
 }
 
-function color_isis_edges_by_edge_attribute(edge_attribute_name='isis_level', edge_attribute_value, level_number=0) {
+function color_isis_edges_by_edge_attribute(edge_attribute_name = 'isis_level', edge_attribute_value, level_number = 0) {
 
   if (level_number == 1) {
     var _color = '#ef9901'; // amber
@@ -2431,7 +2390,7 @@ function color_isis_edges_by_edge_attribute(edge_attribute_name='isis_level', ed
   let arr = Array();
   edges.forEach(function (edge_attr) {
     if (edge_attr.hasOwnProperty(edge_attribute_name) && edge_attr[edge_attribute_name] == edge_attribute_value) {
-        Object.assign(edge_attr, {'color': _color});
+      Object.assign(edge_attr, { 'color': _color });
       arr.push(edge_attr);
     }
   })
@@ -2445,90 +2404,82 @@ function get_removed_edges_id(selected_edge_attr, _shared_removed_edge_vis_id_in
   The func operates based on attributes assigned on edges
   */
   let dr_neighbor_edges_ll = Array();
-  if (typeof selected_edge_attr.ecmp_parent_edge_id !== 'undefined' && selected_edge_attr.comment != "deleted_edge")
-    {
-      // directed edge after unflating ECMP edges
+  if (typeof selected_edge_attr.ecmp_parent_edge_id !== 'undefined' && selected_edge_attr.comment != "deleted_edge") {
+    // directed edge after unflating ECMP edges
+    removed_js_edge_ids_set.add(selected_edge_attr.id);
+  }
+  else if (selected_edge_attr.comment == "updown_traffic_node") {
+    removed_js_edge_ids_set.add(selected_edge_attr.parent_edge_id);
+  }
+  else if (selected_edge_attr.comment == "deleted_edge") {
+    removed_js_edge_ids_set.delete(selected_edge_attr.id);
+    // if we mark deleted edge, but it shares media with DR and multiple neighbors
+    // we can click on any link between multiple neighbors and we need to remove all edges between neighbors
+    let dr_neighbor_edges_ll = edges.get({
+      filter: function (item) { return item.dr_ip_address == selected_edge_attr.dr_ip_address }
+    });
+    // we should exclude directed links from it. Because once you select directed edge, we do not need to add reverse edge to deleted
+    if (dr_neighbor_edges_ll.length > 0 && typeof selected_edge_attr.ecmp_parent_edge_id === 'undefined') {
+      dr_neighbor_edges_ll.forEach(function (edgeAttrToNeighbor) { removed_js_edge_ids_set.delete(edgeAttrToNeighbor.id) });
+    }
+  }
+  else {
+    if (_shared_removed_edge_vis_id_in_ll.length > 0) {
+      for (var i = 0; i < _shared_removed_edge_vis_id_in_ll.length; i++) {
+        removed_js_edge_ids_set.add(_shared_removed_edge_vis_id_in_ll[i].id);
+      }
+    }
+    else {
       removed_js_edge_ids_set.add(selected_edge_attr.id);
     }
-  else if (selected_edge_attr.comment == "updown_traffic_node")
-    {
-      removed_js_edge_ids_set.add(selected_edge_attr.parent_edge_id);
-    }
-  else if (selected_edge_attr.comment == "deleted_edge")
-    {
-      removed_js_edge_ids_set.delete(selected_edge_attr.id);
-      // if we mark deleted edge, but it shares media with DR and multiple neighbors
-      // we can click on any link between multiple neighbors and we need to remove all edges between neighbors
-      let dr_neighbor_edges_ll = edges.get({
-        filter: function (item) {return item.dr_ip_address == selected_edge_attr.dr_ip_address}
-        });
-      // we should exclude directed links from it. Because once you select directed edge, we do not need to add reverse edge to deleted
-      if (dr_neighbor_edges_ll.length > 0 && typeof selected_edge_attr.ecmp_parent_edge_id === 'undefined') {
-        dr_neighbor_edges_ll.forEach(function(edgeAttrToNeighbor) {removed_js_edge_ids_set.delete(edgeAttrToNeighbor.id)});
-      }
-    }
-  else
-    {
-      if (_shared_removed_edge_vis_id_in_ll.length > 0) {
-        for (var i = 0; i < _shared_removed_edge_vis_id_in_ll.length; i++) {
-          removed_js_edge_ids_set.add(_shared_removed_edge_vis_id_in_ll[i].id);
-        }
-      }
-      else {
-        removed_js_edge_ids_set.add(selected_edge_attr.id);
-      }
-    }
+  }
   // remove igraph directed edges
-  if (selected_edge_attr && typeof selected_edge_attr.igraph_edges_id_ll !== 'undefined') 
-    {
-      if (selected_edge_attr.comment != "deleted_edge") {
-        if (Array.isArray(selected_edge_attr.igraph_edges_id_ll))
-            {
-              selected_edge_attr.igraph_edges_id_ll.forEach(function(edge_id) {removed_edge_ids_set.add(edge_id)});
-            }
-          else
-            {
-              removed_edge_ids_set.add(selected_edge_attr.igraph_edges_id_ll)
-            }
-        }
+  if (selected_edge_attr && typeof selected_edge_attr.igraph_edges_id_ll !== 'undefined') {
+    if (selected_edge_attr.comment != "deleted_edge") {
+      if (Array.isArray(selected_edge_attr.igraph_edges_id_ll)) {
+        selected_edge_attr.igraph_edges_id_ll.forEach(function (edge_id) { removed_edge_ids_set.add(edge_id) });
+      }
       else {
-        // remove only recovered from deleted edge igraph edges ids
-        if (Array.isArray(selected_edge_attr.igraph_edges_id_ll)) {
-          selected_edge_attr.igraph_edges_id_ll.forEach(function(edge_id) {removed_edge_ids_set.delete(edge_id)});
-        }
-        else {
-          removed_edge_ids_set.delete(selected_edge_attr.igraph_edges_id_ll);
-        }
-        if (dr_neighbor_edges_ll.length > 0) {
-          // remove all igraph edges ID from all neighboars of shared media
-          dr_neighbor_edges_ll.forEach(function(edgeAttrToNeighbor) {
-            if (Array.isArray(edgeAttrToNeighbor.igraph_edges_id_ll)) {
-              edgeAttrToNeighbor.igraph_edges_id_ll.forEach(function(edge_id) {removed_edge_ids_set.delete(edge_id)});
-            }
-            else {
-              removed_edge_ids_set.delete(edge_id)
-            }
-          });
-        }
+        removed_edge_ids_set.add(selected_edge_attr.igraph_edges_id_ll)
       }
     }
+    else {
+      // remove only recovered from deleted edge igraph edges ids
+      if (Array.isArray(selected_edge_attr.igraph_edges_id_ll)) {
+        selected_edge_attr.igraph_edges_id_ll.forEach(function (edge_id) { removed_edge_ids_set.delete(edge_id) });
+      }
+      else {
+        removed_edge_ids_set.delete(selected_edge_attr.igraph_edges_id_ll);
+      }
+      if (dr_neighbor_edges_ll.length > 0) {
+        // remove all igraph edges ID from all neighboars of shared media
+        dr_neighbor_edges_ll.forEach(function (edgeAttrToNeighbor) {
+          if (Array.isArray(edgeAttrToNeighbor.igraph_edges_id_ll)) {
+            edgeAttrToNeighbor.igraph_edges_id_ll.forEach(function (edge_id) { removed_edge_ids_set.delete(edge_id) });
+          }
+          else {
+            removed_edge_ids_set.delete(edge_id)
+          }
+        });
+      }
+    }
+  }
   removed_js_edge_ids_ll = Array.from(removed_js_edge_ids_set)
   removed_edge_ids_ll = Array.from(removed_edge_ids_set)
   return removed_js_edge_ids_ll, removed_edge_ids_ll
-  }
+}
 
-  function get_edge_remove_outcome(graph_id, selected_edge_attr = Array(), plan_when_changed_ospf_cost = false)
-  {
-    /*
-    when we under NetworkReactionOnFailure View, press on the edge. We show network reaction on a failure of such edge. How traffic will overflow such segment
-    We might press 
-    on unchanged edge with 1.1.1.1_to_1.1.1.2 id or so we choose igraph_edges_id_ll with all inside igraph edges and JS edge ID for removed_js_edge_ids_ll
-    coloured edge id 2.2.2.2_to_2.2.2.3_99 but we should add not ..._99 we take parent_edge_id for removed_js_edge_ids_ll as removed edge because We emulate NetworkReaction on a graph from scratch. ALso takes igraph_edges_id_ll
-    ECMP edge with ecmp_parent_edge_id = 3.3.3.3_to_3.3.3.4 and id 3.3.3.3_to_3.3.3.4_199 <- Take value from igraph_edges_id_ll (it always single digit in directed graphs). edge id for removed_js_edge_ids_ll
-    
-    plan_when_changed_ospf_cost Boolean
-    when plan_when_changed_ospf_cost = True we pass a dictionary with changed ospf link cost and backend function should take it into account
-    */
+function get_edge_remove_outcome(graph_id, selected_edge_attr = Array(), plan_when_changed_ospf_cost = false) {
+  /*
+  when we under NetworkReactionOnFailure View, press on the edge. We show network reaction on a failure of such edge. How traffic will overflow such segment
+  We might press 
+  on unchanged edge with 1.1.1.1_to_1.1.1.2 id or so we choose igraph_edges_id_ll with all inside igraph edges and JS edge ID for removed_js_edge_ids_ll
+  coloured edge id 2.2.2.2_to_2.2.2.3_99 but we should add not ..._99 we take parent_edge_id for removed_js_edge_ids_ll as removed edge because We emulate NetworkReaction on a graph from scratch. ALso takes igraph_edges_id_ll
+  ECMP edge with ecmp_parent_edge_id = 3.3.3.3_to_3.3.3.4 and id 3.3.3.3_to_3.3.3.4_199 <- Take value from igraph_edges_id_ll (it always single digit in directed graphs). edge id for removed_js_edge_ids_ll
+  
+  plan_when_changed_ospf_cost Boolean
+  when plan_when_changed_ospf_cost = True we pass a dictionary with changed ospf link cost and backend function should take it into account
+  */
   /*
   if (typeof selected_edge_attr.ecmp_parent_edge_id !== 'undefined')
     {
@@ -2565,8 +2516,8 @@ function get_removed_edges_id(selected_edge_attr, _shared_removed_edge_vis_id_in
   else {
     // clear painted SPT paths
     let is_painted_edges = edges.get({
-      filter: function (item) {return item.color}
-      });
+      filter: function (item) { return item.color }
+    });
     if (is_painted_edges) {
       ClearPaintedGraph();
     }
@@ -2574,69 +2525,68 @@ function get_removed_edges_id(selected_edge_attr, _shared_removed_edge_vis_id_in
 
   let do_include_all_shared_media_neighbors = false;
   if (document.getElementById('do_include_all_shared_media_neighbors') !== null) {
-    do_include_all_shared_media_neighbors = document.getElementById("do_include_all_shared_media_neighbors").checked ;
+    do_include_all_shared_media_neighbors = document.getElementById("do_include_all_shared_media_neighbors").checked;
   }
 
   $.ajax({
-      url: "/get_edge_remove_outcome",
+    url: "/get_edge_remove_outcome",
     type: "post",
-    data: {'graph_id': graph_id, "removed_edge_ids_ll_json": JSON.stringify(removed_edge_ids_ll), "plan_when_changed_ospf_cost": plan_when_changed_ospf_cost, "changed_edge_cost_dd_json": JSON.stringify(changed_edge_cost_dd),'selected_edge_attr': JSON.stringify(selected_edge_attr), 'do_include_all_shared_media_neighbors': do_include_all_shared_media_neighbors},
-    success:  function callbackFunc(response)
-  {
-    
-    unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
-    // console.log('lets remove edges through which we noticed DOWN traffic: ');
-    remove_unnumbered_edge(response.down_all_edge_attr_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
-    // console.log('lets remove edges through which we noticed UP traffic: ');
-    remove_unnumbered_edge(response.up_all_edge_attr_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
-    paint_network_reaction_results(response.down_all_edge_attr_dd_in_ll, response.up_all_edge_attr_dd_in_ll, response.down_traffic_nodes_name_ll, response.up_traffic_nodes_name_ll);
-    mark_edges_id_as_deleted(removed_js_edge_ids_ll);
-    // backend detected that removed edge is on shared media (with DRs) so we need to mark all shared links as deleted
-    if (!plan_when_changed_ospf_cost && response.shared_removed_edge_vis_id_in_ll.length > 0 && document.getElementById("do_include_all_shared_media_neighbors").checked === true) {
-      removed_js_edge_ids_ll, removed_edge_ids_ll = get_removed_edges_id(selected_edge_attr, response.shared_removed_edge_vis_id_in_ll);
+    data: { 'graph_id': graph_id, "removed_edge_ids_ll_json": JSON.stringify(removed_edge_ids_ll), "plan_when_changed_ospf_cost": plan_when_changed_ospf_cost, "changed_edge_cost_dd_json": JSON.stringify(changed_edge_cost_dd), 'selected_edge_attr': JSON.stringify(selected_edge_attr), 'do_include_all_shared_media_neighbors': do_include_all_shared_media_neighbors },
+    success: function callbackFunc(response) {
+
+      unflat_ecmp(response.to_unflat_ecmp_edges_id_ll);
+      // console.log('lets remove edges through which we noticed DOWN traffic: ');
+      remove_unnumbered_edge(response.down_all_edge_attr_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+      // console.log('lets remove edges through which we noticed UP traffic: ');
+      remove_unnumbered_edge(response.up_all_edge_attr_dd_in_ll, response.to_unflat_ecmp_edges_id_ll); // remove 1.1.1.1_2.2.2.2, because in SPT path we use 1.1.1.1_2.2.2.2_88 where 88 is edge id in igraph
+      paint_network_reaction_results(response.down_all_edge_attr_dd_in_ll, response.up_all_edge_attr_dd_in_ll, response.down_traffic_nodes_name_ll, response.up_traffic_nodes_name_ll);
       mark_edges_id_as_deleted(removed_js_edge_ids_ll);
+      // backend detected that removed edge is on shared media (with DRs) so we need to mark all shared links as deleted
+      if (!plan_when_changed_ospf_cost && response.shared_removed_edge_vis_id_in_ll.length > 0 && document.getElementById("do_include_all_shared_media_neighbors").checked === true) {
+        removed_js_edge_ids_ll, removed_edge_ids_ll = get_removed_edges_id(selected_edge_attr, response.shared_removed_edge_vis_id_in_ll);
+        mark_edges_id_as_deleted(removed_js_edge_ids_ll);
+      }
+
+      // update_ecmp_weight(); I couldn't control width of ECMP links
     }
+  })
+}
+function update_ecmp_weight() {
+  /*
+  we update ECMP weight according to max value of others links. after link reaction weight could be 500 or 800
 
-    // update_ecmp_weight(); I couldn't control width of ECMP links
-  }
-        })
-  }
-  function update_ecmp_weight() {
-    /*
-    we update ECMP weight according to max value of others links. after link reaction weight could be 500 or 800
+  arrows: {from: true, to: false}
+  color: {color: "#808080", opacity: 0.7, hover: "#4d4d4d"}
+  comment: "updown_traffic_node"
+  from: "123.15.15.15"
+  id: "123.15.15.15_to_123.123.110.110_28"
+  igraph_edges_id_ll: [28]
+  new_edge: false
+  parent_edge_id: "123.15.15.15_to_123.123.110.110"
+  title: "<p>123.123.110.110 -> 123.15.15.15 DOWN traffic rate:500.00% </p><p>123.123.110.110-<b>10</b>->123.15.15.15</p><p>123.15.15.15-<b>10</b>->123.123.110.110</p>"
+  to: "123.123.110.110"
+  value: 500
+  width: 8
+  */
 
-    arrows: {from: true, to: false}
-    color: {color: "#808080", opacity: 0.7, hover: "#4d4d4d"}
-    comment: "updown_traffic_node"
-    from: "123.15.15.15"
-    id: "123.15.15.15_to_123.123.110.110_28"
-    igraph_edges_id_ll: [28]
-    new_edge: false
-    parent_edge_id: "123.15.15.15_to_123.123.110.110"
-    title: "<p>123.123.110.110 -> 123.15.15.15 DOWN traffic rate:500.00% </p><p>123.123.110.110-<b>10</b>->123.15.15.15</p><p>123.15.15.15-<b>10</b>->123.123.110.110</p>"
-    to: "123.123.110.110"
-    value: 500
-    width: 8
-    */
-   
-    // retriev ECMP links
+  // retriev ECMP links
   var scalled_edges_dd_ll = edges.get({
     fields: ['value'],
     //fields: ['weight'],
     filter: function (item) {
       return (item.value > 0);
     }
-    });
+  });
   // get max value
   let index, max_value, min_value = 0;
 
   scalled_edges_dd_ll.forEach(function (o) {
-      Object.keys(o).forEach(function (k) {                
-          if (o[k] !== null) {
-            min_value = Math.min(min_value, o[k]);
-            max_value = Math.max(max_value, o[k]);
-          }
-      });
+    Object.keys(o).forEach(function (k) {
+      if (o[k] !== null) {
+        min_value = Math.min(min_value, o[k]);
+        max_value = Math.max(max_value, o[k]);
+      }
+    });
   });
 
   // retriev all ECMP edges
@@ -2645,13 +2595,13 @@ function get_removed_edges_id(selected_edge_attr, _shared_removed_edge_vis_id_in
     filter: function (item) {
       return (item.inside_ecmp_edges_ll);
     }
-    });
+  });
 
   let arr = Array();
-  for (let ecmp_edges_ind in ecmp_edges_dd_ll) { 
+  for (let ecmp_edges_ind in ecmp_edges_dd_ll) {
     let ecmp_edges_attr = ecmp_edges_dd_ll[ecmp_edges_ind];
     //Object.assign(ecmp_edges_attr, {'value': min_value, 'label': 'ECMP'}); // It's too big to print ECMP and too weight
-    Object.assign(ecmp_edges_attr, {'value': 10});
+    Object.assign(ecmp_edges_attr, { 'value': 10 });
     arr.push(ecmp_edges_attr);
     // console.log('new edge attributes', ecmp_edges_attr);
   }
@@ -2661,49 +2611,50 @@ function get_removed_edges_id(selected_edge_attr, _shared_removed_edge_vis_id_in
     Object.assign(_edge_attr, {'value': max_value/2})
     });
   */
-  }
-  function mark_edges_w_changed_ospf_cost_as_changed(){
-    // update edge label
-    // It doesn't work! It always shows last updated edge as `changed`. We make request edges.get('1.1.1.1_to_1.1.1.2') but receive 1.1.1.2_to_1.1.1.8 (last changed edge)
-    let arr = Array();
-    // console.log('all edges ID', edges.getIds());
-    for (let _js_edge_id in changed_js_edge_cost_dd) {
-        // changed_js_edge_cost_dd = {10.1.1.1_to_10.1.1.2: {'js_edge_new_weight': 1, 'original_js_edge_weight': 1, 'igraph_edge_id': 123}}
-        for (var n in [0,1]) {
+}
+function mark_edges_w_changed_ospf_cost_as_changed() {
+  // update edge label
+  // It doesn't work! It always shows last updated edge as `changed`. We make request edges.get('1.1.1.1_to_1.1.1.2') but receive 1.1.1.2_to_1.1.1.8 (last changed edge)
+  let arr = Array();
+  // console.log('all edges ID', edges.getIds());
+  for (let _js_edge_id in changed_js_edge_cost_dd) {
+    // changed_js_edge_cost_dd = {10.1.1.1_to_10.1.1.2: {'js_edge_new_weight': 1, 'original_js_edge_weight': 1, 'igraph_edge_id': 123}}
+    for (var n in [0, 1]) {
 
-          if (n == 0) {
-            let js_edge_attr = edges.get({
-              filter: function (item) {
-                return (item.id == _js_edge_id);
-              }
-              }); }
-          else { 
-            let _edge_id = `${_js_edge_id}_${changed_js_edge_cost_dd[_js_edge_id]['igraph_edge_id']}`;
-            //let js_edge_attr = edges.get(_edge_id);  
-            let js_edge_attr = edges.get({
-              filter: function (item) {
-                return (item.id == _edge_id.toString());
-              }
-              });
+      if (n == 0) {
+        let js_edge_attr = edges.get({
+          filter: function (item) {
+            return (item.id == _js_edge_id);
           }
-                    
-          if (js_edge_attr) {
-            Object.assign(js_edge_attr, {label: 'changed', font: {align: 'horizontal'}});
-            arr.push(js_edge_attr);
-            }
-          }
+        });
       }
-    data.edges.update(arr);
+      else {
+        let _edge_id = `${_js_edge_id}_${changed_js_edge_cost_dd[_js_edge_id]['igraph_edge_id']}`;
+        //let js_edge_attr = edges.get(_edge_id);  
+        let js_edge_attr = edges.get({
+          filter: function (item) {
+            return (item.id == _edge_id.toString());
+          }
+        });
+      }
+
+      if (js_edge_attr) {
+        Object.assign(js_edge_attr, { label: 'changed', font: { align: 'horizontal' } });
+        arr.push(js_edge_attr);
+      }
+    }
   }
+  data.edges.update(arr);
+}
 // #123#################
 
 // #456################
-function ValidateIPaddress(ipaddress) {  
-  if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {  
-    return (true)  
-  }  
-  return (false)  
-}  
+function ValidateIPaddress(ipaddress) {
+  if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {
+    return (true)
+  }
+  return (false)
+}
 
 function resetAllNodes() {
   // not used
@@ -2720,9 +2671,9 @@ function resetAllNodesStabilize() {
   resetAllNodes();
   network.stabilize();
   // clear old description about SPT paths
-  add_spt_description(Array(), clear=true);
+  add_spt_description(Array(), clear = true);
   // clear old description
-  add_backup_path_description(Array(), clear=true);
+  add_backup_path_description(Array(), clear = true);
   // clear deleted edges
   removed_edge_id_from_spt_path_ll_in_ll = Array();
   // clear warning message if it is
@@ -2736,17 +2687,17 @@ function ClearPaintedGraph() {
   var reseted_nodes_ll = Array();
 
   var painted_edges_w_comments = edges.get({
-      filter: function (item) {
-        return (item.comment);
-      }
-    });
+    filter: function (item) {
+      return (item.comment);
+    }
+  });
   // get all painted nodes
   var painted_nodes_attr_ll = nodes.get({
-      filter: function (item) {
-        //return (item.comment == "updown_traffic_node");
-        return (item.color);
-      }
-    });
+    filter: function (item) {
+      //return (item.comment == "updown_traffic_node");
+      return (item.color);
+    }
+  });
   // prepare edges ID list
   for (var n in painted_edges_w_comments) {
     edge_attr = painted_edges_w_comments[n];
@@ -2768,7 +2719,7 @@ function ClearPaintedGraph() {
 
   // if clear labels button is enabled - clear it
   if (elementExists("hideLinkCostBtn") && document.getElementById('hideLinkCostBtn').checked == false) {
-    mark_all_edges_for_dyn_filtering(conf={"labelFrom": "","labelTo": ""})
+    mark_all_edges_for_dyn_filtering(conf = { "labelFrom": "", "labelTo": "" })
   }
   nodes.update(reseted_nodes_ll);
   console.log('Clearing the Graph has been finished...')
@@ -2781,12 +2732,12 @@ function ResetGraph_and_Variables(for_ospfwatcher = false) {
 
     if (!for_ospfwatcher) {
       // clear old warning how to use SPT
-      add_spt_warning_description(clear=true);
+      add_spt_warning_description(clear = true);
 
       // clear old description about SPT paths
-      add_spt_description(Array(), clear=true);
+      add_spt_description(Array(), clear = true);
       // clear old description
-      add_backup_path_description(Array(), clear=true);
+      add_backup_path_description(Array(), clear = true);
       // clear deleted edges
       removed_edge_id_from_spt_path_ll_in_ll = Array();
       // clear warning message if it is
@@ -2836,7 +2787,7 @@ function _pressed_button_name() {
   }
   return pressed_button
 }
-function print_element_descriptions_NetworkReaction () {
+function print_element_descriptions_NetworkReaction() {
   let content = '<blockquote class="blockquote text-center">';
   content += '<p class="mb-0">Simulate a link or router shutdown. Look at traffic flow around failed link or router</p>';
   content += '<footer class="blockquote-footer">Simulate a link failure just clicking on a link <a class="badge badge-info" href="/how-to#ospf-network-reaction-on-a-link-failure">example</a></footer>';
@@ -2845,144 +2796,144 @@ function print_element_descriptions_NetworkReaction () {
   content += '</blockquote>';
   // Mark all DR neigbors as deleted if one of his neighbor marked as deleted or not
   content += '<div class="form-group form-check">';
-	content += '<input type="checkbox" class="form-check-input" name="do_include_all_shared_media_neighbors" id="do_include_all_shared_media_neighbors" checked>';
-	content += '<label style="background-color:#ff9a00;" class="form-check-label" for="do_include_all_shared_media_neighbors">Mark all shared media links (which have common DR) as deleted<a class="badge badge-info" href="/how-to#ospf-network-reaction-on-a-link-failure-dr-enabled"> example</a></label>';
+  content += '<input type="checkbox" class="form-check-input" name="do_include_all_shared_media_neighbors" id="do_include_all_shared_media_neighbors" checked>';
+  content += '<label style="background-color:#ff9a00;" class="form-check-label" for="do_include_all_shared_media_neighbors">Mark all shared media links (which have common DR) as deleted<a class="badge badge-info" href="/how-to#ospf-network-reaction-on-a-link-failure-dr-enabled"> example</a></label>';
   content += '</div>';
   show('description_elem'); // change display settings in order to see text
-  document.getElementById('description_elem').innerHTML = content; 
+  document.getElementById('description_elem').innerHTML = content;
 }
 
 function display_graph_statistics() {
-    if (typeof graph_id === 'undefined' || !graph_id) {
-        console.error("Graph ID not available");
-        return;
-    }
-    
-    $.ajax({
-        url: "/get_graph_statistics",
-        method: "POST",
-        data: {"graph_id": graph_id},
-        success: function(response) {
-            let stats = response.statistics;
-            let score = response.score;
-            
-            let content = '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">';
-            
-            // Left side: Statistics
-            content += '<div style="flex: 1; min-width: 250px; max-width: 100%;">';
-            content += '<h5>Graph Statistics</h5>';
-            content += '<table class="table table-sm table-borderless" style="margin-bottom: 0;">';
-            
-            // Protocol field
-            if (stats.protocol) {
-                content += '<tr><td><strong>Protocol:</strong></td><td>' + stats.protocol + '</td></tr>';
-            }
-            
-            // Watcher name field
-            if (stats.watcher_name) {
-                content += '<tr><td><strong>Watcher:</strong></td><td>' + stats.watcher_name + '</td></tr>';
-            } else if (stats.is_from_watcher === false) {
-                content += '<tr><td><strong>Watcher:</strong></td><td><span style="color: #6c757d;">Not monitored</span></td></tr>';
-            }
-            
-            // Nodes field - clickable
-            content += '<tr><td><strong>Nodes:</strong></td><td>';
-            content += '<details id="nodes_details">';
-            content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;">' + stats.nodes + '</summary>';
-            content += '<div id="nodes_table_container"></div>';
-            content += '</details></td></tr>';
-            
-            content += '<tr><td><strong>Edges:</strong></td><td>' + stats.edges + '</td></tr>';
-            
-            // Subnets field - clickable
-            let subnetText = stats.networks;
-            if (stats.network_entries && stats.network_entries !== stats.networks) {
-                subnetText = stats.networks + ' unique (' + stats.network_entries + ' entries)';
-            }
-            content += '<tr><td><strong>Subnets:</strong></td><td>';
-            content += '<details id="subnets_details">';
-            content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;">' + subnetText + '</summary>';
-            content += '<div id="subnets_table_container"></div>';
-            content += '</details></td></tr>';
-            
-            // Backuped field - clickable
-            content += '<tr><td><strong>Backuped:</strong></td><td>';
-            content += '<details id="backuped_details">';
-            content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;"><span style="color: green;">' + stats.backuped_networks + '</span></summary>';
-            content += '<div id="backuped_table_container"></div>';
-            content += '</details></td></tr>';
-            
-            // Non Backuped field - clickable
-            content += '<tr><td><strong>Non backuped:</strong></td><td>';
-            content += '<details id="non_backuped_details">';
-            content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;"><span style="color: red;">' + stats.non_backuped_networks + '</span></summary>';
-            content += '<div id="non_backuped_table_container"></div>';
-            content += '</details></td></tr>';
-            
-            // Areas field - clickable (if areas > 0)
-            if (stats.areas > 0) {
-                content += '<tr><td><strong>Areas:</strong></td><td>';
-                content += '<details id="areas_details">';
-                content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;">' + stats.areas + '</summary>';
-                content += '<div id="areas_table_container"></div>';
-                content += '</details></td></tr>';
-            }
-            content += '</table>';
-            content += '</div>';
-            
-            // Right side: Network Score (min-width: 0 allows flex item to shrink so content wraps inside)
-            content += '<div style="flex: 1; min-width: 0; max-width: 100%; border-left: 2px solid #ddd; padding-left: 20px;">';
-            content += '<h5>Network Score: ' + score.total + '/' + score.max + '</h5>';
-            
-            // Score bar
-            let scoreColor = score.percentage >= 80 ? 'success' : (score.percentage >= 60 ? 'warning' : 'danger');
-            content += '<div class="progress" style="height: 30px; margin-bottom: 15px;">';
-            content += '<div class="progress-bar bg-' + scoreColor + '" role="progressbar" style="width: ' + score.percentage + '%;" aria-valuenow="' + score.total + '" aria-valuemin="0" aria-valuemax="' + score.max + '">';
-            content += score.percentage.toFixed(0) + '%';
-            content += '</div></div>';
-            
-            // Score details with Pass/Failed and advice
-            content += '<div style="max-height: 300px; overflow-y: auto;">';
-            score.details.forEach(function(detail) {
-                let statusClass = detail.passed ? 'success' : 'danger';
-                let statusText = detail.passed ? 'Pass' : 'Failed';
-                let statusIcon = detail.passed ? '✓' : '✗';
-                let borderColor = detail.passed ? '#28a745' : '#dc3545';
-                
-                content += '<div style="margin-bottom: 10px; padding: 8px; border-left: 3px solid ' + borderColor + '; background-color: #f8f9fa;">';
-                content += '<strong>' + statusIcon + ' ' + statusText + ':</strong> ' + detail.message;
-                
-                if (detail.advice && !detail.passed) {
-                    content += '<br><small style="color: #6c757d; font-style: italic; display: block; word-wrap: break-word; overflow-wrap: break-word;">💡 ' + detail.advice + '</small>';
-                }
-                content += '</div>';
-            });
-            content += '</div>';
-            content += '</div>';
-            
-            content += '</div>';
-            
-            // Append statistics below instructions in description_elem (with collapsible section)
-            let existingContent = document.getElementById('description_elem').innerHTML;
-            let scoreText = score.total + '/' + score.max + ' (' + score.percentage.toFixed(0) + '%)';
-            let scoreColorHex = score.percentage >= 80 ? '#28a745' : (score.percentage >= 60 ? '#ffc107' : '#dc3545');
-            let statisticsSection = '<details style="margin-top: 20px;"><summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">📊 Network Statistics & Score: <span style="color: ' + scoreColorHex + '; font-weight: bold;">' + scoreText + '</span></summary><div style="padding: 15px 0;">' + content + '</div></details>';
-            let separator = existingContent ? '' : '';
-            document.getElementById('description_elem').innerHTML = existingContent + separator + statisticsSection;
-            
-            // Attach event listeners for clickable fields
-            attach_statistics_details_listeners();
-        },
-        error: function(xhr, status, error) {
-            console.error("Error fetching graph statistics:", error);
-            // Show error message
-            show('description_elem');
-            document.getElementById('description_elem').innerHTML = '<div class="alert alert-warning">Unable to load graph statistics. Please ensure a graph is loaded.</div>';
+  if (typeof graph_id === 'undefined' || !graph_id) {
+    console.error("Graph ID not available");
+    return;
+  }
+
+  $.ajax({
+    url: "/get_graph_statistics",
+    method: "POST",
+    data: { "graph_id": graph_id },
+    success: function (response) {
+      let stats = response.statistics;
+      let score = response.score;
+
+      let content = '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">';
+
+      // Left side: Statistics
+      content += '<div style="flex: 1; min-width: 250px; max-width: 100%;">';
+      content += '<h5>Graph Statistics</h5>';
+      content += '<table class="table table-sm table-borderless" style="margin-bottom: 0;">';
+
+      // Protocol field
+      if (stats.protocol) {
+        content += '<tr><td><strong>Protocol:</strong></td><td>' + stats.protocol + '</td></tr>';
+      }
+
+      // Watcher name field
+      if (stats.watcher_name) {
+        content += '<tr><td><strong>Watcher:</strong></td><td>' + stats.watcher_name + '</td></tr>';
+      } else if (stats.is_from_watcher === false) {
+        content += '<tr><td><strong>Watcher:</strong></td><td><span style="color: #6c757d;">Not monitored</span></td></tr>';
+      }
+
+      // Nodes field - clickable
+      content += '<tr><td><strong>Nodes:</strong></td><td>';
+      content += '<details id="nodes_details">';
+      content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;">' + stats.nodes + '</summary>';
+      content += '<div id="nodes_table_container"></div>';
+      content += '</details></td></tr>';
+
+      content += '<tr><td><strong>Edges:</strong></td><td>' + stats.edges + '</td></tr>';
+
+      // Subnets field - clickable
+      let subnetText = stats.networks;
+      if (stats.network_entries && stats.network_entries !== stats.networks) {
+        subnetText = stats.networks + ' unique (' + stats.network_entries + ' entries)';
+      }
+      content += '<tr><td><strong>Subnets:</strong></td><td>';
+      content += '<details id="subnets_details">';
+      content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;">' + subnetText + '</summary>';
+      content += '<div id="subnets_table_container"></div>';
+      content += '</details></td></tr>';
+
+      // Backuped field - clickable
+      content += '<tr><td><strong>Backuped:</strong></td><td>';
+      content += '<details id="backuped_details">';
+      content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;"><span style="color: green;">' + stats.backuped_networks + '</span></summary>';
+      content += '<div id="backuped_table_container"></div>';
+      content += '</details></td></tr>';
+
+      // Non Backuped field - clickable
+      content += '<tr><td><strong>Non backuped:</strong></td><td>';
+      content += '<details id="non_backuped_details">';
+      content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;"><span style="color: red;">' + stats.non_backuped_networks + '</span></summary>';
+      content += '<div id="non_backuped_table_container"></div>';
+      content += '</details></td></tr>';
+
+      // Areas field - clickable (if areas > 0)
+      if (stats.areas > 0) {
+        content += '<tr><td><strong>Areas:</strong></td><td>';
+        content += '<details id="areas_details">';
+        content += '<summary style="cursor: pointer; color: #007bff; text-decoration: underline;">' + stats.areas + '</summary>';
+        content += '<div id="areas_table_container"></div>';
+        content += '</details></td></tr>';
+      }
+      content += '</table>';
+      content += '</div>';
+
+      // Right side: Network Score (min-width: 0 allows flex item to shrink so content wraps inside)
+      content += '<div style="flex: 1; min-width: 0; max-width: 100%; border-left: 2px solid #ddd; padding-left: 20px;">';
+      content += '<h5>Network Score: ' + score.total + '/' + score.max + '</h5>';
+
+      // Score bar
+      let scoreColor = score.percentage >= 80 ? 'success' : (score.percentage >= 60 ? 'warning' : 'danger');
+      content += '<div class="progress" style="height: 30px; margin-bottom: 15px;">';
+      content += '<div class="progress-bar bg-' + scoreColor + '" role="progressbar" style="width: ' + score.percentage + '%;" aria-valuenow="' + score.total + '" aria-valuemin="0" aria-valuemax="' + score.max + '">';
+      content += score.percentage.toFixed(0) + '%';
+      content += '</div></div>';
+
+      // Score details with Pass/Failed and advice
+      content += '<div style="max-height: 300px; overflow-y: auto;">';
+      score.details.forEach(function (detail) {
+        let statusClass = detail.passed ? 'success' : 'danger';
+        let statusText = detail.passed ? 'Pass' : 'Failed';
+        let statusIcon = detail.passed ? '✓' : '✗';
+        let borderColor = detail.passed ? '#28a745' : '#dc3545';
+
+        content += '<div style="margin-bottom: 10px; padding: 8px; border-left: 3px solid ' + borderColor + '; background-color: #f8f9fa;">';
+        content += '<strong>' + statusIcon + ' ' + statusText + ':</strong> ' + detail.message;
+
+        if (detail.advice && !detail.passed) {
+          content += '<br><small style="color: #6c757d; font-style: italic; display: block; word-wrap: break-word; overflow-wrap: break-word;">💡 ' + detail.advice + '</small>';
         }
-    });
+        content += '</div>';
+      });
+      content += '</div>';
+      content += '</div>';
+
+      content += '</div>';
+
+      // Append statistics below instructions in description_elem (with collapsible section)
+      let existingContent = document.getElementById('description_elem').innerHTML;
+      let scoreText = score.total + '/' + score.max + ' (' + score.percentage.toFixed(0) + '%)';
+      let scoreColorHex = score.percentage >= 80 ? '#28a745' : (score.percentage >= 60 ? '#ffc107' : '#dc3545');
+      let statisticsSection = '<details style="margin-top: 20px;"><summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">📊 Network Statistics & Score: <span style="color: ' + scoreColorHex + '; font-weight: bold;">' + scoreText + '</span></summary><div style="padding: 15px 0;">' + content + '</div></details>';
+      let separator = existingContent ? '' : '';
+      document.getElementById('description_elem').innerHTML = existingContent + separator + statisticsSection;
+
+      // Attach event listeners for clickable fields
+      attach_statistics_details_listeners();
+    },
+    error: function (xhr, status, error) {
+      console.error("Error fetching graph statistics:", error);
+      // Show error message
+      show('description_elem');
+      document.getElementById('description_elem').innerHTML = '<div class="alert alert-warning">Unable to load graph statistics. Please ensure a graph is loaded.</div>';
+    }
+  });
 }
 
-function print_element_descriptions_GeneralView (with_heatmap = false) {
+function print_element_descriptions_GeneralView(with_heatmap = false) {
   let content = '<blockquote class="blockquote text-center">';
   content += '<p class="mb-0">Build the shortests paths, find backup paths.</p>';
   content += '<footer class="blockquote-footer">Build the shortest path from source node (router) to the destination (right-clicked node menu) <a class="badge badge-info" href="/how-to#how-to-build-ospf-the-shortest-path">example</a></footer>';
@@ -2993,115 +2944,108 @@ function print_element_descriptions_GeneralView (with_heatmap = false) {
     content += '<footer class="blockquote-footer">Size of node is correlated with a number of backuped (green)/ not-backuped (red) stub networks</footer>';
   }
   content += '</blockquote>';
-  
+
   show('description_elem');
   document.getElementById('description_elem').innerHTML = content;
-  
+
   // Load and display statistics (will append below instructions)
   display_graph_statistics();
 }
 
-  // var custom_menu_container = document.getElementById('toggled_buttons');
-  // custom_menu_container.addEventListener('click', onClick);
-  
-  function onClick (event) {
-    //var properties = timeline.getEventProperties(event);
-    // properties contains things like node id, group, x, y, time, etc.
-    //console.log('button click properties:',event);
-    //console.log('custom_menu_container:',custom_menu_container);
+// var custom_menu_container = document.getElementById('toggled_buttons');
+// custom_menu_container.addEventListener('click', onClick);
 
-    var pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-    document.getElementById('description_elem').innerHTML = '';
-    hide('description_elem');
-    // we don't wont that Graph with SPT and backup paths will be on Network reaction Tab
-    //ResetEdgeAttr();
-    ResetGraph_and_Variables();
-  }
+function onClick(event) {
+  //var properties = timeline.getEventProperties(event);
+  // properties contains things like node id, group, x, y, time, etc.
+  //console.log('button click properties:',event);
+  //console.log('custom_menu_container:',custom_menu_container);
 
-function show_focused_node(nodeId)
-  {
-  // get selected focused node
-    // var nodeId = elm.value;
-    if (ValidateIPaddress(nodeId)) 
-    {
-      //statusUpdateSpan = document.getElementById('statusUpdate');
-      color_nodes([nodeId], {size: 10, color: '#c8ff00', 'comment': 'focused_node'});
-      var options = {
-        scale: 2.0,
-        animation: true // default duration is 1000ms and default easingFunction is easeInOutQuad.
-        };
-      network.focus(nodeId, options);
-      //statusUpdateSpan.innerHTML = 'Focusing on node: ' + nodeId;
-    }
-    else {console.log('invalid ip', nodeId)}
+  var pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+  document.getElementById('description_elem').innerHTML = '';
+  hide('description_elem');
+  // we don't wont that Graph with SPT and backup paths will be on Network reaction Tab
+  //ResetEdgeAttr();
+  ResetGraph_and_Variables();
 }
-  function focused_src_node(elm)
-    {
-      // clear painted SPT paths
-      var is_with_spt_path_on_graph = edges.get({
-        filter: function (item) {return ( (item.comment == 'spt_path_edge') || (item.comment == 'backup_path_edge') );}
-      });
-      if (is_with_spt_path_on_graph) {console.log('CLEAR GRAPH', is_with_spt_path_on_graph); ClearPaintedGraph();}
-      // get either node_id looks like ip address, or network
-      //var nodeId = elm.value;
-      var nodeId = elm.value;
-      if (nodeNameToNodeRidMap[nodeId]) {
-        nodeId = nodeNameToNodeRidMap[nodeId]
-      }
-      /*
-      if (nodeId_or_net.includes("/")) {
-        // stub_net_10.0.0.0/16. take only subnets
-        let stub_net = nodeId_or_net;
-        // THE FUNCTION FOR GETTING NODE ID
-        var nodeId = get_term_node_id_by_network(stub_net);
-      }
-      else {
-        var nodeId = nodeId_or_net;
-      }
-      */
-      if (ValidateIPaddress(nodeId)) 
-      {
-        // get selected focused node
-        show_focused_node(nodeId);
-        // try to build SPT path
-        spt_src_node = nodeId; accept_node_for_spt_return_spt();
-      }
-    }
-  function focused_dst_node(elm)
-    {
-    // clear painted SPT paths
-    var is_with_spt_path_on_graph = edges.get({
-        filter: function (item) {return (item.comment);}
-      });
-    if (is_with_spt_path_on_graph) {console.log('CLEAR GRAPH', is_with_spt_path_on_graph); ClearPaintedGraph();}
-    //var nodeId = elm.value;
-    var nodeId = elm.value;
-    if (nodeNameToNodeRidMap[nodeId]) {
-      nodeId = nodeNameToNodeRidMap[nodeId]
-    }
-    /*
-    if (nodeId_or_net.includes("/")) {
-      // stub_net_10.0.0.0/16. take only subnets
-      let stub_net = nodeId_or_net;
-      // THE FUNCTION FOR GETTING NODE ID
-      var nodeId = get_term_node_id_by_network(stub_net);
-    }
-    else {
-      var nodeId = nodeId_or_net;
-    }
-    */
-    if (ValidateIPaddress(nodeId)) 
-    {
-      // try to build SPT path
-      spt_dst_node = nodeId; accept_node_for_spt_return_spt();
-    }
-    }
-  function build_spt_from_button(elm)
-    {
-      spt_src_node = document.getElementById('src_node_ip').value;
-      spt_dst_node = document.getElementById('dst_node_ip').value;
-      accept_node_for_spt_return_spt();
-    }
+
+function show_focused_node(nodeId) {
+  // get selected focused node
+  // var nodeId = elm.value;
+  if (ValidateIPaddress(nodeId)) {
+    //statusUpdateSpan = document.getElementById('statusUpdate');
+    color_nodes([nodeId], { size: 10, color: '#c8ff00', 'comment': 'focused_node' });
+    var options = {
+      scale: 2.0,
+      animation: true // default duration is 1000ms and default easingFunction is easeInOutQuad.
+    };
+    network.focus(nodeId, options);
+    //statusUpdateSpan.innerHTML = 'Focusing on node: ' + nodeId;
+  }
+  else { console.log('invalid ip', nodeId) }
+}
+function focused_src_node(elm) {
+  // clear painted SPT paths
+  var is_with_spt_path_on_graph = edges.get({
+    filter: function (item) { return ((item.comment == 'spt_path_edge') || (item.comment == 'backup_path_edge')); }
+  });
+  if (is_with_spt_path_on_graph) { console.log('CLEAR GRAPH', is_with_spt_path_on_graph); ClearPaintedGraph(); }
+  // get either node_id looks like ip address, or network
+  //var nodeId = elm.value;
+  var nodeId = elm.value;
+  if (nodeNameToNodeRidMap[nodeId]) {
+    nodeId = nodeNameToNodeRidMap[nodeId]
+  }
+  /*
+  if (nodeId_or_net.includes("/")) {
+    // stub_net_10.0.0.0/16. take only subnets
+    let stub_net = nodeId_or_net;
+    // THE FUNCTION FOR GETTING NODE ID
+    var nodeId = get_term_node_id_by_network(stub_net);
+  }
+  else {
+    var nodeId = nodeId_or_net;
+  }
+  */
+  if (ValidateIPaddress(nodeId)) {
+    // get selected focused node
+    show_focused_node(nodeId);
+    // try to build SPT path
+    spt_src_node = nodeId; accept_node_for_spt_return_spt();
+  }
+}
+function focused_dst_node(elm) {
+  // clear painted SPT paths
+  var is_with_spt_path_on_graph = edges.get({
+    filter: function (item) { return (item.comment); }
+  });
+  if (is_with_spt_path_on_graph) { console.log('CLEAR GRAPH', is_with_spt_path_on_graph); ClearPaintedGraph(); }
+  //var nodeId = elm.value;
+  var nodeId = elm.value;
+  if (nodeNameToNodeRidMap[nodeId]) {
+    nodeId = nodeNameToNodeRidMap[nodeId]
+  }
+  /*
+  if (nodeId_or_net.includes("/")) {
+    // stub_net_10.0.0.0/16. take only subnets
+    let stub_net = nodeId_or_net;
+    // THE FUNCTION FOR GETTING NODE ID
+    var nodeId = get_term_node_id_by_network(stub_net);
+  }
+  else {
+    var nodeId = nodeId_or_net;
+  }
+  */
+  if (ValidateIPaddress(nodeId)) {
+    // try to build SPT path
+    spt_dst_node = nodeId; accept_node_for_spt_return_spt();
+  }
+}
+function build_spt_from_button(elm) {
+  spt_src_node = document.getElementById('src_node_ip').value;
+  spt_dst_node = document.getElementById('dst_node_ip').value;
+  accept_node_for_spt_return_spt();
+}
 // #789###############
 function show_spt_dropdown_menu() {
   let content = '<div class="d-flex flex-row bd-highlight mb-3">';
@@ -3123,10 +3067,10 @@ function show_spt_dropdown_menu() {
     let stub_net_attr_dd = stub_nets_attr_dd_ll[stub_net_i]; // {'10.10.10.0/25': '1.1.1.1'} or 'RTR-A' for ISIS
     let stub_net = Object.keys(stub_net_attr_dd)[0];
     content += `<option value="${stub_net_attr_dd[stub_net]}">` + stub_net + '</option>';
-    }
+  }
   content += '</datalist>';
   content += '</div>';
-  
+
   content += '<div class="p-2 bd-highlight">';
   content += 'To: <input type="text" list="dst_nodes" name="dst_node" id="dst_node_ip" onchange="focused_dst_node(this)">';
   content += '<datalist id="dst_nodes">';
@@ -3138,13 +3082,13 @@ function show_spt_dropdown_menu() {
     // OSPF nodes may not have systemid; fall back to name/id to avoid "undefined" values in destination field.
     let systemid = node_attr_dd['systemid'] || node_attr_dd['name'] || node_attr_dd['id'];
     content += `<option value="${systemid}">` + node_attr_dd['label'] + '</option>';
-    }
+  }
   content += '<option>Networks</option>';
   for (var stub_net_i in stub_nets_attr_dd_ll) {
     let stub_net_attr_dd = stub_nets_attr_dd_ll[stub_net_i]; // {'10.10.10.0/25': '1.1.1.1'} or 'RTR-A' for ISIS
     let stub_net = Object.keys(stub_net_attr_dd)[0];
     content += `<option value="${stub_net_attr_dd[stub_net]}">` + stub_net + '</option>';
-    }
+  }
   content += '</datalist>';
   content += '</div>';
 
@@ -3153,11 +3097,11 @@ function show_spt_dropdown_menu() {
   content += '</div>';
 
   content += '</div>';
-  
+
   // For MST checkbox
   content += '<div class="form-group form-check" id="general_view_button_options_div">';
-	content += '<input type="checkbox" class="form-check-input" name="do_print_MST" id="do_print_MST">';
-	content += '<label class="form-check-label" for="do_print_MST">Print <strong>Minimum Shortest Tree (MST)</strong> for the node. If MST is enabled. Show all paths on the fly, since hover the node. Show all </label>';
+  content += '<input type="checkbox" class="form-check-input" name="do_print_MST" id="do_print_MST">';
+  content += '<label class="form-check-label" for="do_print_MST">Print <strong>Minimum Shortest Tree (MST)</strong> for the node. If MST is enabled. Show all paths on the fly, since hover the node. Show all </label>';
   content += '</div>';
   // dynamically show all paths To or From hovered node
   //content += '<p>If MST is enabled. Show all paths on the fly, since hover the node. Show all </p>';
@@ -3174,58 +3118,59 @@ function show_spt_dropdown_menu() {
   content += '<label class="form-check-label" for="hover_node_MST_InOutDiff"><strong>Diff</strong> IN and OUT paths From hovered node</label>';
   content += '</div>';
   content += '<div id="other_options_below_mst">';
-  
+
   show('spt_dropdown_menu'); // change display settings in order to see text
   if (document.getElementById('spt_dropdown_menu') !== null) {
-  document.getElementById('spt_dropdown_menu').innerHTML = content;}
-  
+    document.getElementById('spt_dropdown_menu').innerHTML = content;
+  }
+
   // three button in one row: show central nodes, the most loaded nodes, the most loaded edges
 
   //show central nodes
   var new_row = document.createElement("div");
-  new_row.classList.add( "d-flex", "flex-row", "bd-highlight", "mb-3" );
+  new_row.classList.add("d-flex", "flex-row", "bd-highlight", "mb-3");
   var new_label = document.createElement("label");
-  new_label.classList.add( "p-2", "toggler-wrapper", "style-11" );
+  new_label.classList.add("p-2", "toggler-wrapper", "style-11");
   var new_input = document.createElement("input");
   new_input.type = "checkbox"
   new_input.value = "networkReactionOnAppliedChanges"
   new_input.id = "showCentralNodesInput"
   var new_slider = document.createElement("div");
-  new_slider.classList.add( "toggler-slider" );
+  new_slider.classList.add("toggler-slider");
   var new_knob = document.createElement("div");
-  new_knob.classList.add( "toggler-knob" );
+  new_knob.classList.add("toggler-knob");
   var btn_name = document.createElement("div");
   btn_name.innerText = "Central nodes"
-  
+
   new_row.appendChild(new_label)
   new_label.appendChild(new_input)
   new_label.appendChild(new_slider)
   new_slider.appendChild(new_knob)
   new_row.appendChild(btn_name)
-  
+
   // the most loaded nodes
   var parent_btn_group = document.createElement("div");
-  parent_btn_group.classList.add( "btn-group", "mr-5" );
+  parent_btn_group.classList.add("btn-group", "mr-5");
 
   var most_loaded_nodes_div = document.createElement("div");
-  most_loaded_nodes_div.classList.add( "input-group", "input-group-sm", "mb-3" );
+  most_loaded_nodes_div.classList.add("input-group", "input-group-sm", "mb-3");
   var most_loaded_nodes_select = document.createElement("select");
-  most_loaded_nodes_select.classList.add( "custom-select", "form-control" );
+  most_loaded_nodes_select.classList.add("custom-select", "form-control");
   most_loaded_nodes_select.style = "padding: 0.25rem 1.5rem"
   most_loaded_nodes_select.id = "most_loaded_nodes_slct_id"
   most_loaded_nodes_select.setAttribute('aria-describedby', "inputGroup-sizing-sm");
 
   //Create and append the options
   for (var i = 1; i < 6; i++) {
-      var option = document.createElement("option");
-      option.value = i;
-      option.text = i;
-      most_loaded_nodes_select.appendChild(option);
+    var option = document.createElement("option");
+    option.value = i;
+    option.text = i;
+    most_loaded_nodes_select.appendChild(option);
   }
   var most_loaded_nodes_btn_div = document.createElement("div");
-  most_loaded_nodes_btn_div.classList.add( "input-group-append" );
+  most_loaded_nodes_btn_div.classList.add("input-group-append");
   var most_loaded_nodes_btn = document.createElement("button");
-  most_loaded_nodes_btn.classList.add( "btn", "btn-outline-secondary", "form-control" );
+  most_loaded_nodes_btn.classList.add("btn", "btn-outline-secondary", "form-control");
   most_loaded_nodes_btn.type = "button"
   most_loaded_nodes_btn.textContent = "Most loaded nodes"
   most_loaded_nodes_btn.setAttribute('onclick', "get_the_most_loaded_graph_elements()");
@@ -3237,24 +3182,24 @@ function show_spt_dropdown_menu() {
 
   // the most loaded edges
   var most_loaded_edges_div = document.createElement("div");
-  most_loaded_edges_div.classList.add( "input-group", "input-group-sm", "mb-3" );
+  most_loaded_edges_div.classList.add("input-group", "input-group-sm", "mb-3");
   var most_loaded_edges_select = document.createElement("select");
-  most_loaded_edges_select.classList.add( "custom-select", "form-control" );
+  most_loaded_edges_select.classList.add("custom-select", "form-control");
   most_loaded_edges_select.style = "padding: 0.25rem 1.5rem"
   most_loaded_edges_select.id = "most_loaded_edges_slct_id"
   most_loaded_edges_select.setAttribute('aria-describedby', "inputGroup-sizing-sm");
 
   //Create and append the options
   for (var i = 1; i < 6; i++) {
-      var option = document.createElement("option");
-      option.value = i;
-      option.text = i;
-      most_loaded_edges_select.appendChild(option);
+    var option = document.createElement("option");
+    option.value = i;
+    option.text = i;
+    most_loaded_edges_select.appendChild(option);
   }
   var most_loaded_edges_btn_div = document.createElement("div");
-  most_loaded_edges_btn_div.classList.add( "input-group-append" );
+  most_loaded_edges_btn_div.classList.add("input-group-append");
   var most_loaded_edges_btn = document.createElement("button");
-  most_loaded_edges_btn.classList.add( "btn", "btn-outline-secondary", "form-control" );
+  most_loaded_edges_btn.classList.add("btn", "btn-outline-secondary", "form-control");
   most_loaded_edges_btn.type = "button"
   most_loaded_edges_btn.textContent = "Most loaded edges"
   most_loaded_edges_btn.setAttribute('onclick', "get_the_most_loaded_edges()");
@@ -3263,14 +3208,14 @@ function show_spt_dropdown_menu() {
   most_loaded_edges_div.appendChild(most_loaded_edges_select)
   most_loaded_edges_div.appendChild(most_loaded_edges_btn_div)
   parent_btn_group.appendChild(most_loaded_edges_div)
-  
+
   // Single point of failure
   var new_spof_label = document.createElement("label");
-  new_spof_label.classList.add( "p-2", "toggler-wrapper", "style-11" );
+  new_spof_label.classList.add("p-2", "toggler-wrapper", "style-11");
   var new_spof_input = document.createElement("input");
   new_spof_input.type = "checkbox"
   new_spof_input.id = "showSinglePointOfFailureNodesInput"
-  new_spof_input.onchange = function() {
+  new_spof_input.onchange = function () {
     if ($(this).is(':checked')) {
       get_single_point_of_failure_node_ll();
     } else {
@@ -3280,23 +3225,23 @@ function show_spt_dropdown_menu() {
     }
   }
   var new_spof_slider = document.createElement("div");
-  new_spof_slider.classList.add( "toggler-slider" );
+  new_spof_slider.classList.add("toggler-slider");
   var new_spof_knob = document.createElement("div");
-  new_spof_knob.classList.add( "toggler-knob" );
+  new_spof_knob.classList.add("toggler-knob");
   var btn_name = document.createElement("div");
   btn_name.innerText = "Single point of failure nodes"
-  
+
   new_spof_label.appendChild(new_spof_input)
   new_spof_label.appendChild(new_spof_slider)
   new_spof_slider.appendChild(new_spof_knob)
 
   // Fault tolerant
   var new_ft_label = document.createElement("label");
-  new_ft_label.classList.add( "p-2", "toggler-wrapper", "style-11" );
+  new_ft_label.classList.add("p-2", "toggler-wrapper", "style-11");
   var new_ft_input = document.createElement("input");
   new_ft_input.type = "checkbox"
   new_ft_input.id = "showFaultTolerantNodesInput"
-  new_ft_input.onchange = function() {
+  new_ft_input.onchange = function () {
     if ($(this).is(':checked')) {
       get_fault_tolerant_node_ll();
     } else {
@@ -3306,12 +3251,12 @@ function show_spt_dropdown_menu() {
     }
   }
   var new_ft_slider = document.createElement("div");
-  new_ft_slider.classList.add( "toggler-slider" );
+  new_ft_slider.classList.add("toggler-slider");
   var new_ft_knob = document.createElement("div");
-  new_ft_knob.classList.add( "toggler-knob" );
+  new_ft_knob.classList.add("toggler-knob");
   var ft_btn_name = document.createElement("div");
   ft_btn_name.innerText = "Fault tolerant nodes"
-  
+
   new_ft_label.appendChild(new_ft_input)
   new_ft_label.appendChild(new_ft_slider)
   new_ft_slider.appendChild(new_ft_knob)
@@ -3327,7 +3272,7 @@ function show_spt_dropdown_menu() {
 
   document.getElementById("other_options_below_mst").appendChild(new_row);
   let showCentralNodesInput = document.getElementById("showCentralNodesInput")
-  showCentralNodesInput.addEventListener('change', function() {
+  showCentralNodesInput.addEventListener('change', function () {
     if ($(this).is(':checked')) {
       get_central_nodes();
     } else {
@@ -3344,64 +3289,64 @@ function add_radio_button_listener() {
   */
   var checkbox = document.getElementById("do_print_MST");
 
-  checkbox.addEventListener('change', function() {
+  checkbox.addEventListener('change', function () {
     if (!$(this).is(':checked')) {
       $('input[name=inlineRadioOptions]').prop('checked', false);
     }
   });
 }
-function load_graph_buttonOnClick () {
-  $( document ).ready(function() {
-      if (typeof(GeneralView) !== "undefined" && GeneralView != null) {
-        $(GeneralView).button('toggle');
-      }
-    })
+function load_graph_buttonOnClick() {
+  $(document).ready(function () {
+    if (typeof (GeneralView) !== "undefined" && GeneralView != null) {
+      $(GeneralView).button('toggle');
+    }
+  })
 }
 
-  // make the clusters
-  function makeClusters(scale) {
-    var clusterOptionsByData = {
-        processProperties: function (clusterOptions, childNodes) {
-            clusterIndex = clusterIndex + 1;
-            var childrenCount = 0;
-            for (var i = 0; i < childNodes.length; i++) {
-                childrenCount += childNodes[i].childrenCount || 1;
-            }
-            clusterOptions.childrenCount = childrenCount;
-            clusterOptions.label = "# " + childrenCount + "";
-            clusterOptions.font = {size: childrenCount*5+30}
-            clusterOptions.id = 'cluster:' + clusterIndex;
-            clusters.push({id:'cluster:' + clusterIndex, scale:scale});
-            return clusterOptions;
-        },
-        clusterNodeProperties: {borderWidth: 3, shape: 'database', font: {size: 30}}
-    }
-    network.clusterOutliers(clusterOptionsByData);
-    // since we use the scale as a unique identifier, we do NOT want to fit after the stabilization
-    network.setOptions({physics:{stabilization:{fit: false}}});
-    network.stabilize();
+// make the clusters
+function makeClusters(scale) {
+  var clusterOptionsByData = {
+    processProperties: function (clusterOptions, childNodes) {
+      clusterIndex = clusterIndex + 1;
+      var childrenCount = 0;
+      for (var i = 0; i < childNodes.length; i++) {
+        childrenCount += childNodes[i].childrenCount || 1;
+      }
+      clusterOptions.childrenCount = childrenCount;
+      clusterOptions.label = "# " + childrenCount + "";
+      clusterOptions.font = { size: childrenCount * 5 + 30 }
+      clusterOptions.id = 'cluster:' + clusterIndex;
+      clusters.push({ id: 'cluster:' + clusterIndex, scale: scale });
+      return clusterOptions;
+    },
+    clusterNodeProperties: { borderWidth: 3, shape: 'database', font: { size: 30 } }
+  }
+  network.clusterOutliers(clusterOptionsByData);
+  // since we use the scale as a unique identifier, we do NOT want to fit after the stabilization
+  network.setOptions({ physics: { stabilization: { fit: false } } });
+  network.stabilize();
 };
 
 // open them back up!
 function openClusters(scale) {
-    var newClusters = [];
-    var declustered = false;
-    for (var i = 0; i < clusters.length; i++) {
-        if (clusters[i].scale < scale) {
-            network.openCluster(clusters[i].id);
-            lastClusterZoomLevel = scale;
-            declustered = true;
-        }
-        else {
-            newClusters.push(clusters[i])
-        }
+  var newClusters = [];
+  var declustered = false;
+  for (var i = 0; i < clusters.length; i++) {
+    if (clusters[i].scale < scale) {
+      network.openCluster(clusters[i].id);
+      lastClusterZoomLevel = scale;
+      declustered = true;
     }
-    clusters = newClusters;
-    if (declustered === true) {
-        // since we use the scale as a unique identifier, we do NOT want to fit after the stabilization
-        network.setOptions({physics:{stabilization:{fit: false}}});
-        network.stabilize();
+    else {
+      newClusters.push(clusters[i])
     }
+  }
+  clusters = newClusters;
+  if (declustered === true) {
+    // since we use the scale as a unique identifier, we do NOT want to fit after the stabilization
+    network.setOptions({ physics: { stabilization: { fit: false } } });
+    network.stabilize();
+  }
 };
 
 
@@ -3431,7 +3376,7 @@ function get_elem_position(event) {
     var x = event.pageX;
     var y = event.pageY;
   }
-  return {'x': x, 'y': y}
+  return { 'x': x, 'y': y }
 }
 
 function scrollToNetworkCenter() {
@@ -3468,829 +3413,827 @@ function toggleFullscreen() {
 
 function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physics_scale_settings = {}) {
 
-    // create a network
-    container = document.getElementById('mynetwork');
-    /*
-    nodes_attr_dd_in_ll.push({id: 1000, x: x, y: y, label: 'Internet', group: 'internet', value: 1, fixed: true, physics:false});
-    nodes_attr_dd_in_ll.push({id: 1001, x: x, y: y + step, label: 'Switch', group: 'switch', value: 1, fixed: true,  physics:false});
-    nodes_attr_dd_in_ll.push({id: 1002, x: x, y: y + 2 * step, label: 'Server', group: 'server', value: 1, fixed: true,  physics:false});
-    nodes_attr_dd_in_ll.push({id: 1003, x: x, y: y + 3 * step, label: 'Computer', group: 'desktop', value: 1, fixed: true,  physics:false});
-    nodes_attr_dd_in_ll.push({id: 1004, x: x, y: y + 4 * step, label: 'Smartphone', group: 'mobile', value: 1, fixed: true,  physics:false});
-    */
-    //nodes_attr_dd_in_ll.push({ id: 2, font: { multi: true }, label: '<b>This</b> is a\n<i>default</i> <b><i>multi-</i>font</b> <code>label</code>', x: -40, y: -40 });
-    nodes = new vis.DataSet(nodes_attr_dd_in_ll);
+  // create a network
+  container = document.getElementById('mynetwork');
+  /*
+  nodes_attr_dd_in_ll.push({id: 1000, x: x, y: y, label: 'Internet', group: 'internet', value: 1, fixed: true, physics:false});
+  nodes_attr_dd_in_ll.push({id: 1001, x: x, y: y + step, label: 'Switch', group: 'switch', value: 1, fixed: true,  physics:false});
+  nodes_attr_dd_in_ll.push({id: 1002, x: x, y: y + 2 * step, label: 'Server', group: 'server', value: 1, fixed: true,  physics:false});
+  nodes_attr_dd_in_ll.push({id: 1003, x: x, y: y + 3 * step, label: 'Computer', group: 'desktop', value: 1, fixed: true,  physics:false});
+  nodes_attr_dd_in_ll.push({id: 1004, x: x, y: y + 4 * step, label: 'Smartphone', group: 'mobile', value: 1, fixed: true,  physics:false});
+  */
+  //nodes_attr_dd_in_ll.push({ id: 2, font: { multi: true }, label: '<b>This</b> is a\n<i>default</i> <b><i>multi-</i>font</b> <code>label</code>', x: -40, y: -40 });
+  nodes = new vis.DataSet(nodes_attr_dd_in_ll);
 
-    // create an array with edges
-    /*
-    var edges = new vis.DataSet([
-        {'from': '10.0.0.1', 'to': '10.0.0.3'},
-        {'from': '10.0.0.1', 'to': '10.0.0.2'},
-        {'from': '10.0.0.2', 'to': '10.0.0.4', 'weight': 1000, title: 'Cost: 10\nCost: 20'},
-        {from: '10.0.0.2', to: '10.0.0.5', color: 'blue', dashes:false, arrows: {to: { enabled: true, type: 'vee'}}, background:{ enabled: true, color: 'rgba(111,111,111,0.5)', size:10, dashes: [20,10], arrows: {to: { enabled: true, type: 'arrow'}}}}
-    ]);*/
-    edges = new vis.DataSet(edges_attr_dd_in_ll);
+  // create an array with edges
+  /*
+  var edges = new vis.DataSet([
+      {'from': '10.0.0.1', 'to': '10.0.0.3'},
+      {'from': '10.0.0.1', 'to': '10.0.0.2'},
+      {'from': '10.0.0.2', 'to': '10.0.0.4', 'weight': 1000, title: 'Cost: 10\nCost: 20'},
+      {from: '10.0.0.2', to: '10.0.0.5', color: 'blue', dashes:false, arrows: {to: { enabled: true, type: 'vee'}}, background:{ enabled: true, color: 'rgba(111,111,111,0.5)', size:10, dashes: [20,10], arrows: {to: { enabled: true, type: 'arrow'}}}}
+  ]);*/
+  edges = new vis.DataSet(edges_attr_dd_in_ll);
 
-    // provide the data in the vis format
-    data = {
-        nodes: nodes,
-        edges: edges
-    };
-    // https://stackoverflow.com/questions/30045279/vis-js-graph-not-stabilizing-even-after-hours
-    options = {
-      //height: '900px', // 900px
-      height: '900px',
-      width: '90%',
-      configure: {enabled: false},
-      //physics: false, doesn't work
-      //physics: {barnesHut: {springLength: 100}},
-      nodes: {
-        color: 'red',
-        size: 7,
-        shape: 'dot',
-        shapeProperties: {
+  // provide the data in the vis format
+  data = {
+    nodes: nodes,
+    edges: edges
+  };
+  // https://stackoverflow.com/questions/30045279/vis-js-graph-not-stabilizing-even-after-hours
+  options = {
+    //height: '900px', // 900px
+    height: '900px',
+    width: '90%',
+    configure: { enabled: false },
+    //physics: false, doesn't work
+    //physics: {barnesHut: {springLength: 100}},
+    nodes: {
+      color: 'red',
+      size: 7,
+      shape: 'dot',
+      shapeProperties: {
         interpolation: false    // 'true' for intensive zooming
       }
-      },
-      edges: {
-        color: 'black',
-        width: 1,
-        smooth: {"enabled": false},
-        dashes: false,
-        font: {size: 12},
-        scaling:{
-          min: 6,
-          max: 15,
-          customScalingFunction: function (min,max,total,value) {
-            if (max === min) {
-              return 0.5;
-            }
-            else {
-              var scale = 1 / (max - min);
-              var returned_val =  Math.max(0,(value - min)*scale);
-              // console.log('scale value, receivedvalue', returned_val, value);
-              return returned_val;
-            }
-          }},
-        arrows:{to: {scaleFactor : 0.2}, from: {scaleFactor : 0.2}},
-        arrowStrikethrough: false
-      },
-      layout: { randomSeed: 2 }, // This means the layout will be the same every time the nodes are settled.
-      interaction: {
-        keyboard: {"enabled": false}, // "-" zoom out,clash with Yaml syntax
-        hover:true,
-        navigationButtons: true,
-        selectConnectedEdges: false
-      },
-      physics: {
-        barnesHut: {
-          gravitationalConstant: -10000, // 14.12  -5000. with -5000 the network a little bit quicker to stabilize. It's better to sparse networks = whole network inside a window. -12000 for dense (star) topologies
-          centralGravity: 0,
-          springLength: 150, // 14.12 100 is better to sparse networks = whole network inside a window. 180 for dense (star) topologies
-          springConstant: 0.01
-        },
-        minVelocity: 0.75,
-        timestep: 0.30
-      },
-    };
-    // you can extend the options like a normal JSON variable:
-
-    if ( Object.keys(graph_physics_scale_settings).length > 0) {
-      // this checks that a dictionary is not empty
-      Object.assign(options, graph_physics_scale_settings);
-
-      // update StopStartPhysics button based on saved settings. do_stop_start_physics()
-      if (graph_physics_scale_settings.physics.enabled == false) {
-        // physics is disabled, so change button view
-        if (document.getElementById('btnStopPhysics')) {
-          document.getElementById('btnStopPhysics').innerHTML = '<img src=\'/static/start_button.png\'/>Unfreeze network';
+    },
+    edges: {
+      color: 'black',
+      width: 1,
+      smooth: { "enabled": false },
+      dashes: false,
+      font: { size: 12 },
+      scaling: {
+        min: 6,
+        max: 15,
+        customScalingFunction: function (min, max, total, value) {
+          if (max === min) {
+            return 0.5;
+          }
+          else {
+            var scale = 1 / (max - min);
+            var returned_val = Math.max(0, (value - min) * scale);
+            // console.log('scale value, receivedvalue', returned_val, value);
+            return returned_val;
+          }
         }
-      } 
+      },
+      arrows: { to: { scaleFactor: 0.2 }, from: { scaleFactor: 0.2 } },
+      arrowStrikethrough: false
+    },
+    layout: { randomSeed: 2 }, // This means the layout will be the same every time the nodes are settled.
+    interaction: {
+      keyboard: { "enabled": false }, // "-" zoom out,clash with Yaml syntax
+      hover: true,
+      navigationButtons: true,
+      selectConnectedEdges: false
+    },
+    physics: {
+      barnesHut: {
+        gravitationalConstant: -10000, // 14.12  -5000. with -5000 the network a little bit quicker to stabilize. It's better to sparse networks = whole network inside a window. -12000 for dense (star) topologies
+        centralGravity: 0,
+        springLength: 150, // 14.12 100 is better to sparse networks = whole network inside a window. 180 for dense (star) topologies
+        springConstant: 0.01
+      },
+      minVelocity: 0.75,
+      timestep: 0.30
+    },
+  };
+  // you can extend the options like a normal JSON variable:
+
+  if (Object.keys(graph_physics_scale_settings).length > 0) {
+    // this checks that a dictionary is not empty
+    Object.assign(options, graph_physics_scale_settings);
+
+    // update StopStartPhysics button based on saved settings. do_stop_start_physics()
+    if (graph_physics_scale_settings.physics.enabled == false) {
+      // physics is disabled, so change button view
+      if (document.getElementById('btnStopPhysics')) {
+        document.getElementById('btnStopPhysics').innerHTML = '<img src=\'/static/start_button.png\'/>Unfreeze network';
+      }
     }
-    
-    // initialize your network!
-    network = new vis.Network(container, data, options);
-    // ── COLLAPSING: wire double-click expand/collapse handler ─────────────────
-    if (typeof _wireCollapseDoubleClick === 'function') { _wireCollapseDoubleClick(); }
-    if (typeof _markCountryHydrationPending === 'function') {
-      _markCountryHydrationPending(typeof _getGraphTime === 'function' ? _getGraphTime() : '');
+  }
+
+  // initialize your network!
+  network = new vis.Network(container, data, options);
+  // ── COLLAPSING: wire double-click expand/collapse handler ─────────────────
+  if (typeof _wireCollapseDoubleClick === 'function') { _wireCollapseDoubleClick(); }
+  if (typeof _markCountryHydrationPending === 'function') {
+    _markCountryHydrationPending(typeof _getGraphTime === 'function' ? _getGraphTime() : '');
+  }
+  var _postLoadCountryHydration = function (attempt) {
+    if (typeof nodes === 'undefined' || !nodes || typeof _syncCountryMetadataFromServer !== 'function') return;
+    var allNodes = nodes.get();
+    if (!allNodes.length) return;
+    var countries = Array.from(new Set(allNodes.map(function (n) {
+      return String(n.country || '').toUpperCase();
+    }).filter(function (v) { return !!v; })));
+    if (countries.length > 1 || (countries.length === 1 && countries[0] !== 'UNK')) {
+      if (typeof _markCountryHydrationReady === 'function') {
+        _markCountryHydrationReady(typeof _getGraphTime === 'function' ? _getGraphTime() : '', {
+          alreadyHydrated: true,
+          source: 'init_visjs_graph'
+        });
+      }
+      return;
     }
-    var _postLoadCountryHydration = function(attempt) {
-      if (typeof nodes === 'undefined' || !nodes || typeof _syncCountryMetadataFromServer !== 'function') return;
-      var allNodes = nodes.get();
-      if (!allNodes.length) return;
-      var countries = Array.from(new Set(allNodes.map(function(n) {
-        return String(n.country || '').toUpperCase();
-      }).filter(function(v) { return !!v; })));
-      if (countries.length > 1 || (countries.length === 1 && countries[0] !== 'UNK')) {
+    var currentGraphTime = typeof _getGraphTime === 'function' ? _getGraphTime() : '';
+    if (!currentGraphTime) return;
+    var finalizePostLoadCountryHydration = function (appliedHostnameSync) {
+      if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
+      if (typeof applyCountryColors === 'function') { applyCountryColors(); }
+      if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
+      if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }
+      if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
+      if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
+      if (typeof _countryHydrationLooksReady === 'function' && _countryHydrationLooksReady()) {
         if (typeof _markCountryHydrationReady === 'function') {
-          _markCountryHydrationReady(typeof _getGraphTime === 'function' ? _getGraphTime() : '', {
-            alreadyHydrated: true,
-            source: 'init_visjs_graph'
+          _markCountryHydrationReady(currentGraphTime, {
+            source: 'post_load_recovery',
+            hostnameSync: !!appliedHostnameSync
           });
+        }
+      } else if (typeof _markCountryHydrationPending === 'function') {
+        _markCountryHydrationPending(currentGraphTime, {
+          source: 'post_load_recovery',
+          hostnameSync: !!appliedHostnameSync,
+          waitingForClassifiedData: true
+        });
+      }
+    };
+    _syncCountryMetadataFromServer(currentGraphTime).then(function (appliedServerSync) {
+      if (appliedServerSync) {
+        if (typeof _syncHostnameMappingsFromServer === 'function') {
+          _syncHostnameMappingsFromServer(currentGraphTime).then(finalizePostLoadCountryHydration, function () { finalizePostLoadCountryHydration(false); });
+        } else {
+          finalizePostLoadCountryHydration(false);
         }
         return;
       }
-      var currentGraphTime = typeof _getGraphTime === 'function' ? _getGraphTime() : '';
-      if (!currentGraphTime) return;
-      var finalizePostLoadCountryHydration = function(appliedHostnameSync) {
-        if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
-        if (typeof applyCountryColors === 'function') { applyCountryColors(); }
-        if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
-        if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }
-        if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
-        if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
-        if (typeof _countryHydrationLooksReady === 'function' && _countryHydrationLooksReady()) {
-          if (typeof _markCountryHydrationReady === 'function') {
-            _markCountryHydrationReady(currentGraphTime, {
-              source: 'post_load_recovery',
-              hostnameSync: !!appliedHostnameSync
-            });
-          }
-        } else if (typeof _markCountryHydrationPending === 'function') {
-          _markCountryHydrationPending(currentGraphTime, {
-            source: 'post_load_recovery',
-            hostnameSync: !!appliedHostnameSync,
-            waitingForClassifiedData: true
-          });
-        }
-      };
-      _syncCountryMetadataFromServer(currentGraphTime).then(function(appliedServerSync) {
-        if (appliedServerSync) {
-          if (typeof _syncHostnameMappingsFromServer === 'function') {
-            _syncHostnameMappingsFromServer(currentGraphTime).then(finalizePostLoadCountryHydration, function() { finalizePostLoadCountryHydration(false); });
-          } else {
+      if (typeof _recoverCountryMetadataFromPeerGraphs === 'function') {
+        _recoverCountryMetadataFromPeerGraphs(currentGraphTime).then(function (appliedPeerRecovery) {
+          if (appliedPeerRecovery) {
             finalizePostLoadCountryHydration(false);
+            return;
           }
-          return;
-        }
-        if (typeof _recoverCountryMetadataFromPeerGraphs === 'function') {
-          _recoverCountryMetadataFromPeerGraphs(currentGraphTime).then(function(appliedPeerRecovery) {
-            if (appliedPeerRecovery) {
-              finalizePostLoadCountryHydration(false);
-              return;
-            }
-            if ((attempt || 0) < 2) {
-              setTimeout(function() { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
-            }
-          }, function() {
-            if ((attempt || 0) < 2) {
-              setTimeout(function() { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
-            }
-          });
-          return;
-        }
-        if ((attempt || 0) < 2) {
-          setTimeout(function() { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
-        }
-      }, function() {
-        if ((attempt || 0) < 2) {
-          setTimeout(function() { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
-        }
-      });
-    };
-    setTimeout(function() { _postLoadCountryHydration(0); }, 1200);
-    // set values
-    network.on("select", function (params) {
-        // console.log('select Event:', params.nodes[0], params.pointer.DOM.x);
-        var nodeId = params.nodes[0];
-        network.focus(nodeId);
+          if ((attempt || 0) < 2) {
+            setTimeout(function () { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
+          }
+        }, function () {
+          if ((attempt || 0) < 2) {
+            setTimeout(function () { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
+          }
+        });
+        return;
+      }
+      if ((attempt || 0) < 2) {
+        setTimeout(function () { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
+      }
+    }, function () {
+      if ((attempt || 0) < 2) {
+        setTimeout(function () { _postLoadCountryHydration((attempt || 0) + 1); }, 1200);
+      }
     });
-    
-    // progress bar
-    if (typeof(graph_physics_scale_settings.physics) !== 'undefined' && graph_physics_scale_settings.physics.enabled == false) {
-      // disabled physics doesn't have stabilization, so we do not show loading bar
-    }
-    else {
-      show('loadingBar' );
-    }
-    if (document.getElementById("loadingBar") !== null) {
-    document.getElementById("loadingBar").style.opacity = 1;}
-    network.on("stabilizationProgress", function (params) { 
-      var maxWidth = 496;
-      var minWidth = 20;
-      var widthFactor = params.iterations / params.total;
-      var width = Math.max(minWidth, maxWidth * widthFactor);
-      document.getElementById("bar").style.width = width + "px";
-      document.getElementById("text").innerText =
+  };
+  setTimeout(function () { _postLoadCountryHydration(0); }, 1200);
+  // set values
+  network.on("select", function (params) {
+    // console.log('select Event:', params.nodes[0], params.pointer.DOM.x);
+    var nodeId = params.nodes[0];
+    network.focus(nodeId);
+  });
+
+  // progress bar
+  if (typeof (graph_physics_scale_settings.physics) !== 'undefined' && graph_physics_scale_settings.physics.enabled == false) {
+    // disabled physics doesn't have stabilization, so we do not show loading bar
+  }
+  else {
+    show('loadingBar');
+  }
+  if (document.getElementById("loadingBar") !== null) {
+    document.getElementById("loadingBar").style.opacity = 1;
+  }
+  network.on("stabilizationProgress", function (params) {
+    var maxWidth = 496;
+    var minWidth = 20;
+    var widthFactor = params.iterations / params.total;
+    var width = Math.max(minWidth, maxWidth * widthFactor);
+    document.getElementById("bar").style.width = width + "px";
+    document.getElementById("text").innerText =
       Math.round(widthFactor * 100) + "%";
-    });
-    network.once("stabilizationIterationsDone", function () {
-      document.getElementById("text").innerText = "100%";
-      document.getElementById("bar").style.width = "496px";
-      // hide loading bar
-      document.getElementById("loadingBar").style.opacity = 0;
-      // really clean the dom element
-      setTimeout(function () {
+  });
+  network.once("stabilizationIterationsDone", function () {
+    document.getElementById("text").innerText = "100%";
+    document.getElementById("bar").style.width = "496px";
+    // hide loading bar
+    document.getElementById("loadingBar").style.opacity = 0;
+    // really clean the dom element
+    setTimeout(function () {
       document.getElementById("loadingBar").style.display = "none";
-      }, 500);
-      // when we hide progress bar - set progress to 0% for further use
-      document.getElementById("text").innerText = "0%";
-      document.getElementById("bar").style.width = "0px";
-      _postLoadCountryHydration(0);
+    }, 500);
+    // when we hide progress bar - set progress to 0% for further use
+    document.getElementById("text").innerText = "0%";
+    document.getElementById("bar").style.width = "0px";
+    _postLoadCountryHydration(0);
+  });
+  // progress bar end
+
+  network.on("selectNode", function (params) {
+    // console.log('selectNode Event:', params);
+
+    $('div.PopUpFormBackupNonBackupNets').fadeToggle();
+    //$( 'div.PopUpFormBackupNonBackupNets' ).fadeIn();
+
+    get_node_details(graph_id, params.nodes[0]);
+  });
+
+  network.on("selectEdge", function (params) {
+    var pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+    // console.log('selectEdge Event, pressed_button', params.edges[0], pressed_button);
+    //edges.setOptions(queue: true);
+    var e = edges.get(params.edges[0]);
+    var choosed_edge_comment = e.comment;
+    // retrieve all items having a property group with value 2
+    var painted_edges_w_comments = edges.get({
+      filter: function (item) {
+        //return (item.comment == "updown_traffic_node");
+        return (item.comment);
+      }
     });
-    // progress bar end
-
-    network.on("selectNode", function (params) {
-        // console.log('selectNode Event:', params);
-
-        $( 'div.PopUpFormBackupNonBackupNets' ).fadeToggle();
-        //$( 'div.PopUpFormBackupNonBackupNets' ).fadeIn();
-
-        get_node_details(graph_id, params.nodes[0]);
-    });
-
-    network.on("selectEdge", function (params) {
-      var pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-      // console.log('selectEdge Event, pressed_button', params.edges[0], pressed_button);
-      //edges.setOptions(queue: true);
-      var e = edges.get(params.edges[0]);
-      var choosed_edge_comment = e.comment;
-      // retrieve all items having a property group with value 2
-      var painted_edges_w_comments = edges.get({
-        filter: function (item) {
-          //return (item.comment == "updown_traffic_node");
-          return (item.comment);
-        }
-      });
-      console.info('from %s, to: %s comment: %s, edge_attr:,', e.from, e.to, choosed_edge_comment, e);
-      if (pressed_button == 'NetworkReactionOnFailure') {
-        if (choosed_edge_comment == "updown_traffic_node")
-          {/* Add calc netowrk reaction on painted edge
+    console.info('from %s, to: %s comment: %s, edge_attr:,', e.from, e.to, choosed_edge_comment, e);
+    if (pressed_button == 'NetworkReactionOnFailure') {
+      if (choosed_edge_comment == "updown_traffic_node") {/* Add calc netowrk reaction on painted edge
 
             removed_links_from_spt_path_ll_in_ll = Array();
             removed_edge_id_from_spt_path_ll_in_ll = Array();
           */
-          ClearPaintedGraph(); // just clear color without clearing variables
-          get_edge_remove_outcome(graph_id, selected_edge_attr = e);
-          document.getElementById('node_failure_prediction_description').innerHTML = '';
-          hide('node_failure_prediction_description');
-          }
-        else if (choosed_edge_comment == "deleted_edge")
-          {// When press "deleted link" we come back this into the graph and will not treat it as deleted
-          ClearPaintedGraph(); // just clear color without clearing variables
-          get_edge_remove_outcome(graph_id, selected_edge_attr = e);
-          document.getElementById('node_failure_prediction_description').innerHTML = '';
-          hide('node_failure_prediction_description');
-          }
-        else if (typeof e.inside_ecmp_edges_ll !== 'undefined') {
-            //edges.remove(e.id);
-            //edges.add(e.inside_ecmp_edges_ll);
-            unflat_ecmp([e.id]);
-            //network.redraw();
-            //network.stabilize(); // when we use stabilize - after click on edge - the graph is moved to another place ( on the center ), without such option - it stayes on the same place
-          }
-        else 
-          {
-          ClearPaintedGraph(); // when we choosed one edge - get result with a painted graph - then we choosed unpainted edge and withoud Clearing the Graph - we get additional Curvewed lines
-          get_edge_remove_outcome(graph_id, selected_edge_attr = e);
-          document.getElementById('node_failure_prediction_description').innerHTML = '';
-          hide('node_failure_prediction_description');
-          }
+        ClearPaintedGraph(); // just clear color without clearing variables
+        get_edge_remove_outcome(graph_id, selected_edge_attr = e);
+        document.getElementById('node_failure_prediction_description').innerHTML = '';
+        hide('node_failure_prediction_description');
       }
-      else if (pressed_button == "GeneralView") {
-        if (choosed_edge_comment == "spt_path_edge" || choosed_edge_comment == 'backup_path_edge')
-          {//reset_up_edge_stype(edges)
-          let src_node = e.from;
-          let dst_node = e.to;
-          if (e.arrows.from) {src_node = e.to; dst_node = e.from;}
-          
-          get_edge_from_spt_outcome(graph_id, src_node, dst_node, e.spt_src_node, e.spt_dst_node, e.id);
-          
-          }
-        else 
-          {
-          if (typeof e.inside_ecmp_edges_ll !== 'undefined') {
-            //edges.remove(e.id);
-            //edges.add(e.inside_ecmp_edges_ll);
-            unflat_ecmp([e.id]);
-            //network.redraw();
-            //network.stabilize(); // when we use stabilize - after click on edge - the graph is moved to another place ( on the center ), without such option - it stayes on the same place
-          }
-          else {
-            edges.clear();
-            edges.add(edges_attr_dd_in_ll);
-            removed_links_from_spt_path_ll_in_ll = Array();
-            removed_edge_id_from_spt_path_ll_in_ll = Array();
-            // clear old description about SPT paths
-            add_spt_description(Array(), clear=true);
-            // clear old description
-            add_backup_path_description(Array(), clear=true);
-          }
-          }
-      } else if (pressed_button == "None") {
-        if (typeof e.inside_ecmp_edges_ll !== 'undefined') {
-          unflat_ecmp([e.id]);
-        }
+      else if (choosed_edge_comment == "deleted_edge") {// When press "deleted link" we come back this into the graph and will not treat it as deleted
+        ClearPaintedGraph(); // just clear color without clearing variables
+        get_edge_remove_outcome(graph_id, selected_edge_attr = e);
+        document.getElementById('node_failure_prediction_description').innerHTML = '';
+        hide('node_failure_prediction_description');
       }
-      //network.redraw()
-    });
-    /*
-    network.on("showPopup", function (params) {
-        console.log('selectNode Event:', params); document.getElementById('eventSpan').innerHTML = '<h2>showPopup event: </h2>' + JSON.stringify(params, null, 4);
-    });
-    network.on("hidePopup", function () {
-        console.log('hidePopup Event');
-    });
-    
-    network.on("hoverNode", function (params) {
-        console.log('hoverNode Event:', params);
-        //document.getElementById('eventSpan').innerHTML = '<h2>hoverNode event: </h2>' + JSON.stringify(params.node, null, 4);
-        //get_node_details(graph_id, params.node);
-        //console.log('result', result);
-        //nodes.update({id: params.node, label: "backuped nets: " + result.backuped_nets.length + ", not_available_nets: " + result.not_available_nets.length});
-    });
-    */
-   network.on("hoverNode", function (params) {
-
-        pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-        // show MST path to this hovered node if `Print Minimum Shortest Tree (MST) for the node` checkbox is enabled
-        if ((pressed_button == "GeneralView") && (document.getElementById("do_print_MST") !== null && document.getElementById("do_print_MST").checked === true)) {
-          // okay, show MST is enabled, but it just allows to build MST from right clicked button. We should checke that radio button is enabled too
-          if (document.getElementById('hover_node_MST_in').checked) {
-            ResetGraph_and_Variables();
-            mst_node_id = params.node;
-            accept_node_for_mst_return_mst(direction = 'IN');
-          }
-          if (document.getElementById('hover_node_MST_from').checked) {
-            ResetGraph_and_Variables();
-            mst_node_id = params.node;
-            accept_node_for_mst_return_mst(direction = 'OUT');
-          }
-          if (document.getElementById('hover_node_MST_InOutDiff').checked) {
-            ResetGraph_and_Variables();
-            mst_node_id = params.node;
-            accept_node_for_MstInOutDiff_return_diff();
-          }
-        }
-    });
-    network.on("hoverEdge", function (params) {
-        // console.log('hoverEdge Event:', params);
-        var edge_id = params.edge;
-        //console.log('hoverEdge Event: EDGE TITLE', edges.get(edge_id));
-        get_edge_details(graph_id, edge_id);
-    });
-
-    /*
-    network.on("blurEdge", function (params) {
-        console.log('blurEdge Event:', params);
-        //reset_up_edge_stype(edges);
-    });*/
-    network.on("oncontext", function (params) {
-      params.event.preventDefault();
-      // console.log('oncontext Event:', params);
-      //var pressed_button = document.querySelectorAll("input[name=options]:checked")[0].id; //Genereal View, Network reaction or Diff Graph
-      var pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
-      var node_id = network.getNodeAt(params.pointer.DOM);
-      choosed_edge_id = network.getEdgeAt(params.pointer.DOM);
-      spt_choosed_node = node_id;
-      node_shutdown_choosed_node_name = node_id;
-      console.log('Right Clicked node ID:', node_id);
-      console.log('Right Clicked edge ID:', choosed_edge_id);
-      console.log('pressed_button:', pressed_button);
-      if (node_id === undefined && choosed_edge_id === undefined) {
-        $.ajax(alert("Node was not chosen"))
+      else if (typeof e.inside_ecmp_edges_ll !== 'undefined') {
+        //edges.remove(e.id);
+        //edges.add(e.inside_ecmp_edges_ll);
+        unflat_ecmp([e.id]);
+        //network.redraw();
+        //network.stabilize(); // when we use stabilize - after click on edge - the graph is moved to another place ( on the center ), without such option - it stayes on the same place
       }
-      else if (pressed_button == "GeneralView") {
-
-        if (node_id !== undefined) {
-          // show menu `build spt From and To this node only if we click on node, not edge
-            position_attr = get_elem_position(params.event);
-            const x = position_attr.x;
-            const y = position_attr.y;
-            $(".custom-menu").finish().toggle(100);
-            $(".custom-menu").css({
-              top: y + "px",
-              left: x + "px"
-            });}
-        }
-      else if (pressed_button == "NetworkReactionOnFailure") {
-        if (node_id !== undefined) {
-          // right click on node, not a edge
-          position_attr = get_elem_position(params.event);
-          const x = position_attr.x;
-          const y = position_attr.y;
-          $('.network-reaction-on-failure-menu').finish().toggle(100);
-          $('.network-reaction-on-failure-menu').css({
-            top: y + "px",
-            left: x + "px"
-          });
-          }
+      else {
+        ClearPaintedGraph(); // when we choosed one edge - get result with a painted graph - then we choosed unpainted edge and withoud Clearing the Graph - we get additional Curvewed lines
+        get_edge_remove_outcome(graph_id, selected_edge_attr = e);
+        document.getElementById('node_failure_prediction_description').innerHTML = '';
+        hide('node_failure_prediction_description');
       }
-
-      if (choosed_edge_id && node_id === undefined) {
-        /*
-        edge_attr = edges.get(choosed_edge_id)
-        from: "10.0.0.7"
-        id: "10.0.0.7_to_10.2.2.10"
-        igraph_edges_id_ll: (2) [0, 3]
-        title: "<p>10.0.0.7-<b>1000</b>->10.2.2.10</p><p>10.2.2.10-<b>1000</b>->10.0.0.7</p>"
-        to: "10.2.2.10"
-        weight: 1000
-        width: 1
-        */
-        //console.log(edges.get(choosed_edge_id));
-        let js_edge_attr;
-        let choosed_js_edge_attr = edges.get(choosed_edge_id); // it could be directed painted link or general link
-
-        let parent_js_edge = choosed_js_edge_attr.parent_edge_id;
-        // if we click on painted directed link - we will have only 10.0.0.7_to_10.2.2.10_123 as edge ID. We will show menu with only one edge - we should show OSPF cost of all link
-        if (typeof parent_js_edge !== 'undefined' ) {
-          // we lose info about original undirected link - so we recover it from edges attr
-          let edges_copy = new vis.DataSet(edges_attr_dd_in_ll);
-          js_edge_attr = edges_copy.get(parent_js_edge); // it's always general link
-        }
-        else { js_edge_attr = choosed_js_edge_attr}
-
-        if (js_edge_attr) {
-          $( 'div.PopUpFormNewOSPFCostSet' ).fadeToggle();
-          //get_edge_details_by_igraph_edge_id(js_edge_attr);
-          get_edge_details_by_igraph_edge_id(js_edge_attr, choosed_js_edge_attr);
-        }
-      }
-    });
-
-/*
-    var custom_menu_container = document.getElementById('option1_in_custom-menu');
-    console.log('clicked_doc:', custom_menu_container);
-    function onClick (event) {
-      //var properties = timeline.getEventProperties(event);
-      // properties contains things like node id, group, x, y, time, etc.
-      console.log('mouseover properties:',event);
     }
-    custom_menu_container.addEventListener('click', onClick);
-*/
-    
-    // If the document is clicked somewhere
-    $(document).bind("mousedown", function (e) {
-        
-        // If the clicked element is not the menu
-        if (!$(e.target).parents(".custom-menu").length > 0) {
-            
-            // Hide it
-            $(".custom-menu").hide(100);
-        }
-    });
+    else if (pressed_button == "GeneralView") {
+      if (choosed_edge_comment == "spt_path_edge" || choosed_edge_comment == 'backup_path_edge') {//reset_up_edge_stype(edges)
+        let src_node = e.from;
+        let dst_node = e.to;
+        if (e.arrows.from) { src_node = e.to; dst_node = e.from; }
 
-    // If the menu element is clicked
-    var that = this;
-    $(".custom-menu li").off().click(function(){
-        
-        // This is the triggered action name
-        switch($(this).attr("data-action")) {
-            
-            // A case for each action. Your actions here
-            case "_spt_src_node": spt_src_node = spt_choosed_node; accept_node_for_spt_return_spt(); break;
-            case "_spt_dst_node": spt_dst_node = spt_choosed_node; accept_node_for_spt_return_spt(); break;
-            case "_mst_root_node": mst_node_id = spt_choosed_node; accept_node_for_mst_return_mst(); break;
+        get_edge_from_spt_outcome(graph_id, src_node, dst_node, e.spt_src_node, e.spt_dst_node, e.id);
+
+      }
+      else {
+        if (typeof e.inside_ecmp_edges_ll !== 'undefined') {
+          //edges.remove(e.id);
+          //edges.add(e.inside_ecmp_edges_ll);
+          unflat_ecmp([e.id]);
+          //network.redraw();
+          //network.stabilize(); // when we use stabilize - after click on edge - the graph is moved to another place ( on the center ), without such option - it stayes on the same place
         }
-      
-        // Hide it AFTER the action was triggered
-        $(".custom-menu").hide(100);
-      });
+        else {
+          edges.clear();
+          edges.add(edges_attr_dd_in_ll);
+          removed_links_from_spt_path_ll_in_ll = Array();
+          removed_edge_id_from_spt_path_ll_in_ll = Array();
+          // clear old description about SPT paths
+          add_spt_description(Array(), clear = true);
+          // clear old description
+          add_backup_path_description(Array(), clear = true);
+        }
+      }
+    } else if (pressed_button == "None") {
+      if (typeof e.inside_ecmp_edges_ll !== 'undefined') {
+        unflat_ecmp([e.id]);
+      }
+    }
+    //network.redraw()
+  });
+  /*
+  network.on("showPopup", function (params) {
+      console.log('selectNode Event:', params); document.getElementById('eventSpan').innerHTML = '<h2>showPopup event: </h2>' + JSON.stringify(params, null, 4);
+  });
+  network.on("hidePopup", function () {
+      console.log('hidePopup Event');
+  });
+  
+  network.on("hoverNode", function (params) {
+      console.log('hoverNode Event:', params);
+      //document.getElementById('eventSpan').innerHTML = '<h2>hoverNode event: </h2>' + JSON.stringify(params.node, null, 4);
+      //get_node_details(graph_id, params.node);
+      //console.log('result', result);
+      //nodes.update({id: params.node, label: "backuped nets: " + result.backuped_nets.length + ", not_available_nets: " + result.not_available_nets.length});
+  });
+  */
+  network.on("hoverNode", function (params) {
+
+    pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+    // show MST path to this hovered node if `Print Minimum Shortest Tree (MST) for the node` checkbox is enabled
+    if ((pressed_button == "GeneralView") && (document.getElementById("do_print_MST") !== null && document.getElementById("do_print_MST").checked === true)) {
+      // okay, show MST is enabled, but it just allows to build MST from right clicked button. We should checke that radio button is enabled too
+      if (document.getElementById('hover_node_MST_in').checked) {
+        ResetGraph_and_Variables();
+        mst_node_id = params.node;
+        accept_node_for_mst_return_mst(direction = 'IN');
+      }
+      if (document.getElementById('hover_node_MST_from').checked) {
+        ResetGraph_and_Variables();
+        mst_node_id = params.node;
+        accept_node_for_mst_return_mst(direction = 'OUT');
+      }
+      if (document.getElementById('hover_node_MST_InOutDiff').checked) {
+        ResetGraph_and_Variables();
+        mst_node_id = params.node;
+        accept_node_for_MstInOutDiff_return_diff();
+      }
+    }
+  });
+  network.on("hoverEdge", function (params) {
+    // console.log('hoverEdge Event:', params);
+    var edge_id = params.edge;
+    //console.log('hoverEdge Event: EDGE TITLE', edges.get(edge_id));
+    get_edge_details(graph_id, edge_id);
+  });
+
+  /*
+  network.on("blurEdge", function (params) {
+      console.log('blurEdge Event:', params);
+      //reset_up_edge_stype(edges);
+  });*/
+  network.on("oncontext", function (params) {
+    params.event.preventDefault();
+    // console.log('oncontext Event:', params);
+    //var pressed_button = document.querySelectorAll("input[name=options]:checked")[0].id; //Genereal View, Network reaction or Diff Graph
+    var pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
+    var node_id = network.getNodeAt(params.pointer.DOM);
+    choosed_edge_id = network.getEdgeAt(params.pointer.DOM);
+    spt_choosed_node = node_id;
+    node_shutdown_choosed_node_name = node_id;
+    console.log('Right Clicked node ID:', node_id);
+    console.log('Right Clicked edge ID:', choosed_edge_id);
+    console.log('pressed_button:', pressed_button);
+    if (node_id === undefined && choosed_edge_id === undefined) {
+      $.ajax(alert("Node was not chosen"))
+    }
+    else if (pressed_button == "GeneralView") {
+
+      if (node_id !== undefined) {
+        // show menu `build spt From and To this node only if we click on node, not edge
+        position_attr = get_elem_position(params.event);
+        const x = position_attr.x;
+        const y = position_attr.y;
+        $(".custom-menu").finish().toggle(100);
+        $(".custom-menu").css({
+          top: y + "px",
+          left: x + "px"
+        });
+      }
+    }
+    else if (pressed_button == "NetworkReactionOnFailure") {
+      if (node_id !== undefined) {
+        // right click on node, not a edge
+        position_attr = get_elem_position(params.event);
+        const x = position_attr.x;
+        const y = position_attr.y;
+        $('.network-reaction-on-failure-menu').finish().toggle(100);
+        $('.network-reaction-on-failure-menu').css({
+          top: y + "px",
+          left: x + "px"
+        });
+      }
+    }
+
+    if (choosed_edge_id && node_id === undefined) {
+      /*
+      edge_attr = edges.get(choosed_edge_id)
+      from: "10.0.0.7"
+      id: "10.0.0.7_to_10.2.2.10"
+      igraph_edges_id_ll: (2) [0, 3]
+      title: "<p>10.0.0.7-<b>1000</b>->10.2.2.10</p><p>10.2.2.10-<b>1000</b>->10.0.0.7</p>"
+      to: "10.2.2.10"
+      weight: 1000
+      width: 1
+      */
+      //console.log(edges.get(choosed_edge_id));
+      let js_edge_attr;
+      let choosed_js_edge_attr = edges.get(choosed_edge_id); // it could be directed painted link or general link
+
+      let parent_js_edge = choosed_js_edge_attr.parent_edge_id;
+      // if we click on painted directed link - we will have only 10.0.0.7_to_10.2.2.10_123 as edge ID. We will show menu with only one edge - we should show OSPF cost of all link
+      if (typeof parent_js_edge !== 'undefined') {
+        // we lose info about original undirected link - so we recover it from edges attr
+        let edges_copy = new vis.DataSet(edges_attr_dd_in_ll);
+        js_edge_attr = edges_copy.get(parent_js_edge); // it's always general link
+      }
+      else { js_edge_attr = choosed_js_edge_attr }
+
+      if (js_edge_attr) {
+        $('div.PopUpFormNewOSPFCostSet').fadeToggle();
+        //get_edge_details_by_igraph_edge_id(js_edge_attr);
+        get_edge_details_by_igraph_edge_id(js_edge_attr, choosed_js_edge_attr);
+      }
+    }
+  });
+
+  /*
+      var custom_menu_container = document.getElementById('option1_in_custom-menu');
+      console.log('clicked_doc:', custom_menu_container);
+      function onClick (event) {
+        //var properties = timeline.getEventProperties(event);
+        // properties contains things like node id, group, x, y, time, etc.
+        console.log('mouseover properties:',event);
+      }
+      custom_menu_container.addEventListener('click', onClick);
+  */
+
+  // If the document is clicked somewhere
+  $(document).bind("mousedown", function (e) {
+
+    // If the clicked element is not the menu
+    if (!$(e.target).parents(".custom-menu").length > 0) {
+
+      // Hide it
+      $(".custom-menu").hide(100);
+    }
+  });
+
+  // If the menu element is clicked
+  var that = this;
+  $(".custom-menu li").off().click(function () {
+
+    // This is the triggered action name
+    switch ($(this).attr("data-action")) {
+
+      // A case for each action. Your actions here
+      case "_spt_src_node": spt_src_node = spt_choosed_node; accept_node_for_spt_return_spt(); break;
+      case "_spt_dst_node": spt_dst_node = spt_choosed_node; accept_node_for_spt_return_spt(); break;
+      case "_mst_root_node": mst_node_id = spt_choosed_node; accept_node_for_mst_return_mst(); break;
+    }
+
+    // Hide it AFTER the action was triggered
+    $(".custom-menu").hide(100);
+  });
 
 }
 
 function load_networks_table(page = 1, filter_type = 'all') {
-    if (typeof graph_id === 'undefined' || !graph_id) {
-        console.error("Graph ID not available");
-        return;
+  if (typeof graph_id === 'undefined' || !graph_id) {
+    console.error("Graph ID not available");
+    return;
+  }
+
+  let containerId = 'subnets_table_container';
+  if (filter_type === 'backuped_only') {
+    containerId = 'backuped_table_container';
+  } else if (filter_type === 'non_backuped_only') {
+    containerId = 'non_backuped_table_container';
+  }
+
+  const container = document.getElementById(containerId);
+  if (!container) {
+    return;
+  }
+
+  // Show loading indicator
+  container.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div> Loading networks...</div>';
+
+  $.ajax({
+    url: "/get_networks_list",
+    method: "POST",
+    data: {
+      "graph_id": graph_id,
+      "page": page,
+      "per_page": 20,
+      "filter_type": filter_type
+    },
+    success: function (response) {
+      let html = '<div style="margin-top: 10px;">';
+
+      // Table
+      html += '<table class="table table-sm table-bordered" style="font-size: 0.9em;">';
+      html += '<thead class="thead-light"><tr><th>Network</th><th>Termination Points</th><th>Backup Status</th><th>Cost</th><th>Area</th></tr></thead>';
+      html += '<tbody>';
+
+      if (response.items && response.items.length > 0) {
+        response.items.forEach(function (network) {
+          let termPoints = network.termination_points.map(function (tp) {
+            return tp.hostname + ' (' + tp.rid + ', cost: ' + tp.cost + ')';
+          }).join(', ');
+
+          let backupStatus = network.is_backuped ? '<span style="color: green;">✓ Backuped</span>' : '<span style="color: red;">✗ Not backuped</span>';
+
+          html += '<tr>';
+          html += '<td>' + network.subnet + '</td>';
+          html += '<td>' + termPoints + '</td>';
+          html += '<td>' + backupStatus + '</td>';
+          html += '<td>' + network.cost + '</td>';
+          html += '<td>' + network.area + '</td>';
+          html += '</tr>';
+        });
+      } else {
+        html += '<tr><td colspan="5" class="text-center">No networks found</td></tr>';
+      }
+
+      html += '</tbody></table>';
+
+      // Pagination controls
+      if (response.pagination && response.pagination.total_pages > 1) {
+        let paginationHtml = render_pagination_controls(response.pagination, filter_type, 'networks');
+        html += paginationHtml;
+      }
+
+      // Show count
+      if (response.pagination) {
+        let start = (response.pagination.page - 1) * response.pagination.per_page + 1;
+        let end = Math.min(start + response.pagination.per_page - 1, response.pagination.total);
+        html += '<div class="text-muted" style="margin-top: 10px; font-size: 0.85em;">Showing ' + start + '-' + end + ' of ' + response.pagination.total + ' networks</div>';
+      }
+
+      html += '</div>';
+      container.innerHTML = html;
+    },
+    error: function (xhr, status, error) {
+      console.error("Error loading networks:", error);
+      container.innerHTML = '<div class="alert alert-danger">Error loading networks. Please try again.</div>';
     }
-    
-    let containerId = 'subnets_table_container';
-    if (filter_type === 'backuped_only') {
-        containerId = 'backuped_table_container';
-    } else if (filter_type === 'non_backuped_only') {
-        containerId = 'non_backuped_table_container';
-    }
-    
-    const container = document.getElementById(containerId);
-    if (!container) {
-        return;
-    }
-    
-    // Show loading indicator
-    container.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div> Loading networks...</div>';
-    
-    $.ajax({
-        url: "/get_networks_list",
-        method: "POST",
-        data: {
-            "graph_id": graph_id,
-            "page": page,
-            "per_page": 20,
-            "filter_type": filter_type
-        },
-        success: function(response) {
-            let html = '<div style="margin-top: 10px;">';
-            
-            // Table
-            html += '<table class="table table-sm table-bordered" style="font-size: 0.9em;">';
-            html += '<thead class="thead-light"><tr><th>Network</th><th>Termination Points</th><th>Backup Status</th><th>Cost</th><th>Area</th></tr></thead>';
-            html += '<tbody>';
-            
-            if (response.items && response.items.length > 0) {
-                response.items.forEach(function(network) {
-                    let termPoints = network.termination_points.map(function(tp) {
-                        return tp.hostname + ' (' + tp.rid + ', cost: ' + tp.cost + ')';
-                    }).join(', ');
-                    
-                    let backupStatus = network.is_backuped ? '<span style="color: green;">✓ Backuped</span>' : '<span style="color: red;">✗ Not backuped</span>';
-                    
-                    html += '<tr>';
-                    html += '<td>' + network.subnet + '</td>';
-                    html += '<td>' + termPoints + '</td>';
-                    html += '<td>' + backupStatus + '</td>';
-                    html += '<td>' + network.cost + '</td>';
-                    html += '<td>' + network.area + '</td>';
-                    html += '</tr>';
-                });
-            } else {
-                html += '<tr><td colspan="5" class="text-center">No networks found</td></tr>';
-            }
-            
-            html += '</tbody></table>';
-            
-            // Pagination controls
-            if (response.pagination && response.pagination.total_pages > 1) {
-                let paginationHtml = render_pagination_controls(response.pagination, filter_type, 'networks');
-                html += paginationHtml;
-            }
-            
-            // Show count
-            if (response.pagination) {
-                let start = (response.pagination.page - 1) * response.pagination.per_page + 1;
-                let end = Math.min(start + response.pagination.per_page - 1, response.pagination.total);
-                html += '<div class="text-muted" style="margin-top: 10px; font-size: 0.85em;">Showing ' + start + '-' + end + ' of ' + response.pagination.total + ' networks</div>';
-            }
-            
-            html += '</div>';
-            container.innerHTML = html;
-        },
-        error: function(xhr, status, error) {
-            console.error("Error loading networks:", error);
-            container.innerHTML = '<div class="alert alert-danger">Error loading networks. Please try again.</div>';
-        }
-    });
+  });
 }
 
 function load_nodes_table(page = 1) {
-    if (typeof graph_id === 'undefined' || !graph_id) {
-        console.error("Graph ID not available");
-        return;
+  if (typeof graph_id === 'undefined' || !graph_id) {
+    console.error("Graph ID not available");
+    return;
+  }
+
+  const container = document.getElementById('nodes_table_container');
+  if (!container) {
+    return;
+  }
+
+  // Show loading indicator
+  container.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div> Loading nodes...</div>';
+
+  $.ajax({
+    url: "/get_nodes_list",
+    method: "POST",
+    data: {
+      "graph_id": graph_id,
+      "page": page,
+      "per_page": 50
+    },
+    success: function (response) {
+      let html = '<div style="margin-top: 10px;">';
+
+      // Table
+      html += '<table class="table table-sm table-bordered" style="font-size: 0.9em;">';
+      html += '<thead class="thead-light"><tr><th>RID/System ID</th><th>Hostname</th><th>Networks Count</th><th>Area(s)</th></tr></thead>';
+      html += '<tbody>';
+
+      if (response.items && response.items.length > 0) {
+        response.items.forEach(function (node) {
+          let nodeId = node.node_id;
+          if (node.is_isis && node.systemid) {
+            nodeId = node.systemid + ' (pseudo-RID: ' + (node.pseudo_rid || 'N/A') + ')';
+          }
+
+          let areasText = node.areas && node.areas.length > 0 ? node.areas.join(', ') : 'N/A';
+
+          html += '<tr>';
+          html += '<td>' + nodeId + '</td>';
+          html += '<td>' + node.hostname + '</td>';
+          html += '<td>' + node.networks_count + '</td>';
+          html += '<td>' + areasText + '</td>';
+          html += '</tr>';
+        });
+      } else {
+        html += '<tr><td colspan="4" class="text-center">No nodes found</td></tr>';
+      }
+
+      html += '</tbody></table>';
+
+      // Pagination controls
+      if (response.pagination && response.pagination.total_pages > 1) {
+        let paginationHtml = render_pagination_controls(response.pagination, null, 'nodes');
+        html += paginationHtml;
+      }
+
+      // Show count
+      if (response.pagination) {
+        let start = (response.pagination.page - 1) * response.pagination.per_page + 1;
+        let end = Math.min(start + response.pagination.per_page - 1, response.pagination.total);
+        html += '<div class="text-muted" style="margin-top: 10px; font-size: 0.85em;">Showing ' + start + '-' + end + ' of ' + response.pagination.total + ' nodes</div>';
+      }
+
+      html += '</div>';
+      container.innerHTML = html;
+    },
+    error: function (xhr, status, error) {
+      console.error("Error loading nodes:", error);
+      container.innerHTML = '<div class="alert alert-danger">Error loading nodes. Please try again.</div>';
     }
-    
-    const container = document.getElementById('nodes_table_container');
-    if (!container) {
-        return;
-    }
-    
-    // Show loading indicator
-    container.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div> Loading nodes...</div>';
-    
-    $.ajax({
-        url: "/get_nodes_list",
-        method: "POST",
-        data: {
-            "graph_id": graph_id,
-            "page": page,
-            "per_page": 50
-        },
-        success: function(response) {
-            let html = '<div style="margin-top: 10px;">';
-            
-            // Table
-            html += '<table class="table table-sm table-bordered" style="font-size: 0.9em;">';
-            html += '<thead class="thead-light"><tr><th>RID/System ID</th><th>Hostname</th><th>Networks Count</th><th>Area(s)</th></tr></thead>';
-            html += '<tbody>';
-            
-            if (response.items && response.items.length > 0) {
-                response.items.forEach(function(node) {
-                    let nodeId = node.node_id;
-                    if (node.is_isis && node.systemid) {
-                        nodeId = node.systemid + ' (pseudo-RID: ' + (node.pseudo_rid || 'N/A') + ')';
-                    }
-                    
-                    let areasText = node.areas && node.areas.length > 0 ? node.areas.join(', ') : 'N/A';
-                    
-                    html += '<tr>';
-                    html += '<td>' + nodeId + '</td>';
-                    html += '<td>' + node.hostname + '</td>';
-                    html += '<td>' + node.networks_count + '</td>';
-                    html += '<td>' + areasText + '</td>';
-                    html += '</tr>';
-                });
-            } else {
-                html += '<tr><td colspan="4" class="text-center">No nodes found</td></tr>';
-            }
-            
-            html += '</tbody></table>';
-            
-            // Pagination controls
-            if (response.pagination && response.pagination.total_pages > 1) {
-                let paginationHtml = render_pagination_controls(response.pagination, null, 'nodes');
-                html += paginationHtml;
-            }
-            
-            // Show count
-            if (response.pagination) {
-                let start = (response.pagination.page - 1) * response.pagination.per_page + 1;
-                let end = Math.min(start + response.pagination.per_page - 1, response.pagination.total);
-                html += '<div class="text-muted" style="margin-top: 10px; font-size: 0.85em;">Showing ' + start + '-' + end + ' of ' + response.pagination.total + ' nodes</div>';
-            }
-            
-            html += '</div>';
-            container.innerHTML = html;
-        },
-        error: function(xhr, status, error) {
-            console.error("Error loading nodes:", error);
-            container.innerHTML = '<div class="alert alert-danger">Error loading nodes. Please try again.</div>';
-        }
-    });
+  });
 }
 
 function load_areas_table() {
-    if (typeof graph_id === 'undefined' || !graph_id) {
-        console.error("Graph ID not available");
-        return;
+  if (typeof graph_id === 'undefined' || !graph_id) {
+    console.error("Graph ID not available");
+    return;
+  }
+
+  const container = document.getElementById('areas_table_container');
+  if (!container) {
+    return;
+  }
+
+  // Show loading indicator
+  container.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div> Loading areas...</div>';
+
+  $.ajax({
+    url: "/get_areas_list",
+    method: "POST",
+    data: {
+      "graph_id": graph_id
+    },
+    success: function (response) {
+      let html = '<div style="margin-top: 10px;">';
+
+      // Table
+      html += '<table class="table table-sm table-bordered" style="font-size: 0.9em;">';
+      html += '<thead class="thead-light"><tr><th>Area ID</th><th>Nodes Count</th><th>Networks Count</th><th>Is Backbone</th></tr></thead>';
+      html += '<tbody>';
+
+      if (response.items && response.items.length > 0) {
+        response.items.forEach(function (area) {
+          let backboneText = area.is_backbone ? '<span style="color: green;">✓ Yes</span>' : 'No';
+
+          html += '<tr>';
+          html += '<td>' + area.area_id + '</td>';
+          html += '<td>' + area.nodes_count + '</td>';
+          html += '<td>' + area.networks_count + '</td>';
+          html += '<td>' + backboneText + '</td>';
+          html += '</tr>';
+        });
+      } else {
+        html += '<tr><td colspan="4" class="text-center">No areas found</td></tr>';
+      }
+
+      html += '</tbody></table>';
+      html += '</div>';
+      container.innerHTML = html;
+    },
+    error: function (xhr, status, error) {
+      console.error("Error loading areas:", error);
+      container.innerHTML = '<div class="alert alert-danger">Error loading areas. Please try again.</div>';
     }
-    
-    const container = document.getElementById('areas_table_container');
-    if (!container) {
-        return;
-    }
-    
-    // Show loading indicator
-    container.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div> Loading areas...</div>';
-    
-    $.ajax({
-        url: "/get_areas_list",
-        method: "POST",
-        data: {
-            "graph_id": graph_id
-        },
-        success: function(response) {
-            let html = '<div style="margin-top: 10px;">';
-            
-            // Table
-            html += '<table class="table table-sm table-bordered" style="font-size: 0.9em;">';
-            html += '<thead class="thead-light"><tr><th>Area ID</th><th>Nodes Count</th><th>Networks Count</th><th>Is Backbone</th></tr></thead>';
-            html += '<tbody>';
-            
-            if (response.items && response.items.length > 0) {
-                response.items.forEach(function(area) {
-                    let backboneText = area.is_backbone ? '<span style="color: green;">✓ Yes</span>' : 'No';
-                    
-                    html += '<tr>';
-                    html += '<td>' + area.area_id + '</td>';
-                    html += '<td>' + area.nodes_count + '</td>';
-                    html += '<td>' + area.networks_count + '</td>';
-                    html += '<td>' + backboneText + '</td>';
-                    html += '</tr>';
-                });
-            } else {
-                html += '<tr><td colspan="4" class="text-center">No areas found</td></tr>';
-            }
-            
-            html += '</tbody></table>';
-            html += '</div>';
-            container.innerHTML = html;
-        },
-        error: function(xhr, status, error) {
-            console.error("Error loading areas:", error);
-            container.innerHTML = '<div class="alert alert-danger">Error loading areas. Please try again.</div>';
-        }
-    });
+  });
 }
 
 function render_pagination_controls(pagination, filter_type, table_type) {
-    let pageNum = pagination.page;
-    let totalPages = pagination.total_pages;
-    let uniqueId = 'pagination_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    
-    let html = '<nav aria-label="Page navigation" style="margin-top: 15px;">';
-    html += '<ul class="pagination pagination-sm justify-content-center pagination-container" data-pagination-id="' + uniqueId + '" data-filter="' + (filter_type || '') + '" data-table="' + table_type + '">';
-    
-    // Previous button
-    if (pageNum > 1) {
-        html += '<li class="page-item"><a class="page-link pagination-link" href="#" data-page="' + (pageNum - 1) + '">Previous</a></li>';
-    } else {
-        html += '<li class="page-item disabled"><span class="page-link">Previous</span></li>';
+  let pageNum = pagination.page;
+  let totalPages = pagination.total_pages;
+  let uniqueId = 'pagination_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+  let html = '<nav aria-label="Page navigation" style="margin-top: 15px;">';
+  html += '<ul class="pagination pagination-sm justify-content-center pagination-container" data-pagination-id="' + uniqueId + '" data-filter="' + (filter_type || '') + '" data-table="' + table_type + '">';
+
+  // Previous button
+  if (pageNum > 1) {
+    html += '<li class="page-item"><a class="page-link pagination-link" href="#" data-page="' + (pageNum - 1) + '">Previous</a></li>';
+  } else {
+    html += '<li class="page-item disabled"><span class="page-link">Previous</span></li>';
+  }
+
+  // Page numbers (show max 7 pages around current)
+  let startPage = Math.max(1, pageNum - 3);
+  let endPage = Math.min(totalPages, pageNum + 3);
+
+  if (startPage > 1) {
+    html += '<li class="page-item"><a class="page-link pagination-link" href="#" data-page="1">1</a></li>';
+    if (startPage > 2) {
+      html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
     }
-    
-    // Page numbers (show max 7 pages around current)
-    let startPage = Math.max(1, pageNum - 3);
-    let endPage = Math.min(totalPages, pageNum + 3);
-    
-    if (startPage > 1) {
-        html += '<li class="page-item"><a class="page-link pagination-link" href="#" data-page="1">1</a></li>';
-        if (startPage > 2) {
-            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += '<li class="page-item' + (i === pageNum ? ' active' : '') + '">';
+    html += '<a class="page-link pagination-link" href="#" data-page="' + i + '">' + i + '</a>';
+    html += '</li>';
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
     }
-    
-    for (let i = startPage; i <= endPage; i++) {
-        html += '<li class="page-item' + (i === pageNum ? ' active' : '') + '">';
-        html += '<a class="page-link pagination-link" href="#" data-page="' + i + '">' + i + '</a>';
-        html += '</li>';
+    html += '<li class="page-item"><a class="page-link pagination-link" href="#" data-page="' + totalPages + '">' + totalPages + '</a></li>';
+  }
+
+  // Next button
+  if (pageNum < totalPages) {
+    html += '<li class="page-item"><a class="page-link pagination-link" href="#" data-page="' + (pageNum + 1) + '">Next</a></li>';
+  } else {
+    html += '<li class="page-item disabled"><span class="page-link">Next</span></li>';
+  }
+
+  html += '</ul></nav>';
+
+  // Attach event listeners after DOM insertion
+  setTimeout(function () {
+    let container = document.querySelector('[data-pagination-id="' + uniqueId + '"]');
+    if (container) {
+      let links = container.querySelectorAll('.pagination-link[data-page]');
+      let storedFilter = container.getAttribute('data-filter');
+      let storedTable = container.getAttribute('data-table');
+
+      links.forEach(function (link) {
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          let page = parseInt(this.getAttribute('data-page'));
+          if (storedTable === 'networks') {
+            load_networks_table(page, storedFilter || 'all');
+          } else if (storedTable === 'nodes') {
+            load_nodes_table(page);
+          }
+        });
+      });
     }
-    
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-        html += '<li class="page-item"><a class="page-link pagination-link" href="#" data-page="' + totalPages + '">' + totalPages + '</a></li>';
-    }
-    
-    // Next button
-    if (pageNum < totalPages) {
-        html += '<li class="page-item"><a class="page-link pagination-link" href="#" data-page="' + (pageNum + 1) + '">Next</a></li>';
-    } else {
-        html += '<li class="page-item disabled"><span class="page-link">Next</span></li>';
-    }
-    
-    html += '</ul></nav>';
-    
-    // Attach event listeners after DOM insertion
-    setTimeout(function() {
-        let container = document.querySelector('[data-pagination-id="' + uniqueId + '"]');
-        if (container) {
-            let links = container.querySelectorAll('.pagination-link[data-page]');
-            let storedFilter = container.getAttribute('data-filter');
-            let storedTable = container.getAttribute('data-table');
-            
-            links.forEach(function(link) {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    let page = parseInt(this.getAttribute('data-page'));
-                    if (storedTable === 'networks') {
-                        load_networks_table(page, storedFilter || 'all');
-                    } else if (storedTable === 'nodes') {
-                        load_nodes_table(page);
-                    }
-                });
-            });
-        }
-    }, 100);
-    
-    return html;
+  }, 100);
+
+  return html;
 }
 
 // Statistics details event listeners and load functions
 function attach_statistics_details_listeners() {
-    // Nodes details
-    const nodesDetails = document.getElementById('nodes_details');
-    if (nodesDetails) {
-        nodesDetails.addEventListener('toggle', function() {
-            if (this.open && !this.dataset.loaded) {
-                load_nodes_table(1);
-                this.dataset.loaded = 'true';
-            }
-        });
-    }
-    
-    // Subnets details
-    const subnetsDetails = document.getElementById('subnets_details');
-    if (subnetsDetails) {
-        subnetsDetails.addEventListener('toggle', function() {
-            if (this.open && !this.dataset.loaded) {
-                load_networks_table(1, 'all');
-                this.dataset.loaded = 'true';
-            }
-        });
-    }
-    
-    // Backuped details
-    const backupedDetails = document.getElementById('backuped_details');
-    if (backupedDetails) {
-        backupedDetails.addEventListener('toggle', function() {
-            if (this.open && !this.dataset.loaded) {
-                load_networks_table(1, 'backuped_only');
-                this.dataset.loaded = 'true';
-            }
-        });
-    }
-    
-    // Non Backuped details
-    const nonBackupedDetails = document.getElementById('non_backuped_details');
-    if (nonBackupedDetails) {
-        nonBackupedDetails.addEventListener('toggle', function() {
-            if (this.open && !this.dataset.loaded) {
-                load_networks_table(1, 'non_backuped_only');
-                this.dataset.loaded = 'true';
-            }
-        });
-    }
-    
-    // Areas details
-    const areasDetails = document.getElementById('areas_details');
-    if (areasDetails) {
-        areasDetails.addEventListener('toggle', function() {
-            if (this.open && !this.dataset.loaded) {
-                load_areas_table();
-                this.dataset.loaded = 'true';
-            }
-        });
-    }
+  // Nodes details
+  const nodesDetails = document.getElementById('nodes_details');
+  if (nodesDetails) {
+    nodesDetails.addEventListener('toggle', function () {
+      if (this.open && !this.dataset.loaded) {
+        load_nodes_table(1);
+        this.dataset.loaded = 'true';
+      }
+    });
+  }
+
+  // Subnets details
+  const subnetsDetails = document.getElementById('subnets_details');
+  if (subnetsDetails) {
+    subnetsDetails.addEventListener('toggle', function () {
+      if (this.open && !this.dataset.loaded) {
+        load_networks_table(1, 'all');
+        this.dataset.loaded = 'true';
+      }
+    });
+  }
+
+  // Backuped details
+  const backupedDetails = document.getElementById('backuped_details');
+  if (backupedDetails) {
+    backupedDetails.addEventListener('toggle', function () {
+      if (this.open && !this.dataset.loaded) {
+        load_networks_table(1, 'backuped_only');
+        this.dataset.loaded = 'true';
+      }
+    });
+  }
+
+  // Non Backuped details
+  const nonBackupedDetails = document.getElementById('non_backuped_details');
+  if (nonBackupedDetails) {
+    nonBackupedDetails.addEventListener('toggle', function () {
+      if (this.open && !this.dataset.loaded) {
+        load_networks_table(1, 'non_backuped_only');
+        this.dataset.loaded = 'true';
+      }
+    });
+  }
+
+  // Areas details
+  const areasDetails = document.getElementById('areas_details');
+  if (areasDetails) {
+    areasDetails.addEventListener('toggle', function () {
+      if (this.open && !this.dataset.loaded) {
+        load_areas_table();
+        this.dataset.loaded = 'true';
+      }
+    });
+  }
 }
 
 /* ============================================================================
@@ -4326,11 +4269,13 @@ function _countryColorFor(code) {
   var hash = 0;
   for (var i = 0; i < code.length; i++) { hash = (hash * 31 + code.charCodeAt(i)) >>> 0; }
   var hue = hash % 360;
-  var bg  = 'hsl(' + hue + ',65%,60%)';
+  var bg = 'hsl(' + hue + ',65%,60%)';
   var bdr = 'hsl(' + hue + ',65%,40%)';
-  return { background: bg, border: bdr,
-           highlight: { background: bg, border: bdr },
-           hover:     { background: bg, border: bdr } };
+  return {
+    background: bg, border: bdr,
+    highlight: { background: bg, border: bdr },
+    hover: { background: bg, border: bdr }
+  };
 }
 
 function _looksLikeIpv4(value) {
@@ -4359,9 +4304,151 @@ function _deriveCountryCodeFromHostname(hostname) {
   return 'UNK';
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// SP4-FILTER: Multi-Format Hostname Parser — B-type + C-type + Unified
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Hardware vendor keyword → vendor name mapping (case-insensitive match) */
+var HARDWARE_VENDORS = {
+  '7750sr': 'Nokia', '7750': 'Nokia', '7450': 'Nokia', '7250': 'Nokia',
+  'asr9k': 'Cisco', 'asr': 'Cisco', 'ncs5500': 'Cisco', 'ncs540': 'Cisco',
+  'ncs': 'Cisco', 'mx': 'Juniper', 'ptx': 'Juniper'
+};
+
+/**
+ * IP range classification rules — wildcard '*' matches any octet value.
+ * Evaluated in order; first match wins.
+ * Loaded from IP-RANGE-RULES.json at startup if available; falls back to
+ * these defaults (which mirror the expanded test dataset).
+ */
+var IP_RANGE_RULES = [
+  { pattern: { o1: '9', o2: '9', o3: '9', o4: '*' }, country: 'CAN', description: 'Canada Toronto' },
+  { pattern: { o1: '10', o2: '10', o3: '*', o4: '*' }, country: 'CAN', description: 'Canada Vancouver' },
+  { pattern: { o1: '19', o2: '19', o3: '19', o4: '*' }, country: 'MTP', description: 'Malta core' },
+  { pattern: { o1: '20', o2: '20', o3: '20', o4: '*' }, country: 'GBR', description: 'GB peering' },
+  { pattern: { o1: '21', o2: '21', o3: '21', o4: '*' }, country: 'USA', description: 'USA West' },
+  { pattern: { o1: '22', o2: '22', o3: '22', o4: '*' }, country: 'DEU', description: 'Germany' },
+  { pattern: { o1: '23', o2: '23', o3: '23', o4: '*' }, country: 'FRA', description: 'France' },
+  { pattern: { o1: '24', o2: '24', o3: '24', o4: '*' }, country: 'JPN', description: 'Japan' },
+  { pattern: { o1: '25', o2: '25', o3: '25', o4: '*' }, country: 'AUS', description: 'Australia' },
+  { pattern: { o1: '26', o2: '26', o3: '26', o4: '*' }, country: 'BRA', description: 'Brazil' },
+  { pattern: { o1: '192', o2: '168', o3: '*', o4: '*' }, country: 'UNK', description: 'RFC1918 private' }
+];
+
+/**
+ * B-type regex: COUNTRY(3 letters) - ROLE(1-4 letters) - HARDWARE - NUMBER(digits) - SUFFIX
+ * Example: MTP-P-7750sr-01-bl, GBR-PE-ASR9k-02-core
+ */
+var _BTYPE_RE = /^([A-Za-z]{3})-([A-Za-z]{1,4})-([A-Za-z0-9]+)-(\d+)-(.+)$/;
+
+/**
+ * Detect hardware vendor from a hostname string.
+ * Returns vendor name ('Nokia', 'Cisco', 'Juniper') or null.
+ */
+function _detectHardwareVendor(hostname) {
+  var h = String(hostname || '').toLowerCase();
+  var keys = Object.keys(HARDWARE_VENDORS);
+  // Sort by length desc so 'asr9k' is matched before 'asr'
+  keys.sort(function (a, b) { return b.length - a.length; });
+  for (var i = 0; i < keys.length; i++) {
+    if (h.indexOf(keys[i].toLowerCase()) !== -1) return HARDWARE_VENDORS[keys[i]];
+  }
+  return null;
+}
+
+/**
+ * B-type parser: extracts 3-letter country code from hardware hostnames.
+ * Only returns a result when BOTH the regex matches AND a known hardware
+ * vendor keyword is present — prevents false positives on A-type names.
+ * Returns uppercase country string or null if not B-type.
+ */
+function _deriveCountryFromBTypeHostname(hostname) {
+  var h = String(hostname || '').trim();
+  if (!h) return null;
+  var m = _BTYPE_RE.exec(h);
+  if (!m) return null;
+  // Require at least one known hardware vendor keyword in the hardware segment (m[3])
+  var hw = m[3].toLowerCase();
+  var isVendorHw = false;
+  Object.keys(HARDWARE_VENDORS).forEach(function (k) {
+    if (hw.indexOf(k.toLowerCase()) !== -1) isVendorHw = true;
+  });
+  if (!isVendorHw) return null;
+  return m[1].toUpperCase();
+}
+
+/**
+ * Wildcard per-octet IP pattern matcher.
+ * pattern: { o1, o2, o3, o4 } where each value is a string or '*'.
+ */
+function _matchIpPattern(ip, p) {
+  var o = String(ip || '').split('.');
+  if (o.length !== 4) return false;
+  return (p.o1 === '*' || p.o1 === o[0]) &&
+    (p.o2 === '*' || p.o2 === o[1]) &&
+    (p.o3 === '*' || p.o3 === o[2]) &&
+    (p.o4 === '*' || p.o4 === o[3]);
+}
+
+/**
+ * C-type parser: classifies a node by IP address using IP_RANGE_RULES.
+ * Returns uppercase country string or null if no rule matches.
+ */
+function _deriveCountryFromIpRange(ipAddress) {
+  if (!ipAddress) return null;
+  for (var i = 0; i < IP_RANGE_RULES.length; i++) {
+    if (_matchIpPattern(String(ipAddress), IP_RANGE_RULES[i].pattern)) {
+      return IP_RANGE_RULES[i].country || 'UNK';
+    }
+  }
+  return null;
+}
+
+/**
+ * Detect the hostname format type for a given hostname string.
+ * Returns 'B', 'A', or 'C' (C = IP-only / no resolvable hostname).
+ */
+function _getHostnameFormatType(hostname) {
+  var h = String(hostname || '').trim();
+  if (!h || _looksLikeIpv4(h)) return 'C';
+  if (_BTYPE_RE.test(h) && _detectHardwareVendor(h)) return 'B';
+  return 'A';
+}
+
+/**
+ * Unified parser orchestrator — priority: B-type → A-type → C-type (IP range) → UNK.
+ * @param {string} hostname  - device hostname (may be empty)
+ * @param {string} ipAddress - device IP address (used for C-type fallback)
+ * @returns {string} uppercase 3-letter country code or 'UNK'
+ */
+function _deriveCountryCodeUnified(hostname, ipAddress) {
+  var h = String(hostname || '').trim();
+
+  // 1. B-type (hardware vendor pattern — must match BEFORE A-type to avoid
+  //    false negatives on names like GBR-PE-ASR9k-01-core)
+  if (h && !_looksLikeIpv4(h)) {
+    var bResult = _deriveCountryFromBTypeHostname(h);
+    if (bResult) return bResult;
+  }
+
+  // 2. A-type (existing logic — country-city-town-router)
+  if (h && !_looksLikeIpv4(h)) {
+    var aResult = _deriveCountryCodeFromHostname(h);
+    if (aResult && aResult !== 'UNK') return aResult;
+  }
+
+  // 3. C-type — IP range fallback (handles IP-only entries, no hostname)
+  if (ipAddress) {
+    var cResult = _deriveCountryFromIpRange(String(ipAddress).trim());
+    if (cResult) return cResult;
+  }
+
+  return 'UNK';
+}
+
 function _buildHostnameCsvFromServerMap(hostMap) {
   var rows = ['router_id,hostname,country'];
-  Object.keys(hostMap || {}).forEach(function(routerId) {
+  Object.keys(hostMap || {}).forEach(function (routerId) {
     var hostname = String(hostMap[routerId] || '').trim();
     if (!routerId || !hostname || _looksLikeIpv4(hostname)) return;
     rows.push(routerId + ',' + hostname + ',' + _deriveCountryCodeFromHostname(hostname));
@@ -4372,7 +4459,7 @@ function _buildHostnameCsvFromServerMap(hostMap) {
 function _getCountryMetadataIdentityCandidates(item) {
   var candidates = [];
   var seen = {};
-  var addCandidate = function(value) {
+  var addCandidate = function (value) {
     var next = String(value || '').split('\n')[0].trim();
     if (!next || /^\[.*\]$/.test(next) || next.indexOf('▲') !== -1 || next.indexOf('∑cost') !== -1 || seen[next]) return;
     seen[next] = true;
@@ -4396,7 +4483,7 @@ function _summarizeCountryMetadataServerNodes(serverNodes) {
   };
   if (!Array.isArray(serverNodes)) return summary;
   summary.nodeCount = serverNodes.length;
-  serverNodes.forEach(function(serverNode) {
+  serverNodes.forEach(function (serverNode) {
     var country = String(serverNode.country || serverNode.group || '').toUpperCase().trim();
     var hostname = String(serverNode.hostname || '').trim();
     if (country && country !== 'UNK') summary.classifiedCount += 1;
@@ -4408,8 +4495,8 @@ function _summarizeCountryMetadataServerNodes(serverNodes) {
 
 function _buildCountryMetadataServerNodeLookup(serverNodes) {
   var byRouterId = {};
-  (serverNodes || []).forEach(function(serverNode) {
-    _getCountryMetadataIdentityCandidates(serverNode).forEach(function(routerId) {
+  (serverNodes || []).forEach(function (serverNode) {
+    _getCountryMetadataIdentityCandidates(serverNode).forEach(function (routerId) {
       byRouterId[routerId] = serverNode;
     });
   });
@@ -4435,9 +4522,9 @@ function _applyCountryMetadataFromServerNodes(serverNodes, sourceGraphTime, requ
   var byRouterId = _buildCountryMetadataServerNodeLookup(serverNodes);
   var updates = [];
   var matchedCount = 0;
-  liveNodes.forEach(function(node) {
+  liveNodes.forEach(function (node) {
     var serverNode = null;
-    _getCountryMetadataIdentityCandidates(node).some(function(routerId) {
+    _getCountryMetadataIdentityCandidates(node).some(function (routerId) {
       if (!routerId || !byRouterId[routerId]) return false;
       serverNode = byRouterId[routerId];
       return true;
@@ -4494,12 +4581,12 @@ function _fetchCountryMetadataServerNodes(graphTime) {
   if (!graphTime || typeof fetch !== 'function') return Promise.resolve([]);
   return fetch('/__security/session-diagram/' + encodeURIComponent(graphTime) + '/nodes', {
     credentials: 'same-origin'
-  }).then(function(response) {
+  }).then(function (response) {
     if (!response.ok) throw new Error('Failed to load node metadata for graph ' + graphTime);
     return response.json();
-  }).then(function(serverNodes) {
+  }).then(function (serverNodes) {
     return Array.isArray(serverNodes) ? serverNodes : [];
-  }).catch(function() {
+  }).catch(function () {
     return [];
   });
 }
@@ -4508,19 +4595,19 @@ function _fetchSavedGraphTimesForMetadataRecovery() {
   if (typeof fetch !== 'function') return Promise.resolve([]);
   return fetch('/upload-ospf-isis-lsdb', {
     credentials: 'same-origin'
-  }).then(function(response) {
+  }).then(function (response) {
     if (!response.ok) throw new Error('Failed to load saved graph list');
     return response.text();
-  }).then(function(html) {
+  }).then(function (html) {
     var parser = new DOMParser();
     var doc = parser.parseFromString(html, 'text/html');
-    var graphTimes = Array.from(doc.querySelectorAll('option')).map(function(option) {
+    var graphTimes = Array.from(doc.querySelectorAll('option')).map(function (option) {
       return String(option.value || '').trim();
-    }).filter(function(value) {
+    }).filter(function (value) {
       return !!value;
     });
     return Array.from(new Set(graphTimes));
-  }).catch(function() {
+  }).catch(function () {
     return [];
   });
 }
@@ -4532,12 +4619,12 @@ function _recoverCountryMetadataFromPeerGraphs(currentGraphTime) {
   var dayPrefix = String(currentGraphTime || '').split('_')[0] || '';
   var hostCountMatch = String(currentGraphTime || '').match(/_(\d+)_hosts$/i);
   var hostCountSuffix = hostCountMatch ? hostCountMatch[1] : '';
-  return _fetchSavedGraphTimesForMetadataRecovery().then(function(graphTimes) {
-    var candidates = (graphTimes || []).filter(function(graphTime) {
+  return _fetchSavedGraphTimesForMetadataRecovery().then(function (graphTimes) {
+    var candidates = (graphTimes || []).filter(function (graphTime) {
       return graphTime && graphTime !== currentGraphTime;
     });
-    candidates.sort(function(a, b) {
-      var scoreFor = function(value) {
+    candidates.sort(function (a, b) {
+      var scoreFor = function (value) {
         var score = 0;
         if (hostCountSuffix && new RegExp('_' + hostCountSuffix + '_hosts$', 'i').test(String(value || ''))) score += 2;
         if (dayPrefix && String(value || '').indexOf(dayPrefix + '_') === 0) score += 1;
@@ -4548,10 +4635,10 @@ function _recoverCountryMetadataFromPeerGraphs(currentGraphTime) {
       return String(b || '').localeCompare(String(a || ''));
     });
     var index = 0;
-    var tryNext = function() {
+    var tryNext = function () {
       if (index >= candidates.length || index >= 12) return Promise.resolve(false);
       var candidateGraphTime = candidates[index++];
-      return _fetchCountryMetadataServerNodes(candidateGraphTime).then(function(serverNodes) {
+      return _fetchCountryMetadataServerNodes(candidateGraphTime).then(function (serverNodes) {
         var summary = _summarizeCountryMetadataServerNodes(serverNodes);
         if (!summary.nodeCount || summary.nodeCount !== liveNodes.length) return tryNext();
         if (summary.classifiedCount === 0 && summary.hostnameCount === 0 && summary.gatewayCount === 0) return tryNext();
@@ -4564,7 +4651,7 @@ function _recoverCountryMetadataFromPeerGraphs(currentGraphTime) {
       });
     };
     return tryNext();
-  }).catch(function(err) {
+  }).catch(function (err) {
     console.warn('[EN-F0] Could not recover country metadata from peer graphs', err);
     return false;
   });
@@ -4579,14 +4666,14 @@ function _syncHostnameMappingsFromServer(graphTime) {
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
     },
     body: 'graph_time=' + encodeURIComponent(graphTime)
-  }).then(function(response) {
+  }).then(function (response) {
     if (!response.ok) throw new Error('Failed to load saved hostnames for graph ' + graphTime);
     return response.text();
-  }).then(function(html) {
+  }).then(function (html) {
     var parser = new DOMParser();
     var doc = parser.parseFromString(html, 'text/html');
     var hostMap = {};
-    Array.from(doc.querySelectorAll('input[id^="comment_"]')).forEach(function(input) {
+    Array.from(doc.querySelectorAll('input[id^="comment_"]')).forEach(function (input) {
       var hostname = String(input.value || '').trim();
       var routerId = String(input.id || '').replace(/^comment_/, '').trim();
       if (!routerId || !hostname || _looksLikeIpv4(hostname)) return;
@@ -4598,18 +4685,78 @@ function _syncHostnameMappingsFromServer(graphTime) {
     _applyHostnameMapping(csvText, 'saved hostnames for ' + graphTime);
     console.log('[SP3-A] Synced saved hostname mappings from server for graph ' + graphTime);
     return true;
-  }).catch(function(err) {
+  }).catch(function (err) {
     console.warn('[SP3-A] Could not sync hostname mappings from server', err);
     return false;
   });
 }
 
+var _originalCountryState = {};
+function _ensureOriginalCountryStateRecorded() {
+  if (typeof nodes === 'undefined' || !nodes) return;
+  nodes.get().forEach(function (n) {
+    if (!_originalCountryState[n.id]) {
+      _originalCountryState[n.id] = {
+        country: String(n.country || n.group || 'UNK').toUpperCase(),
+        group: String(n.group || n.country || 'UNK').toUpperCase(),
+        label: n.label,
+        title: n.title,
+        color: n.color
+      };
+    }
+  });
+}
+
+function _syncCustomCountryOverridesFromServer(graphTime) {
+  if (!graphTime) return Promise.resolve(false);
+  return fetch('/country-overrides/' + encodeURIComponent(graphTime), { credentials: 'same-origin' })
+    .then(function (res) { if (!res.ok) throw new Error('Failed to load custom countries'); return res.json(); })
+    .then(function (data) {
+      var overrides = data.overrides || {};
+      if (Object.keys(overrides).length === 0 || typeof nodes === 'undefined' || !nodes) return false;
+
+      _ensureOriginalCountryStateRecorded();
+      var updates = [];
+      nodes.get().forEach(function (n) {
+        var routerIdCandidates = _getCountryMetadataIdentityCandidates(n);
+        var targetCountry = null;
+        routerIdCandidates.some(function (rid) {
+          if (overrides[rid]) { targetCountry = overrides[rid].toUpperCase(); return true; }
+          return false;
+        });
+
+        if (targetCountry && targetCountry !== String(n.country || '').toUpperCase()) {
+          var update = { id: n.id, country: targetCountry, group: targetCountry };
+          update.label = _buildCountryAwareNodeLabel({
+            id: n.id, name: n.name, router_id: n.router_id, hostname: n.hostname, label: n.label, country: targetCountry, group: targetCountry
+          });
+          update.title = _buildCountryAwareNodeTitle({
+            id: n.id, name: n.name, router_id: n.router_id, hostname: n.hostname, country: targetCountry, group: targetCountry, is_gateway: !!n.is_gateway
+          });
+          updates.push(update);
+        }
+      });
+      if (updates.length > 0) {
+        nodes.update(updates);
+        console.log('[SP3-CRUD] Synced ' + updates.length + ' custom country overrides from server');
+        if (typeof applyCountryColors === 'function') applyCountryColors();
+        return true;
+      }
+      return false;
+    }).catch(function (err) {
+      console.warn('[SP3-CRUD] Failed to sync custom overrides', err);
+      return false;
+    });
+}
+
 function _syncCountryMetadataFromServer(graphTime) {
   if (!graphTime || typeof fetch !== 'function' || typeof nodes === 'undefined' || !nodes) return Promise.resolve(false);
-  return _fetchCountryMetadataServerNodes(graphTime).then(function(serverNodes) {
+  return _fetchCountryMetadataServerNodes(graphTime).then(function (serverNodes) {
     var applied = _applyCountryMetadataFromServerNodes(serverNodes, graphTime, false);
-    return !!(applied && applied.applied);
-  }).catch(function(err) {
+    return _syncCustomCountryOverridesFromServer(graphTime).then(function (customApplied) {
+      return !!(applied && applied.applied) || customApplied;
+    });
+  }).catch(function (err) {
     console.warn('[EN-F0] Could not sync country metadata from server', err);
     return false;
   });
@@ -4655,7 +4802,7 @@ function _buildCountryAwareNodeLabel(node) {
 function _normalizeCountryNodeLabels() {
   if (typeof nodes === 'undefined' || !nodes) return;
   var updates = [];
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     var normalized = _buildCountryAwareNodeLabel(n);
     if (normalized && normalized !== n.label) {
       updates.push({ id: n.id, label: normalized });
@@ -4667,7 +4814,7 @@ function _normalizeCountryNodeLabels() {
 function _refreshCountryAwareNodeTitles() {
   if (typeof nodes === 'undefined' || !nodes) return;
   var updates = [];
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     var nextTitle = _buildCountryAwareNodeTitle({
       id: n.id,
       name: n.name,
@@ -4687,9 +4834,9 @@ function _inferGatewayRolesFromCountryAdjacency() {
   if (typeof nodes === 'undefined' || !nodes || typeof edges === 'undefined' || !edges) return;
   var allNodes = nodes.get();
   var byId = {};
-  allNodes.forEach(function(n) { byId[n.id] = n; });
+  allNodes.forEach(function (n) { byId[n.id] = n; });
   var gatewayIds = {};
-  edges.get().forEach(function(e) {
+  edges.get().forEach(function (e) {
     var src = byId[e.from];
     var dst = byId[e.to];
     if (!src || !dst) return;
@@ -4700,7 +4847,7 @@ function _inferGatewayRolesFromCountryAdjacency() {
     gatewayIds[dst.id] = true;
   });
   var updates = [];
-  allNodes.forEach(function(n) {
+  allNodes.forEach(function (n) {
     var inferredGateway = !!gatewayIds[n.id];
     if (!!n.is_gateway !== inferredGateway) {
       updates.push({ id: n.id, is_gateway: inferredGateway });
@@ -4716,15 +4863,25 @@ function applyCountryColors(options) {
   var allowCountryInference = settings.allowCountryInference === true;
   if (allowCountryInference) {
     var inferredUpdates = [];
-    nodes.get().forEach(function(n) {
+    nodes.get().forEach(function (n) {
       var existingCountry = (n.country || '').toUpperCase();
       if (existingCountry && existingCountry !== 'UNK') return;
       var hostname = String(n.hostname || '').trim();
       if (!hostname && n.label) hostname = String(n.label).split('\n')[0].trim();
-      var derived = _deriveCountryCodeFromHostname(hostname);
+      // Resolve IP address from node properties (router_id is an IP in OSPF)
+      var ipAddr = String(n.ip_address || n.router_id || '').trim();
+      if (!ipAddr && _looksLikeIpv4(String(n.id || ''))) ipAddr = String(n.id);
+      var derived = _deriveCountryCodeUnified(hostname, ipAddr);
+      var fmtType = _getHostnameFormatType(hostname || ipAddr);
+      var hwVendor = _detectHardwareVendor(hostname) || '';
+      // Always store format metadata; only update country when resolvable
+      var pushObj = { id: n.id, hostnameFormatType: fmtType, hardwareVendor: hwVendor };
       if (derived !== 'UNK') {
-        inferredUpdates.push({ id: n.id, country: derived, group: derived, title: _buildCountryAwareNodeTitle({ hostname: hostname || (n.name || n.id), country: derived, is_gateway: n.is_gateway === true }) });
+        pushObj.country = derived;
+        pushObj.group = derived;
+        pushObj.title = _buildCountryAwareNodeTitle({ hostname: hostname || (n.name || n.id), country: derived, is_gateway: n.is_gateway === true });
       }
+      inferredUpdates.push(pushObj);
     });
     if (inferredUpdates.length > 0) nodes.update(inferredUpdates);
   }
@@ -4732,8 +4889,8 @@ function applyCountryColors(options) {
   _normalizeCountryNodeLabels();
   _refreshCountryAwareNodeTitles();
   var allNodes = nodes.get();
-  var updates  = [];
-  allNodes.forEach(function(n) {
+  var updates = [];
+  allNodes.forEach(function (n) {
     var code = (n.country || 'UNK').toUpperCase();
     if (n.color && typeof n.color === 'object' && n.color.background) return; // already coloured by push-to-ui
     var col = _countryColorFor(code);
@@ -4746,25 +4903,103 @@ function applyCountryColors(options) {
 function _getCountriesInGraph() {
   if (typeof nodes === 'undefined' || !nodes) return [];
   var seen = {};
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     var code = (n.country || 'UNK').toUpperCase();
     seen[code] = true;
   });
   return Object.keys(seen).sort();
 }
 
-// ── 4. Filter nodes by country ────────────────────────────────────────────────
+// ── 4. Filter nodes by country and text ─────────────────────────────────────────
+
+var _activeIpFilter = '';
+var _activeHostnameFilter = '';
+
+function _matchIpPattern(ip, pattern) {
+  if (!pattern) return true; // empty matches all
+  if (!ip) return false;
+  ip = ip.trim();
+  pattern = pattern.trim();
+  if (pattern.indexOf('/') !== -1) {
+    // CIDR
+    var parts = pattern.split('/');
+    var baseIp = parts[0];
+    var mask = parseInt(parts[1], 10);
+    var ipToObj = function (i) { return i.split('.').reduce(function (acc, val) { return (acc << 8) + parseInt(val, 10); }, 0); };
+    var ipNum = ipToObj(ip);
+    var baseNum = ipToObj(baseIp);
+    var bitMask = -1 << (32 - mask);
+    return (ipNum & bitMask) === (baseNum & bitMask);
+  } else if (pattern.indexOf('*') !== -1) {
+    // 10.*.12.*
+    var pParts = pattern.split('.');
+    var iParts = ip.split('.');
+    if (pParts.length !== iParts.length) return false;
+    for (var i = 0; i < pParts.length; i++) {
+      if (pParts[i] !== '*' && pParts[i] !== iParts[i]) return false;
+    }
+    return true;
+  }
+  return ip === pattern;
+}
+
+function _matchHostnamePattern(hostname, pattern) {
+  if (!pattern) return true;
+  if (!hostname) return false;
+  hostname = hostname.trim();
+  pattern = pattern.trim();
+  if (pattern.startsWith('/') && pattern.endsWith('/')) {
+    try {
+      var r = new RegExp(pattern.slice(1, -1), 'i');
+      return r.test(hostname);
+    } catch (e) { return false; }
+  } else if (pattern.indexOf('*') !== -1) {
+    var regexStr = '^' + pattern.split('*').map(function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('.*') + '$';
+    return new RegExp(regexStr, 'i').test(hostname);
+  }
+  return hostname.toLowerCase() === pattern.toLowerCase();
+}
+
+function applyTextFilters() {
+  if (typeof nodes === 'undefined' || !nodes) return;
+  var updates = [];
+  var ipPat = (_activeIpFilter || '').trim();
+  var hPat = (_activeHostnameFilter || '').trim();
+  nodes.get().forEach(function (n) {
+    var ip = n.ip_address || n.router_id || String(n.id || '');
+    var host = n.hostname || n.label || '';
+    if (typeof host === 'string' && host.indexOf('\n') !== -1) host = host.split('\n')[0];
+
+    var hIp = ipPat ? !_matchIpPattern(ip, ipPat) : false;
+    var hHost = hPat ? !_matchHostnamePattern(host, hPat) : false;
+
+    if (!!n._ipFilterHidden !== hIp || !!n._hostnameFilterHidden !== hHost) {
+      updates.push({ id: n.id, _ipFilterHidden: hIp, _hostnameFilterHidden: hHost });
+    }
+  });
+  if (updates.length > 0) nodes.update(updates);
+  _syncEdgeVisibility();
+}
+
 //  mode: 'all' | 'exclude' | 'show_only'
 //  selected: Set of country codes
 function filterNodesByCountry(mode, selected) {
   if (typeof nodes === 'undefined' || !nodes) return;
+  // Collect enabled hostname format types from the filter panel checkboxes
+  var enabledFmts = { 'A': true, 'B': true, 'C': true };
+  document.querySelectorAll('.cfFmtCheck').forEach(function (cb) {
+    enabledFmts[cb.dataset.fmt] = cb.checked;
+  });
   var allNodes = nodes.get();
-  var updates  = [];
-  allNodes.forEach(function(n) {
+  var updates = [];
+  allNodes.forEach(function (n) {
     var code = (n.country || 'UNK').toUpperCase();
+    var fmt = n.hostnameFormatType || 'A';
     var hidden = false;
-    if (mode === 'exclude')   { hidden = selected.has(code); }
-    if (mode === 'show_only') { hidden = !selected.has(code); }
+    // Format-type filter (overrides country filter when format is disabled)
+    if (!enabledFmts[fmt]) { hidden = true; }
+    else if (mode === 'exclude') { hidden = selected.has(code); }
+    else if (mode === 'show_only') { hidden = !selected.has(code); }
     updates.push({ id: n.id, _filterHidden: hidden });
   });
   nodes.update(updates);
@@ -4772,13 +5007,13 @@ function filterNodesByCountry(mode, selected) {
 }
 
 function _nodeHiddenByRules(node) {
-  return !!(node && (node._modeHidden || node._filterHidden || node._collapseHidden));
+  return !!(node && (node._modeHidden || node._filterHidden || node._collapseHidden || node._ipFilterHidden || node._hostnameFilterHidden));
 }
 
 function _syncEdgeVisibility() {
   if (typeof nodes !== 'undefined' && nodes) {
     var nodeUpdates = [];
-    nodes.get().forEach(function(n) {
+    nodes.get().forEach(function (n) {
       var hidden = _nodeHiddenByRules(n);
       if (!!n.hidden !== hidden) {
         nodeUpdates.push({ id: n.id, hidden: hidden });
@@ -4788,9 +5023,9 @@ function _syncEdgeVisibility() {
   }
   if (typeof edges === 'undefined' || !edges) return;
   var hiddenNodes = new Set();
-  nodes.get().forEach(function(n) { if (_nodeHiddenByRules(n)) hiddenNodes.add(n.id); });
+  nodes.get().forEach(function (n) { if (_nodeHiddenByRules(n)) hiddenNodes.add(n.id); });
   var edgeUpdates = [];
-  edges.get().forEach(function(e) {
+  edges.get().forEach(function (e) {
     var h = !!e._collapseHidden || !!e._bundledHidden || hiddenNodes.has(e.from) || hiddenNodes.has(e.to);
     if (!!e.hidden !== h) edgeUpdates.push({ id: e.id, hidden: h });
   });
@@ -4799,7 +5034,13 @@ function _syncEdgeVisibility() {
 
 function resetCountryFilter() {
   if (typeof nodes === 'undefined' || !nodes) return;
-  var updates = nodes.get().map(function(n) { return { id: n.id, _filterHidden: false }; });
+  var updates = nodes.get().map(function (n) { return { id: n.id, _filterHidden: false, _ipFilterHidden: false, _hostnameFilterHidden: false }; });
+  _activeIpFilter = '';
+  _activeHostnameFilter = '';
+  var ipBtn = document.getElementById('cfIpFilterInput');
+  if (ipBtn) ipBtn.value = '';
+  var hostBtn = document.getElementById('cfHostFilterInput');
+  if (hostBtn) hostBtn.value = '';
   nodes.update(updates);
   _syncEdgeVisibility();
 }
@@ -4807,11 +5048,29 @@ function resetCountryFilter() {
 // ── 5. Build and inject the Country Filter panel ──────────────────────────────
 var _cfPanelBuilt = false;
 
+/**
+ * Toggle collapse/expand of a collapsible section inside the Country Filter panel.
+ * @param {string} sectionId - element ID of the collapsible div
+ * @param {Element} hdr      - the header element (updates ▸/▾ arrow)
+ */
+function _toggleCfSection(sectionId, hdr) {
+  var el = document.getElementById(sectionId);
+  if (!el) return;
+  var isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : '';
+  if (hdr) {
+    hdr.textContent = hdr.textContent.replace(isOpen ? '▾' : '▸', isOpen ? '▸' : '▾');
+  }
+}
+
 function buildCountryFilterPanel() {
   // Remove stale panel if graph was reloaded
   var existing = document.getElementById('countryFilterPanel');
   if (existing) existing.remove();
   _cfPanelBuilt = false;
+
+  // Record original country state for rollback capability
+  _ensureOriginalCountryStateRecorded();
 
   var countries = _getCountriesInGraph();
   if (countries.length === 0) return;
@@ -4819,7 +5078,7 @@ function buildCountryFilterPanel() {
   // ── Inject CSS once ────────────────────────────────────────────────────────
   if (!document.getElementById('cfPanelStyle')) {
     var style = document.createElement('style');
-    style.id  = 'cfPanelStyle';
+    style.id = 'cfPanelStyle';
     style.textContent = [
       '#countryFilterPanel{position:fixed;top:80px;right:16px;z-index:9999;',
       '  background:#1e2330;border:1px solid #3a4560;border-radius:10px;',
@@ -4858,14 +5117,14 @@ function buildCountryFilterPanel() {
 
   // ── Build node count per country ───────────────────────────────────────────
   var countPerCountry = {};
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     var c = (n.country || 'UNK').toUpperCase();
     countPerCountry[c] = (countPerCountry[c] || 0) + 1;
   });
 
   // ── Build panel DOM ────────────────────────────────────────────────────────
   var panel = document.createElement('div');
-  panel.id  = 'countryFilterPanel';
+  panel.id = 'countryFilterPanel';
 
   var headerHTML = '<div id="cfHeader">' +
     '<h4>🌍 Country Filter</h4>' +
@@ -4878,12 +5137,12 @@ function buildCountryFilterPanel() {
     '</div>';
 
   var listHTML = '<div class="cfCountryList" id="cfCountryList">';
-  countries.forEach(function(code) {
-    var col    = _countryColorFor(code);
-    var bg     = col.background || '#888';
-    var cnt    = countPerCountry[code] || 0;
-    var label  = code === 'UNK' ? 'Unknown / Unmapped' : code;
-    listHTML  += '<label class="cfCountryItem">' +
+  countries.forEach(function (code) {
+    var col = _countryColorFor(code);
+    var bg = col.background || '#888';
+    var cnt = countPerCountry[code] || 0;
+    var label = code === 'UNK' ? 'Unknown / Unmapped' : code;
+    listHTML += '<label class="cfCountryItem">' +
       '<input type="checkbox" class="cfCheckbox" data-country="' + code + '" checked>' +
       '<span class="cfSwatch" style="background:' + bg + '"></span>' +
       '<span class="cfLabel">' + label + '</span>' +
@@ -4900,16 +5159,81 @@ function buildCountryFilterPanel() {
     '</div>' +
     '<div class="cfInfo" id="cfInfo">Mode: show all routers</div>';
 
+  // ── IP Range Filters section ───────────────────────────────────────────────
+  var ipRangeHTML = '<div id="cfIpSection" style="border-top:1px solid #3a4560;margin-top:8px;padding-top:6px;">' +
+    '<div class="cfSectionHdr" onclick="_toggleCfSection(\'cfIpList\',this)" ' +
+    'style="font-size:11px;color:#aab;margin-bottom:4px;cursor:pointer;user-select:none;">▸ 📍 IP Range Filters</div>' +
+    '<div id="cfIpList" style="display:none;">';
+  IP_RANGE_RULES.forEach(function (rule, idx) {
+    var pat = rule.pattern;
+    var patStr = pat.o1 + '.' + pat.o2 + '.' + pat.o3 + '.' + pat.o4;
+    ipRangeHTML += '<label class="cfCountryItem">' +
+      '<input type="checkbox" class="cfIpCheck" data-idx="' + idx + '" checked>' +
+      '<span class="cfLabel" style="font-size:11px;font-family:monospace;">' + patStr + ' → ' + rule.country + '</span>' +
+      '</label>';
+  });
+  ipRangeHTML += '</div></div>';
+
+  // ── Custom IP Filter section ───────────────────────────────────────────────
+  var customIpHTML = '<div id="cfCustomIpSection" style="border-top:1px solid #3a4560;margin-top:8px;padding-top:6px;">' +
+    '<div class="cfSectionHdr" onclick="_toggleCfSection(\'cfCustomIpWrap\',this)" ' +
+    'style="font-size:11px;color:#aab;margin-bottom:4px;cursor:pointer;user-select:none;">▾ 🔍 Custom IP Filter</div>' +
+    '<div id="cfCustomIpWrap">' +
+    '<input type="text" id="cfIpFilterInput" placeholder="10.*.*.* or 10.0.0.0/24" style="width:100%;margin-bottom:4px;background:#2a3248;color:#c8d0e8;border:1px solid #3a4560;padding:4px;border-radius:4px;font-size:11px;">' +
+    '<button class="cfBtn" id="cfApplyIp" style="width:100%;">Apply IP Filter</button>' +
+    '</div></div>';
+
+  // ── Custom Hostname Filter section ───────────────────────────────────────
+  var customHostHTML = '<div id="cfCustomHostSection" style="border-top:1px solid #3a4560;margin-top:8px;padding-top:6px;">' +
+    '<div class="cfSectionHdr" onclick="_toggleCfSection(\'cfCustomHostWrap\',this)" ' +
+    'style="font-size:11px;color:#aab;margin-bottom:4px;cursor:pointer;user-select:none;">▾ 🔍 Custom Hostname Filter</div>' +
+    '<div id="cfCustomHostWrap">' +
+    '<input type="text" id="cfHostFilterInput" placeholder="exact, wild*, or /regex/" style="width:100%;margin-bottom:4px;background:#2a3248;color:#c8d0e8;border:1px solid #3a4560;padding:4px;border-radius:4px;font-size:11px;">' +
+    '<button class="cfBtn" id="cfApplyHostname" style="width:100%;">Apply Hostname Filter</button>' +
+    '</div></div>';
+
+  // ── Bulk Country Editor section ───────────────────────────────────────────
+  var bulkEditorHTML = '<div id="cfBulkEditorSection" style="border-top:1px solid #3a4560;margin-top:8px;padding-top:6px;">' +
+    '<div class="cfSectionHdr" onclick="_toggleCfSection(\'cfBulkEditorWrap\',this)" ' +
+    'style="font-size:11px;color:#aab;margin-bottom:4px;cursor:pointer;user-select:none;">▾ ✏️ Bulk Country Editor</div>' +
+    '<div id="cfBulkEditorWrap">' +
+    '<div style="font-size:11px;margin-bottom:4px;color:#c8d0e8;">Selected Routers: <span id="cfBulkCount" style="font-weight:bold;color:#fff;">0</span></div>' +
+    '<select id="cfBulkCountrySel" style="width:100%;margin-bottom:4px;background:#2a3248;color:#c8d0e8;border:1px solid #3a4560;padding:4px;border-radius:4px;font-size:11px;">' +
+    '<option value="UNK">UNK (Unknown)</option>';
+  countries.forEach(function (code) {
+    if (code !== 'UNK') bulkEditorHTML += '<option value="' + code + '">' + code + '</option>';
+  });
+  bulkEditorHTML += '</select>' +
+    '<div class="cfActionRow">' +
+    '<button class="cfBtn apply" id="cfBulkApplyBtn" title="Apply Country locally to selection" style="flex:2;">Apply to Map</button>' +
+    '<button class="cfBtn" id="cfBulkRollbackBtn" title="Revert selected nodes to original state" style="flex:1;">↩️ Rollback</button>' +
+    '</div>' +
+    '<button class="cfBtn" id="cfBulkSaveBtn" style="width:100%;margin-top:4px;border-color:#3a4560;" title="Save current overrides to Database">💾 Save to DB</button>' +
+    '</div></div>';
+
+  // ── Hostname Format Filters section ───────────────────────────────────────
+  var fmtHTML = '<div id="cfFmtSection" style="border-top:1px solid #3a4560;margin-top:4px;padding-top:6px;">' +
+    '<div class="cfSectionHdr" onclick="_toggleCfSection(\'cfFmtList\',this)" ' +
+    'style="font-size:11px;color:#aab;margin-bottom:4px;cursor:pointer;user-select:none;">▸ 🔧 Hostname Format</div>' +
+    '<div id="cfFmtList" style="display:none;">' +
+    '<label class="cfCountryItem"><input type="checkbox" class="cfFmtCheck" data-fmt="A" checked>' +
+    '<span class="cfLabel" style="font-size:11px;">A-type  <span style="color:#667;">(country-city-town)</span></span></label>' +
+    '<label class="cfCountryItem"><input type="checkbox" class="cfFmtCheck" data-fmt="B" checked>' +
+    '<span class="cfLabel" style="font-size:11px;">B-type  <span style="color:#667;">(vendor hardware)</span></span></label>' +
+    '<label class="cfCountryItem"><input type="checkbox" class="cfFmtCheck" data-fmt="C" checked>' +
+    '<span class="cfLabel" style="font-size:11px;">C-type  <span style="color:#667;">(IP range only)</span></span></label>' +
+    '</div></div>';
+
   panel.innerHTML = headerHTML +
-    '<div id="cfBody">' + modeHTML + listHTML + actionHTML + '</div>';
+    '<div id="cfBody">' + modeHTML + listHTML + actionHTML + ipRangeHTML + customIpHTML + customHostHTML + bulkEditorHTML + fmtHTML + '</div>';
 
   document.body.appendChild(panel);
 
   // ── Collapse / Expand ──────────────────────────────────────────────────────
-  var cfBody     = document.getElementById('cfBody');
-  var cfToggle   = document.getElementById('cfToggle');
+  var cfBody = document.getElementById('cfBody');
+  var cfToggle = document.getElementById('cfToggle');
   var _collapsed = false;
-  cfToggle.addEventListener('click', function() {
+  cfToggle.addEventListener('click', function () {
     _collapsed = !_collapsed;
     cfBody.style.display = _collapsed ? 'none' : '';
     cfToggle.textContent = _collapsed ? '+' : '−';
@@ -4917,9 +5241,9 @@ function buildCountryFilterPanel() {
 
   // ── Mode buttons ───────────────────────────────────────────────────────────
   var _currentMode = 'all';
-  document.querySelectorAll('.cfModeBtn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.cfModeBtn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.cfModeBtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.cfModeBtn').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       _currentMode = btn.dataset.mode;
       var info = document.getElementById('cfInfo');
@@ -4931,16 +5255,16 @@ function buildCountryFilterPanel() {
   });
 
   // ── Select All / None / Reset ──────────────────────────────────────────────
-  document.getElementById('cfSelectAll').addEventListener('click', function() {
-    document.querySelectorAll('.cfCheckbox').forEach(function(cb) { cb.checked = true; });
+  document.getElementById('cfSelectAll').addEventListener('click', function () {
+    document.querySelectorAll('.cfCheckbox').forEach(function (cb) { cb.checked = true; });
   });
-  document.getElementById('cfSelectNone').addEventListener('click', function() {
-    document.querySelectorAll('.cfCheckbox').forEach(function(cb) { cb.checked = false; });
+  document.getElementById('cfSelectNone').addEventListener('click', function () {
+    document.querySelectorAll('.cfCheckbox').forEach(function (cb) { cb.checked = false; });
   });
-  document.getElementById('cfReset').addEventListener('click', function() {
+  document.getElementById('cfReset').addEventListener('click', function () {
     // Reset: check all boxes, switch to 'all' mode, show all nodes
-    document.querySelectorAll('.cfCheckbox').forEach(function(cb) { cb.checked = true; });
-    document.querySelectorAll('.cfModeBtn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.cfCheckbox').forEach(function (cb) { cb.checked = true; });
+    document.querySelectorAll('.cfModeBtn').forEach(function (b) { b.classList.remove('active'); });
     var allBtn = document.querySelector('.cfModeBtn[data-mode="all"]');
     if (allBtn) allBtn.classList.add('active');
     _currentMode = 'all';
@@ -4950,9 +5274,9 @@ function buildCountryFilterPanel() {
   });
 
   // ── Apply button ───────────────────────────────────────────────────────────
-  document.getElementById('cfApply').addEventListener('click', function() {
+  document.getElementById('cfApply').addEventListener('click', function () {
     var selected = new Set();
-    document.querySelectorAll('.cfCheckbox').forEach(function(cb) {
+    document.querySelectorAll('.cfCheckbox').forEach(function (cb) {
       if (cb.checked) selected.add(cb.dataset.country);
     });
     if (_currentMode === 'all') {
@@ -4962,23 +5286,123 @@ function buildCountryFilterPanel() {
     }
   });
 
+  // ── Apply Text Filters buttons ──────────────────────────────────────────────
+  document.getElementById('cfApplyIp').addEventListener('click', function () {
+    _activeIpFilter = document.getElementById('cfIpFilterInput').value;
+    applyTextFilters();
+  });
+  document.getElementById('cfApplyHostname').addEventListener('click', function () {
+    _activeHostnameFilter = document.getElementById('cfHostFilterInput').value;
+    applyTextFilters();
+  });
+
+  // ── Bulk Editor bindings ────────────────────────────────────────────────────
+  function _updateBulkCount() {
+    var c = document.getElementById('cfBulkCount');
+    if (c && network && network.getSelectedNodes) c.textContent = network.getSelectedNodes().length;
+  }
+  if (network) {
+    network.off('selectNode', _updateBulkCount);
+    network.off('deselectNode', _updateBulkCount);
+    network.on('selectNode', _updateBulkCount);
+    network.on('deselectNode', _updateBulkCount);
+  }
+
+  document.getElementById('cfBulkApplyBtn').addEventListener('click', function () {
+    if (!network) return;
+    var selIds = network.getSelectedNodes();
+    if (!selIds.length) return;
+    var target = document.getElementById('cfBulkCountrySel').value;
+    var updates = [];
+    selIds.forEach(function (nid) {
+      var n = nodes.get(nid);
+      if (n) {
+        var update = { id: n.id, country: target, group: target };
+        update.label = _buildCountryAwareNodeLabel({
+          id: n.id, name: n.name, router_id: n.router_id, hostname: n.hostname, label: n.label, country: target, group: target
+        });
+        update.title = _buildCountryAwareNodeTitle({
+          id: n.id, name: n.name, router_id: n.router_id, hostname: n.hostname, country: target, group: target, is_gateway: !!n.is_gateway
+        });
+        updates.push(update);
+      }
+    });
+    nodes.update(updates);
+    if (typeof applyCountryColors === 'function') applyCountryColors();
+    this.textContent = '✓ Applied';
+    var btn = this; setTimeout(function () { btn.textContent = 'Apply to Map'; }, 1500);
+  });
+
+  document.getElementById('cfBulkRollbackBtn').addEventListener('click', function () {
+    if (!network) return;
+    var selIds = network.getSelectedNodes();
+    if (!selIds.length) return;
+    var updates = [];
+    selIds.forEach(function (nid) {
+      if (_originalCountryState[nid]) {
+        var orig = _originalCountryState[nid];
+        var n = nodes.get(nid);
+        if (n) {
+          updates.push({ id: nid, country: orig.country, group: orig.group, label: orig.label, title: orig.title, color: orig.color });
+        }
+      }
+    });
+    if (updates.length) {
+      nodes.update(updates);
+      if (typeof applyCountryColors === 'function') applyCountryColors();
+      this.textContent = '✓ Reverted';
+      var btn = this; setTimeout(function () { btn.textContent = '↩️ Rollback'; }, 1500);
+    }
+  });
+
+  document.getElementById('cfBulkSaveBtn').addEventListener('click', function () {
+    var overrides = {};
+    nodes.get().forEach(function (n) {
+      var orig = _originalCountryState[n.id];
+      var curr = String(n.country || n.group || 'UNK').toUpperCase();
+      if (orig && orig.country !== curr) {
+        var rids = _getCountryMetadataIdentityCandidates(n);
+        if (rids.length) overrides[rids[0]] = curr;
+      }
+    });
+
+    var btn = this;
+    var gt = typeof _getGraphTime === 'function' ? _getGraphTime() : (typeof dynamic_graph_time !== 'undefined' ? dynamic_graph_time : '');
+    btn.textContent = 'Saving...';
+    fetch('/country-overrides/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ graph_time: gt, overrides: overrides })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('Bad response');
+      return res.json();
+    }).then(function () {
+      btn.textContent = '✓ Saved DB';
+      setTimeout(function () { btn.textContent = '💾 Save to DB'; }, 2000);
+    }).catch(function (err) {
+      console.error(err);
+      btn.textContent = '❌ Failed';
+      setTimeout(function () { btn.textContent = '💾 Save to DB'; }, 3000);
+    });
+  });
+
   // ── Drag to reposition ─────────────────────────────────────────────────────
   var header = document.getElementById('cfHeader');
   var isDragging = false, dragX = 0, dragY = 0;
-  header.addEventListener('mousedown', function(e) {
+  header.addEventListener('mousedown', function (e) {
     if (e.target === cfToggle) return;
     isDragging = true;
     dragX = e.clientX - panel.getBoundingClientRect().left;
     dragY = e.clientY - panel.getBoundingClientRect().top;
     e.preventDefault();
   });
-  document.addEventListener('mousemove', function(e) {
+  document.addEventListener('mousemove', function (e) {
     if (!isDragging) return;
-    panel.style.right  = 'auto';
-    panel.style.left   = (e.clientX - dragX) + 'px';
-    panel.style.top    = (e.clientY - dragY) + 'px';
+    panel.style.right = 'auto';
+    panel.style.left = (e.clientX - dragX) + 'px';
+    panel.style.top = (e.clientY - dragY) + 'px';
   });
-  document.addEventListener('mouseup', function() { isDragging = false; });
+  document.addEventListener('mouseup', function () { isDragging = false; });
 
   _cfPanelBuilt = true;
 }
@@ -5006,11 +5430,11 @@ function buildCountryFilterPanel() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 // ── Global state ─────────────────────────────────────────────────────────────
-var _collapseState  = {};         // { ZAF: true,  DRC: false, … }
+var _collapseState = {};         // { ZAF: true,  DRC: false, … }
 var _collapseHidden = {};         // { ZAF: {nodeIds:Set, edgeIds:Set}, … }
-var _viewMode       = 'enriched'; // 'asis' | 'gateway' | 'enriched' | 'collapsing'
-var _cpPanelBuilt   = false;      // Country Groups panel built flag
-var _vmBarBuilt     = false;      // View Mode button bar built flag
+var _viewMode = 'enriched'; // 'asis' | 'gateway' | 'enriched' | 'collapsing'
+var _cpPanelBuilt = false;      // Country Groups panel built flag
+var _vmBarBuilt = false;      // View Mode button bar built flag
 
 // ── A. Helper utilities ───────────────────────────────────────────────────────
 
@@ -5021,11 +5445,11 @@ var _vmBarBuilt     = false;      // View Mode button bar built flag
  */
 function _getCountryNodesByType(code) {
   if (typeof nodes === 'undefined' || !nodes) return { gateways: [], cores: [], all: [] };
-  var all      = nodes.get().filter(function(n) {
+  var all = nodes.get().filter(function (n) {
     return (n.country || 'UNK').toUpperCase() === code.toUpperCase();
   });
-  var gateways = all.filter(function(n) { return n.is_gateway === true; });
-  var cores    = all.filter(function(n) { return n.is_gateway !== true; });
+  var gateways = all.filter(function (n) { return n.is_gateway === true; });
+  var cores = all.filter(function (n) { return n.is_gateway !== true; });
   return { gateways: gateways, cores: cores, all: all };
 }
 
@@ -5064,26 +5488,26 @@ function _isGatewayNode(nodeId) {
  */
 function _collapseEdgeIds(coreNodeIdSet, countryCode) {
   if (typeof edges === 'undefined' || !edges) return { toHide: [], intraCost: 0, crossCountry: [] };
-  var toHide        = [];
-  var intraCost     = 0;
-  var crossCountry  = [];  // Cross-country edges to keep visible
+  var toHide = [];
+  var intraCost = 0;
+  var crossCountry = [];  // Cross-country edges to keep visible
   var cc = countryCode ? countryCode.toUpperCase() : null;
 
-  edges.get().forEach(function(e) {
+  edges.get().forEach(function (e) {
     // Check if endpoints are core or gateway nodes of this country
     var fromIsCore = coreNodeIdSet.has(e.from);
-    var toIsCore   = coreNodeIdSet.has(e.to);
-    
+    var toIsCore = coreNodeIdSet.has(e.to);
+
     // Get node countries for cross-country check
     var srcNode = typeof nodes !== 'undefined' && nodes ? nodes.get(e.from) : null;
     var dstNode = typeof nodes !== 'undefined' && nodes ? nodes.get(e.to) : null;
     var srcC = srcNode && srcNode.country ? srcNode.country.toUpperCase() : null;
     var dstC = dstNode && dstNode.country ? dstNode.country.toUpperCase() : null;
-    
+
     // Check if this edge involves the country being collapsed
     var fromInCountry = srcC === cc;
-    var toInCountry   = dstC === cc;
-    
+    var toInCountry = dstC === cc;
+
     // Skip edges that don't involve this country at all
     if (!fromInCountry && !toInCountry) return;
 
@@ -5119,31 +5543,31 @@ function _aggregateGatewayLinks(crossCountryEdges) {
   if (!crossCountryEdges || crossCountryEdges.length === 0) {
     return { metaEdges: [], bundledEdgeIds: new Set() };
   }
-  
+
   // Group edges by (from, to) pair
   var edgeGroups = {};
-  crossCountryEdges.forEach(function(e) {
+  crossCountryEdges.forEach(function (e) {
     var key = e.from + '_' + e.to;
     if (!edgeGroups[key]) {
       edgeGroups[key] = [];
     }
     edgeGroups[key].push(e);
   });
-  
+
   var metaEdges = [];
   var bundledEdgeIds = new Set();
-  
+
   // For each group with multiple links, create a meta-edge
-  Object.keys(edgeGroups).forEach(function(key) {
+  Object.keys(edgeGroups).forEach(function (key) {
     var group = edgeGroups[key];
-    
+
     if (group.length > 1) {
       // Multiple links - find PRIMARY ROUTE (minimum cost)
       var minCost = Infinity;
       var primaryLink = null;
       var costDetails = [];
-      
-      group.forEach(function(e) {
+
+      group.forEach(function (e) {
         var cost = _edgeCost(e);
         if (cost < minCost) {
           minCost = cost;
@@ -5153,20 +5577,20 @@ function _aggregateGatewayLinks(crossCountryEdges) {
         costDetails.push(marker + (e.label || 'Link ' + e.id) + ': cost ' + cost);
         bundledEdgeIds.add(e.id);
       });
-      
+
       // Sort details to show primary first
-      costDetails.sort(function(a, b) {
+      costDetails.sort(function (a, b) {
         if (a.startsWith('★')) return -1;
         if (b.startsWith('★')) return 1;
         return 0;
       });
-      
+
       var metaEdge = {
         id: 'meta_' + key,
         from: group[0].from,
         to: group[0].to,
         _isMetaEdge: true,
-        _bundledEdgeIds: group.map(function(e) { return e.id; }),
+        _bundledEdgeIds: group.map(function (e) { return e.id; }),
         _linkCount: group.length,
         _primaryCost: minCost,
         _primaryLinkId: primaryLink ? primaryLink.id : null,
@@ -5177,11 +5601,11 @@ function _aggregateGatewayLinks(crossCountryEdges) {
         title: 'Bundled gateway links (' + group.length + '):\n' + costDetails.join('\n') + '\n\nPrimary route cost: ' + minCost + ' (SPF shortest path)',
         arrows: group[0].arrows || { to: { enabled: false } }
       };
-      
+
       metaEdges.push(metaEdge);
     }
   });
-  
+
   return { metaEdges: metaEdges, bundledEdgeIds: bundledEdgeIds };
 }
 
@@ -5206,43 +5630,43 @@ function _aggregateGatewayLinks(crossCountryEdges) {
 function _markGatewayCollapsed(countryCode, isCollapsed, hiddenCount, intraCost) {
   if (typeof nodes === 'undefined' || !nodes) return;
   var gws = _getCountryNodesByType(countryCode).gateways;
-  var updates = gws.map(function(n) {
+  var updates = gws.map(function (n) {
     if (isCollapsed) {
       // CL-F3 + IP Fabric Cost Aggregation:
       // Badge = "▲ N hidden" base + optional "| ∑cost: X" when cost is known
-      var origLabel  = (n._origLabel !== undefined) ? n._origLabel : (n.label || '');
+      var origLabel = (n._origLabel !== undefined) ? n._origLabel : (n.label || '');
       var costSuffix = (typeof intraCost === 'number' && intraCost > 0)
-                       ? (' | \u03a3cost: ' + intraCost)   // Σ (sigma) unicode
-                       : '';
-      var badge      = (hiddenCount > 0)
-                       ? ('\n\u25b2 ' + hiddenCount + ' hidden' + costSuffix)
-                       : '';
-      var tooltip    = (n._origTitle || n.title || n.label || '') +
-                       '\n[' + countryCode + ': ' + hiddenCount + ' core router' +
-                       (hiddenCount !== 1 ? 's' : '') + ' hidden';
+        ? (' | \u03a3cost: ' + intraCost)   // Σ (sigma) unicode
+        : '';
+      var badge = (hiddenCount > 0)
+        ? ('\n\u25b2 ' + hiddenCount + ' hidden' + costSuffix)
+        : '';
+      var tooltip = (n._origTitle || n.title || n.label || '') +
+        '\n[' + countryCode + ': ' + hiddenCount + ' core router' +
+        (hiddenCount !== 1 ? 's' : '') + ' hidden';
       if (typeof intraCost === 'number' && intraCost > 0) {
         tooltip += ' | intra-country \u03a3OSPF cost: ' + intraCost;
       }
       tooltip += ' — dbl-click to expand]';
       return {
-        id:              n.id,
-        _origLabel:      origLabel,
-        _origIntraCost:  intraCost,   // store for tooltip on re-collapse
-        label:           origLabel + badge,
-        borderWidth:     3,
+        id: n.id,
+        _origLabel: origLabel,
+        _origIntraCost: intraCost,   // store for tooltip on re-collapse
+        label: origLabel + badge,
+        borderWidth: 3,
         shapeProperties: { borderDashes: [6, 3] },
-        title:           tooltip
+        title: tooltip
       };
     } else {
       // CL-F3: restore original label, clear badge
       return {
-        id:              n.id,
-        label:           (n._origLabel !== undefined) ? n._origLabel : (n.label || ''),
-        _origLabel:      undefined,
-        _origIntraCost:  undefined,
-        borderWidth:     1,
+        id: n.id,
+        label: (n._origLabel !== undefined) ? n._origLabel : (n.label || ''),
+        _origLabel: undefined,
+        _origIntraCost: undefined,
+        borderWidth: 1,
         shapeProperties: { borderDashes: false },
-        title:           n._origTitle || n.title || n.label || ''
+        title: n._origTitle || n.title || n.label || ''
       };
     }
   });
@@ -5260,42 +5684,42 @@ function collapseCountry(code) {
   code = code.toUpperCase();
   if (typeof nodes === 'undefined' || !nodes) return;
 
-  var split    = _getCountryNodesByType(code);
+  var split = _getCountryNodesByType(code);
   var gateways = split.gateways;
-  var cores    = split.cores;
+  var cores = split.cores;
 
   // UNK / gateway-less countries cannot be meaningfully collapsed:
   // there is no boundary gateway node to pin the badge to.
   // Skip silently so nodes do not vanish without a visual indicator.
   if (gateways.length === 0 && cores.length > 0) {
     console.warn('[COLLAPSE] Skipping ' + code + ' — no gateway nodes (UNK/unmapped country).' +
-                 ' Use the ⚠ UNK button to highlight these nodes.');
+      ' Use the ⚠ UNK button to highlight these nodes.');
     return;
   }
 
   if (cores.length === 0) {
     // No core routers — mark as collapsed for UI consistency but nothing to hide
-    _collapseState[code]  = true;
+    _collapseState[code] = true;
     _collapseHidden[code] = { nodeIds: new Set(), edgeIds: new Set() };
     _updateCollapsePanel();
     return;
   }
 
-  var coreIds      = new Set(cores.map(function(n) { return n.id; }));
+  var coreIds = new Set(cores.map(function (n) { return n.id; }));
   // ── IP Fabric Persistent Path Overlay + Cost Aggregation ──────────────
   // _collapseEdgeIds now filters out cross-country edges (kept visible)
   // and returns the summed intra-country OSPF cost for the badge.
-  var edgeResult      = _collapseEdgeIds(coreIds, code);
-  var edgeIds         = edgeResult.toHide;
-  var intraCost       = edgeResult.intraCost;
-  var crossCountry    = edgeResult.crossCountry;
-  var edgeIdSet       = new Set(edgeIds);
+  var edgeResult = _collapseEdgeIds(coreIds, code);
+  var edgeIds = edgeResult.toHide;
+  var intraCost = edgeResult.intraCost;
+  var crossCountry = edgeResult.crossCountry;
+  var edgeIdSet = new Set(edgeIds);
 
   // ── Gateway Link Aggregation ──────────────────────────────────────────
   // Bundle multiple parallel links between same gateway pairs
-  var aggregation     = _aggregateGatewayLinks(crossCountry);
-  var metaEdges       = aggregation.metaEdges;
-  var bundledEdgeIds  = aggregation.bundledEdgeIds;
+  var aggregation = _aggregateGatewayLinks(crossCountry);
+  var metaEdges = aggregation.metaEdges;
+  var bundledEdgeIds = aggregation.bundledEdgeIds;
 
   // Disable physics briefly to prevent layout jump
   if (typeof network !== 'undefined' && network) {
@@ -5303,18 +5727,18 @@ function collapseCountry(code) {
   }
 
   // Hide core nodes
-  nodes.update(cores.map(function(n) { return { id: n.id, _collapseHidden: true }; }));
+  nodes.update(cores.map(function (n) { return { id: n.id, _collapseHidden: true }; }));
 
   // Hide INTRA-country edges only (cross-country edges remain visible
   // per IP Fabric Persistent Path Overlay — their costs stay readable)
   if (edgeIds.length) {
-    edges.update(edgeIds.map(function(id) { return { id: id, _collapseHidden: true }; }));
+    edges.update(edgeIds.map(function (id) { return { id: id, _collapseHidden: true }; }));
   }
-  
+
   // Hide bundled edges and add meta-edges
   if (bundledEdgeIds.size > 0) {
     var bundleUpdates = [];
-    bundledEdgeIds.forEach(function(id) {
+    bundledEdgeIds.forEach(function (id) {
       bundleUpdates.push({ id: id, _bundledHidden: true });
       edgeIdSet.add(id);  // Track for restoration
     });
@@ -5323,19 +5747,19 @@ function collapseCountry(code) {
   if (metaEdges.length > 0) {
     edges.add(metaEdges);
   }
-  
+
   _syncEdgeVisibility();
 
   // Visual badge on gateway nodes — includes ∑cost for Cost Aggregation
   _markGatewayCollapsed(code, true, cores.length, intraCost);
 
   // Record state (including meta-edges for cleanup on expand)
-  _collapseState[code]  = true;
-  _collapseHidden[code] = { 
-    nodeIds: coreIds, 
-    edgeIds: edgeIdSet, 
+  _collapseState[code] = true;
+  _collapseHidden[code] = {
+    nodeIds: coreIds,
+    edgeIds: edgeIdSet,
     intraCost: intraCost,
-    metaEdges: metaEdges.map(function(e) { return e.id; })
+    metaEdges: metaEdges.map(function (e) { return e.id; })
   };
 
   _updateCollapsePanel();
@@ -5363,15 +5787,15 @@ function expandCountry(code) {
   // Restore core nodes
   if (hidden.nodeIds.size) {
     var nodeUpd = [];
-    hidden.nodeIds.forEach(function(id) { nodeUpd.push({ id: id, _collapseHidden: false }); });
+    hidden.nodeIds.forEach(function (id) { nodeUpd.push({ id: id, _collapseHidden: false }); });
     nodes.update(nodeUpd);
   }
 
   // Restore edges (both intra-country and bundled gateway edges)
   if (hidden.edgeIds.size) {
     var edgeUpd = [];
-    hidden.edgeIds.forEach(function(id) { 
-      edgeUpd.push({ id: id, _collapseHidden: false, _bundledHidden: false }); 
+    hidden.edgeIds.forEach(function (id) {
+      edgeUpd.push({ id: id, _collapseHidden: false, _bundledHidden: false });
     });
     edges.update(edgeUpd);
   }
@@ -5401,13 +5825,13 @@ function toggleCollapseCountry(code) {
 /** Collapse every country that has core routers. */
 function collapseAllCountries() {
   var countries = _getCountriesInGraph();
-  countries.forEach(function(code) { collapseCountry(code); });
+  countries.forEach(function (code) { collapseCountry(code); });
 }
 
 /** Expand every currently-collapsed country. */
 function expandAllCountries() {
-  var toExpand = Object.keys(_collapseState).filter(function(c) { return _collapseState[c]; });
-  toExpand.forEach(function(code) { expandCountry(code); });
+  var toExpand = Object.keys(_collapseState).filter(function (c) { return _collapseState[c]; });
+  toExpand.forEach(function (code) { expandCountry(code); });
 }
 
 // ── C. View Mode (4-button bar) ───────────────────────────────────────────────
@@ -5443,7 +5867,7 @@ function setViewMode(mode) {
   _viewMode = mode;
 
   // Update button active state
-  document.querySelectorAll('.vmBtn').forEach(function(b) {
+  document.querySelectorAll('.vmBtn').forEach(function (b) {
     b.classList.remove('active');
   });
   var activeBtn = document.querySelector('.vmBtn[data-mode="' + mode + '"]');
@@ -5451,8 +5875,8 @@ function setViewMode(mode) {
 
   if (typeof nodes === 'undefined' || !nodes) return;
   _normalizeCountryNodeLabels();
-  var setModeHidden = function(predicate) {
-    nodes.update(nodes.get().map(function(n) {
+  var setModeHidden = function (predicate) {
+    nodes.update(nodes.get().map(function (n) {
       return { id: n.id, _modeHidden: !!predicate(n) };
     }));
     _syncEdgeVisibility();
@@ -5462,13 +5886,17 @@ function setViewMode(mode) {
     expandAllCountries();
     resetCountryFilter();
     // Grey all nodes (remove country colours)
-    var greyUpd = nodes.get().map(function(n) {
-      return { id: n.id, color: { background: '#cccccc', border: '#999999',
-        highlight: { background: '#dddddd', border: '#aaaaaa' },
-        hover:     { background: '#dddddd', border: '#aaaaaa' } } };
+    var greyUpd = nodes.get().map(function (n) {
+      return {
+        id: n.id, color: {
+          background: '#cccccc', border: '#999999',
+          highlight: { background: '#dddddd', border: '#aaaaaa' },
+          hover: { background: '#dddddd', border: '#aaaaaa' }
+        }
+      };
     });
     nodes.update(greyUpd);
-    setModeHidden(function() { return false; });
+    setModeHidden(function () { return false; });
     _showCfPanel();
     _hideCpPanel();
 
@@ -5477,7 +5905,7 @@ function setViewMode(mode) {
     resetCountryFilter();
     applyCountryColors();
     // Hide non-gateway nodes, but KEEP UNK nodes visible so operators can classify them
-    setModeHidden(function(n) {
+    setModeHidden(function (n) {
       var isUnk = (n.country || '').toUpperCase() === 'UNK';
       return n.is_gateway !== true && !isUnk;
     });
@@ -5490,7 +5918,7 @@ function setViewMode(mode) {
     expandAllCountries();
     resetCountryFilter();
     applyCountryColors();
-    setModeHidden(function() { return false; });
+    setModeHidden(function () { return false; });
     _hideCpPanel();
     _showCfPanel();
 
@@ -5498,7 +5926,7 @@ function setViewMode(mode) {
     expandAllCountries();
     resetCountryFilter();
     applyCountryColors();
-    setModeHidden(function() { return false; });
+    setModeHidden(function () { return false; });
     _showCfPanel();
     // Build or show the Country Groups panel
     if (!_cpPanelBuilt) {
@@ -5528,8 +5956,8 @@ function buildViewModeButtons() {
 
   // Inject CSS once
   if (!document.getElementById('vmBarStyle')) {
-    var style      = document.createElement('style');
-    style.id       = 'vmBarStyle';
+    var style = document.createElement('style');
+    style.id = 'vmBarStyle';
     style.textContent = [
       '#viewModeBar{display:inline-flex;gap:5px;margin:4px 0 4px 8px;',
       '  vertical-align:middle;flex-wrap:wrap;align-items:center;}',
@@ -5555,7 +5983,7 @@ function buildViewModeButtons() {
   }
 
   var bar = document.createElement('div');
-  bar.id  = 'viewModeBar';
+  bar.id = 'viewModeBar';
   bar.innerHTML =
     '<span id="vmBarLabel">View:</span>' +
     '<button class="vmBtn" data-mode="asis"       title="Raw topology — no country colours">AS-IS</button>' +
@@ -5575,11 +6003,15 @@ function buildViewModeButtons() {
     '<button class="vmToolBtn" id="btnUnkHighlight"  title="Highlight unclassified nodes (no country assigned). Upload a hostname file to classify them." onclick="_toggleUnkHighlight()">⚠ UNK</button>' +
     '<button class="vmToolBtn" id="btnHostnameUpload" title="Upload OSPF database + hostname mapping CSV to classify nodes" onclick="buildHostnameUploadPanel()">📂 Host File</button>' +
     '<button class="vmToolBtn" id="btnCostMatrix"    title="OSPF Cost Matrix — country-to-country Dijkstra shortest paths, heat-map, Excel export" onclick="buildOspfCostMatrix()">🗺 Cost Matrix</button>' +
-    '<button class="vmToolBtn" id="btnWhatIf"        title="OSPF What-If analysis — change edge cost, see impact on all paths" onclick="buildOspfWhatIf()">🔬 What-If</button>';
+    '<button class="vmToolBtn" id="btnWhatIf"        title="OSPF What-If analysis — change edge cost, see impact on all paths" onclick="buildOspfWhatIf()">🔬 What-If</button>' +
+    /* ── Sprint 4: Multi-format hostname filter ──────────────────────── */
+    '<span class="vmSep">│</span>' +
+    '<button class="vmToolBtn" id="btnCountryFilter" title="Filter by country, IP range, and hostname format (A/B/C-type)" onclick="toggleCountryFilterPanel()">🌍 Countries</button>' +
+    '<button class="vmToolBtn" id="btnUnkFilter"     title="Show only UNK (unclassified) nodes — quick filter by IP range" onclick="toggleUnkFilterPanel()">⚠ UNK Filter</button>';
 
   // Wire click handlers
-  bar.querySelectorAll('.vmBtn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
+  bar.querySelectorAll('.vmBtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
       setViewMode(btn.dataset.mode);
     });
   });
@@ -5599,8 +6031,60 @@ function buildViewModeButtons() {
   // EN-F5: wire node-click inspector (must be re-wired each time bar is rebuilt)
   if (typeof _initNodeInspector === 'function') { _initNodeInspector(); }
 
-  _vmBarBuilt  = true;
-  _viewMode    = 'enriched'; // reset to default on each graph load
+  _vmBarBuilt = true;
+  _viewMode = 'enriched'; // reset to default on each graph load
+}
+
+// ── SP4: Country Filter Panel toggle (toolbar button handler) ────────────────
+
+/**
+ * Toggle the Country Filter panel visibility.
+ * Opens it if not yet built; hides/shows if it already exists.
+ */
+function toggleCountryFilterPanel() {
+  var panel = document.getElementById('countryFilterPanel');
+  var btn = document.getElementById('btnCountryFilter');
+  if (!panel) {
+    // First open — build panel then activate button
+    buildCountryFilterPanel();
+    panel = document.getElementById('countryFilterPanel');
+    if (btn) btn.classList.add('active');
+    return;
+  }
+  var isVisible = panel.style.display !== 'none';
+  panel.style.display = isVisible ? 'none' : '';
+  if (btn) btn.classList.toggle('active', !isVisible);
+}
+
+/**
+ * Open the Country Filter panel pre-configured for UNK-only / show-only mode.
+ * Convenient shortcut from the "⚠ UNK Filter" toolbar button.
+ */
+function toggleUnkFilterPanel() {
+  // Ensure panel is built and visible
+  var panel = document.getElementById('countryFilterPanel');
+  if (!panel) buildCountryFilterPanel();
+  panel = document.getElementById('countryFilterPanel');
+  if (!panel) return;
+  panel.style.display = '';
+
+  // Pre-select ONLY the UNK checkbox
+  document.querySelectorAll('.cfCheckbox').forEach(function (cb) {
+    cb.checked = (cb.dataset.country === 'UNK');
+  });
+
+  // Switch to "show_only" mode so only UNK nodes remain visible
+  document.querySelectorAll('.cfModeBtn').forEach(function (b) { b.classList.remove('active'); });
+  var soBtn = document.querySelector('.cfModeBtn[data-mode="show_only"]');
+  if (soBtn) soBtn.classList.add('active');
+
+  // Update the info label
+  var info = document.getElementById('cfInfo');
+  if (info) info.textContent = 'Mode: show only selected countries';
+
+  // Toggle button state
+  var btn = document.getElementById('btnUnkFilter');
+  if (btn) btn.classList.add('active');
 }
 
 // ── D. Country Groups Panel (COLLAPSING mode side-panel) ──────────────────────
@@ -5620,8 +6104,8 @@ function buildCollapsePanel() {
 
   // ── Inject CSS once ──────────────────────────────────────────────────────────
   if (!document.getElementById('cpPanelStyle')) {
-    var style      = document.createElement('style');
-    style.id       = 'cpPanelStyle';
+    var style = document.createElement('style');
+    style.id = 'cpPanelStyle';
     style.textContent = [
       '#countryCollapsePanel{position:fixed;top:80px;right:270px;z-index:9998;',
       '  background:#1e2330;border:1px solid #3a4560;border-radius:10px;',
@@ -5666,18 +6150,18 @@ function buildCollapsePanel() {
 
   // ── Build per-country stats ───────────────────────────────────────────────────
   var countryStats = {};
-  countries.forEach(function(code) {
+  countries.forEach(function (code) {
     var split = _getCountryNodesByType(code);
     countryStats[code] = {
-      total:    split.all.length,
+      total: split.all.length,
       gateways: split.gateways.length,
-      cores:    split.cores.length,
+      cores: split.cores.length,
     };
   });
 
   // ── Panel DOM ─────────────────────────────────────────────────────────────────
   var panel = document.createElement('div');
-  panel.id  = 'countryCollapsePanel';
+  panel.id = 'countryCollapsePanel';
 
   var headerHTML =
     '<div id="cpHeader">' +
@@ -5691,13 +6175,13 @@ function buildCollapsePanel() {
     '</div>';
 
   // Separate collapsible countries (has ≥1 gateway) from UNK/unmapped (no gateway)
-  var collapsibleCodes = countries.filter(function(c) { return countryStats[c].gateways > 0; });
-  var unkCodes         = countries.filter(function(c) { return countryStats[c].gateways === 0; });
+  var collapsibleCodes = countries.filter(function (c) { return countryStats[c].gateways > 0; });
+  var unkCodes = countries.filter(function (c) { return countryStats[c].gateways === 0; });
 
   var listHTML = '<div class="cpCountryList" id="cpCountryList">';
-  collapsibleCodes.forEach(function(code) {
-    var col   = _countryColorFor(code);
-    var bg    = col.background || '#888';
+  collapsibleCodes.forEach(function (code) {
+    var col = _countryColorFor(code);
+    var bg = col.background || '#888';
     var stats = countryStats[code];
     var hasCores = stats.cores > 0;
     listHTML +=
@@ -5705,7 +6189,7 @@ function buildCollapsePanel() {
       '<span class="cpSwatch" style="background:' + bg + '"></span>' +
       '<span class="cpCode">' + code + '</span>' +
       '<span class="cpStats">' + stats.total + ' total' +
-        (hasCores ? ' · ' + stats.gateways + 'gw · ' + stats.cores + 'core' : ' · all gw') +
+      (hasCores ? ' · ' + stats.gateways + 'gw · ' + stats.cores + 'core' : ' · all gw') +
       '</span>' +
       '<button class="cpToggleBtn" title="Toggle collapse/expand">▶</button>' +
       '</div>';
@@ -5713,13 +6197,13 @@ function buildCollapsePanel() {
 
   // UNK / unmapped countries (no gateway — cannot be collapsed to a boundary node)
   if (unkCodes.length > 0) {
-    var totalUnk = unkCodes.reduce(function(s, c) { return s + countryStats[c].total; }, 0);
+    var totalUnk = unkCodes.reduce(function (s, c) { return s + countryStats[c].total; }, 0);
     listHTML +=
       '<div style="border-top:1px solid #2a3248;margin-top:6px;padding-top:6px;">' +
       '<div style="font-size:10px;color:#778;margin-bottom:4px;padding:0 4px;">⚠ Unclassified (no gateway — use ⚠ UNK button to highlight)</div>';
-    unkCodes.forEach(function(code) {
-      var col   = _countryColorFor(code);
-      var bg    = col.background || '#AAAAAA';
+    unkCodes.forEach(function (code) {
+      var col = _countryColorFor(code);
+      var bg = col.background || '#AAAAAA';
       var stats = countryStats[code];
       listHTML +=
         '<div class="cpRow" id="cpRow_' + code + '" data-country="' + code + '" style="opacity:0.6;cursor:default;" title="No gateway nodes — cannot collapse">' +
@@ -5751,48 +6235,48 @@ function buildCollapsePanel() {
   document.body.appendChild(panel);
 
   // ── Panel collapse/expand (the panel itself, not countries) ──────────────────
-  var cpBody    = document.getElementById('cpBody');
-  var cpToggle  = document.getElementById('cpToggle');
+  var cpBody = document.getElementById('cpBody');
+  var cpToggle = document.getElementById('cpToggle');
   var _panelMin = false;
-  cpToggle.addEventListener('click', function() {
+  cpToggle.addEventListener('click', function () {
     _panelMin = !_panelMin;
-    cpBody.style.display    = _panelMin ? 'none' : '';
-    cpToggle.textContent    = _panelMin ? '+' : '−';
+    cpBody.style.display = _panelMin ? 'none' : '';
+    cpToggle.textContent = _panelMin ? '+' : '−';
   });
 
   // ── Bulk buttons ─────────────────────────────────────────────────────────────
-  document.getElementById('cpCollapseAll').addEventListener('click', function() {
+  document.getElementById('cpCollapseAll').addEventListener('click', function () {
     collapseAllCountries();
   });
-  document.getElementById('cpExpandAll').addEventListener('click', function() {
+  document.getElementById('cpExpandAll').addEventListener('click', function () {
     expandAllCountries();
   });
 
   // ── Country row click → toggle ────────────────────────────────────────────────
-  document.querySelectorAll('.cpRow').forEach(function(row) {
-    row.addEventListener('click', function() {
+  document.querySelectorAll('.cpRow').forEach(function (row) {
+    row.addEventListener('click', function () {
       var code = row.dataset.country;
       toggleCollapseCountry(code);
     });
   });
 
   // ── Drag-to-reposition ────────────────────────────────────────────────────────
-  var header   = document.getElementById('cpHeader');
+  var header = document.getElementById('cpHeader');
   var isDragging = false, dragX = 0, dragY = 0;
-  header.addEventListener('mousedown', function(e) {
+  header.addEventListener('mousedown', function (e) {
     if (e.target === cpToggle) return;
     isDragging = true;
     dragX = e.clientX - panel.getBoundingClientRect().left;
     dragY = e.clientY - panel.getBoundingClientRect().top;
     e.preventDefault();
   });
-  document.addEventListener('mousemove', function(e) {
+  document.addEventListener('mousemove', function (e) {
     if (!isDragging) return;
     panel.style.right = 'auto';
-    panel.style.left  = (e.clientX - dragX) + 'px';
-    panel.style.top   = (e.clientY - dragY) + 'px';
+    panel.style.left = (e.clientX - dragX) + 'px';
+    panel.style.top = (e.clientY - dragY) + 'px';
   });
-  document.addEventListener('mouseup', function() { isDragging = false; });
+  document.addEventListener('mouseup', function () { isDragging = false; });
 
   _cpPanelBuilt = true;
   _updateCollapsePanel();
@@ -5807,9 +6291,9 @@ function _updateCollapsePanel() {
   if (!list) return;
 
   var collapsedCount = 0;
-  list.querySelectorAll('.cpRow').forEach(function(row) {
-    var code      = row.dataset.country;
-    var btn       = row.querySelector('.cpToggleBtn');
+  list.querySelectorAll('.cpRow').forEach(function (row) {
+    var code = row.dataset.country;
+    var btn = row.querySelector('.cpToggleBtn');
     var isCollapsed = !!_collapseState[code];
     if (isCollapsed) collapsedCount++;
     row.classList.toggle('collapsed', isCollapsed);
@@ -5836,7 +6320,7 @@ function _updateCollapsePanel() {
 
 function _wireCollapseDoubleClick() {
   if (typeof network === 'undefined' || !network) return;
-  network.on('doubleClick', function(params) {
+  network.on('doubleClick', function (params) {
     // Only act in COLLAPSING mode
     if (_viewMode !== 'collapsing') return;
     if (!params.nodes || params.nodes.length !== 1) return;
@@ -5848,16 +6332,16 @@ function _wireCollapseDoubleClick() {
 
 // ── F. Reset helper (call on graph reload to clear stale state) ───────────────
 function _resetCollapseState() {
-  _collapseState  = {};
+  _collapseState = {};
   _collapseHidden = {};
-  _viewMode       = 'enriched';
-  _cpPanelBuilt   = false;
-  _vmBarBuilt     = false;
+  _viewMode = 'enriched';
+  _cpPanelBuilt = false;
+  _vmBarBuilt = false;
   _inspectorWired = false;
-  _costLabelsOn   = false;
+  _costLabelsOn = false;
   _degreeHeatmapOn = false;
-  _asymmetricOn   = false;
-  _matrixVisible  = false;
+  _asymmetricOn = false;
+  _matrixVisible = false;
   _edgeOrigLabels = {};
   _nodeOrigColors = {};
 }
@@ -5872,14 +6356,14 @@ function _resetCollapseState() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ── Shared module-level state ─────────────────────────────────────────────────
-var _costLabelsOn    = false;
-var _edgeOrigLabels  = {};   // edge id → original label string
+var _costLabelsOn = false;
+var _edgeOrigLabels = {};   // edge id → original label string
 var _degreeHeatmapOn = false;
-var _nodeOrigColors  = {};   // node id → original color object
-var _asymmetricOn    = false;
-var _matrixVisible   = false;
-var _inspectorWired  = false;
-var _LS_KEY          = 'topolograph_collapse_v1';
+var _nodeOrigColors = {};   // node id → original color object
+var _asymmetricOn = false;
+var _matrixVisible = false;
+var _inspectorWired = false;
+var _LS_KEY = 'topolograph_collapse_v1';
 var _countryHydrationState = {
   status: 'idle',
   graphTime: '',
@@ -5908,7 +6392,7 @@ function _countryHydrationSummary() {
   var allNodes = nodes.get();
   var classifiedCount = 0;
   var countries = new Set();
-  allNodes.forEach(function(n) {
+  allNodes.forEach(function (n) {
     var code = String(n.country || 'UNK').toUpperCase();
     countries.add(code);
     if (code && code !== 'UNK') classifiedCount += 1;
@@ -5960,15 +6444,15 @@ function _nodeLabel(nodeId) {
 function _lerpColor(c1, c2, t) {
   function parse(hex) {
     var h = hex.replace('#', '');
-    if (h.length === 3) h = h.split('').map(function(c) { return c + c; }).join('');
-    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+    if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
   }
   function clamp(v) { return Math.max(0, Math.min(255, Math.round(v))); }
   var a = parse(c1), b = parse(c2);
-  var r = clamp(a[0] + (b[0]-a[0])*t);
-  var g = clamp(a[1] + (b[1]-a[1])*t);
-  var bl = clamp(a[2] + (b[2]-a[2])*t);
-  return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + bl.toString(16).padStart(2,'0');
+  var r = clamp(a[0] + (b[0] - a[0]) * t);
+  var g = clamp(a[1] + (b[1] - a[1]) * t);
+  var bl = clamp(a[2] + (b[2] - a[2]) * t);
+  return '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + bl.toString(16).padStart(2, '0');
 }
 
 // ── Helper: extract numeric OSPF cost from an edge object ─────────────────────
@@ -5989,29 +6473,29 @@ function _edgeCost(e) {
 
 function _persistCollapseState() {
   try {
-    var gt    = _getGraphTime();
+    var gt = _getGraphTime();
     var store = {};
-    try { store = JSON.parse(localStorage.getItem(_LS_KEY) || '{}'); } catch(e2) {}
+    try { store = JSON.parse(localStorage.getItem(_LS_KEY) || '{}'); } catch (e2) { }
     store[gt] = _collapseState;
     localStorage.setItem(_LS_KEY, JSON.stringify(store));
     console.log('[CL-F1] Collapse state saved for graph_time=' + gt,
-                Object.keys(_collapseState).filter(function(k){ return _collapseState[k]; }));
-  } catch(e) { console.warn('[CL-F1] localStorage write failed:', e); }
+      Object.keys(_collapseState).filter(function (k) { return _collapseState[k]; }));
+  } catch (e) { console.warn('[CL-F1] localStorage write failed:', e); }
 }
 
 function _restoreCollapseState() {
   try {
-    var gt    = _getGraphTime();
+    var gt = _getGraphTime();
     var store = {};
-    try { store = JSON.parse(localStorage.getItem(_LS_KEY) || '{}'); } catch(e2) {}
+    try { store = JSON.parse(localStorage.getItem(_LS_KEY) || '{}'); } catch (e2) { }
     var saved = store[gt];
     if (!saved) { console.log('[CL-F1] No saved state for graph_time=' + gt); return; }
-    Object.keys(saved).forEach(function(code) {
+    Object.keys(saved).forEach(function (code) {
       if (saved[code] && !_collapseState[code]) { collapseCountry(code); }
     });
     if (typeof _updateCollapsePanel === 'function') { _updateCollapsePanel(); }
     console.log('[CL-F1] Collapse state restored for graph_time=' + gt);
-  } catch(e) { console.warn('[CL-F1] Restore failed:', e); }
+  } catch (e) { console.warn('[CL-F1] Restore failed:', e); }
 }
 
 // ── AS-F1: OSPF cost labels on/off toggle ────────────────────────────────────
@@ -6019,9 +6503,9 @@ function _restoreCollapseState() {
 function _applyCostLabels(show) {
   if (typeof edges === 'undefined' || !edges) return;
   _costLabelsOn = !!show;
-  var allEdges  = edges.get();
-  var updates   = [];
-  allEdges.forEach(function(e) {
+  var allEdges = edges.get();
+  var updates = [];
+  allEdges.forEach(function (e) {
     if (!(e.id in _edgeOrigLabels)) { _edgeOrigLabels[e.id] = e.label || ''; }
     updates.push({ id: e.id, label: show ? _edgeOrigLabels[e.id] : '' });
   });
@@ -6034,16 +6518,18 @@ function _applyCostLabels(show) {
 function _applyGatewayCostStyle() {
   if (typeof edges === 'undefined' || !edges) return;
   var allEdges = edges.get();
-  var costs    = allEdges.map(function(e) { return _edgeCost(e); });
-  var nonZero  = costs.filter(Boolean);
-  var maxCost  = nonZero.length ? Math.max.apply(null, nonZero) : 1;
-  var minCost  = nonZero.length ? Math.min.apply(null, nonZero) : 0;
-  var range    = maxCost - minCost || 1;
-  var updates  = allEdges.map(function(e, i) {
-    var t   = (costs[i] - minCost) / range;
+  var costs = allEdges.map(function (e) { return _edgeCost(e); });
+  var nonZero = costs.filter(Boolean);
+  var maxCost = nonZero.length ? Math.max.apply(null, nonZero) : 1;
+  var minCost = nonZero.length ? Math.min.apply(null, nonZero) : 0;
+  var range = maxCost - minCost || 1;
+  var updates = allEdges.map(function (e, i) {
+    var t = (costs[i] - minCost) / range;
     var col = _lerpColor('#27ae60', '#e74c3c', t);   // green(cheap) → red(expensive)
-    return { id: e.id, color: { color: col, highlight: col, hover: col },
-             width: 1 + Math.round(t * 2) };
+    return {
+      id: e.id, color: { color: col, highlight: col, hover: col },
+      width: 1 + Math.round(t * 2)
+    };
   });
   if (updates.length) edges.update(updates);
   console.log('[GW-F2] Gateway cost colouring applied, range=[' + minCost + '..' + maxCost + ']');
@@ -6055,23 +6541,23 @@ function _applyEnrichedEdgeStyle(show) {
   if (typeof edges === 'undefined' || !edges) return;
   if (typeof nodes === 'undefined' || !nodes) return;
   if (!show) {
-    edges.update(edges.get().map(function(e) {
+    edges.update(edges.get().map(function (e) {
       return { id: e.id, color: undefined, dashes: false, width: 1 };
     }));
     return;
   }
   var nodeCountry = {};
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     nodeCountry[n.id] = (n.country || n.group || 'UNK').toUpperCase();
   });
-  var updates = edges.get().map(function(e) {
+  var updates = edges.get().map(function (e) {
     var intra = nodeCountry[e.from] === nodeCountry[e.to] && nodeCountry[e.from] !== 'UNK';
     return {
-      id:     e.id,
-      color:  intra ? { color:'#95d5b2', highlight:'#74c69d', hover:'#74c69d' }
-                    : { color:'#e76f51', highlight:'#f4a261', hover:'#f4a261' },
+      id: e.id,
+      color: intra ? { color: '#95d5b2', highlight: '#74c69d', hover: '#74c69d' }
+        : { color: '#e76f51', highlight: '#f4a261', hover: '#f4a261' },
       dashes: !intra,
-      width:  intra ? 1 : 2,
+      width: intra ? 1 : 2,
     };
   });
   edges.update(updates);
@@ -6092,7 +6578,7 @@ function applyDegreeHeatmap(enable) {
   if (typeof edges === 'undefined' || !edges) return;
   if (!enable) {
     var resets = [];
-    nodes.get().forEach(function(n) {
+    nodes.get().forEach(function (n) {
       if (n.id in _nodeOrigColors) { resets.push({ id: n.id, color: _nodeOrigColors[n.id] }); }
     });
     if (resets.length) nodes.update(resets);
@@ -6100,23 +6586,27 @@ function applyDegreeHeatmap(enable) {
     return;
   }
   var degree = {};
-  nodes.get().forEach(function(n) { degree[n.id] = 0; });
-  edges.get().forEach(function(e) {
+  nodes.get().forEach(function (n) { degree[n.id] = 0; });
+  edges.get().forEach(function (e) {
     if (degree[e.from] !== undefined) degree[e.from]++;
-    if (degree[e.to]   !== undefined) degree[e.to]++;
+    if (degree[e.to] !== undefined) degree[e.to]++;
   });
-  var vals   = Object.values(degree);
+  var vals = Object.values(degree);
   var maxDeg = Math.max.apply(null, vals) || 1;
   var minDeg = Math.min.apply(null, vals) || 0;
-  var range  = maxDeg - minDeg || 1;
+  var range = maxDeg - minDeg || 1;
   var updates = [];
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     _nodeOrigColors[n.id] = n.color || null;
-    var t   = (degree[n.id] - minDeg) / range;
+    var t = (degree[n.id] - minDeg) / range;
     var col = _lerpColor('#3498db', '#e74c3c', t);   // blue(leaf) → red(hub)
-    updates.push({ id: n.id, color: { background: col, border: col,
-      highlight: { background: col, border: '#fff' },
-      hover:     { background: col, border: '#fff' } } });
+    updates.push({
+      id: n.id, color: {
+        background: col, border: col,
+        highlight: { background: col, border: '#fff' },
+        hover: { background: col, border: '#fff' }
+      }
+    });
   });
   nodes.update(updates);
   console.log('[AS-F4] Degree heatmap ON, range=[' + minDeg + '..' + maxDeg + ']');
@@ -6141,29 +6631,33 @@ function _toggleAsymmetricHighlight() {
 function detectAsymmetricLinks() {
   if (typeof edges === 'undefined' || !edges) return [];
   var edgeMap = {};
-  edges.get().forEach(function(e) {
+  edges.get().forEach(function (e) {
     edgeMap[e.from + '-' + e.to] = { id: e.id, from: e.from, to: e.to, cost: _edgeCost(e) };
   });
   var asymmetric = [], seen = {};
-  edges.get().forEach(function(e) {
+  edges.get().forEach(function (e) {
     var fwd = e.from + '-' + e.to, rev = e.to + '-' + e.from;
     if (seen[fwd] || seen[rev]) return;
     seen[fwd] = seen[rev] = true;
     if (edgeMap[fwd] && edgeMap[rev] && edgeMap[fwd].cost !== edgeMap[rev].cost) {
-      asymmetric.push({ from: e.from, to: e.to,
+      asymmetric.push({
+        from: e.from, to: e.to,
         fwdCost: edgeMap[fwd].cost, revCost: edgeMap[rev].cost,
-        fwdId: edgeMap[fwd].id,   revId:  edgeMap[rev].id });
+        fwdId: edgeMap[fwd].id, revId: edgeMap[rev].id
+      });
     }
   });
   if (asymmetric.length) {
     var asymIds = [];
-    asymmetric.forEach(function(a) { asymIds.push(a.fwdId, a.revId); });
-    edges.update(edges.get().map(function(e) {
+    asymmetric.forEach(function (a) { asymIds.push(a.fwdId, a.revId); });
+    edges.update(edges.get().map(function (e) {
       var hi = asymIds.indexOf(e.id) !== -1;
-      return { id: e.id,
-        color: hi ? { color:'#f72585', highlight:'#f72585' }
-                  : { color:'rgba(150,150,150,0.25)' },
-        width: hi ? 3 : 1 };
+      return {
+        id: e.id,
+        color: hi ? { color: '#f72585', highlight: '#f72585' }
+          : { color: 'rgba(150,150,150,0.25)' },
+        width: hi ? 3 : 1
+      };
     }));
   }
   console.log('[AS-F3] Asymmetric links found: ' + asymmetric.length);
@@ -6172,7 +6666,7 @@ function detectAsymmetricLinks() {
 
 function _clearAsymmetricHighlight() {
   if (typeof edges === 'undefined' || !edges) return;
-  edges.update(edges.get().map(function(e) { return { id: e.id, color: undefined, width: 1 }; }));
+  edges.update(edges.get().map(function (e) { return { id: e.id, color: undefined, width: 1 }; }));
 }
 
 function _buildAsymmetricPanel(asymmetric) {
@@ -6184,17 +6678,17 @@ function _buildAsymmetricPanel(asymmetric) {
       'color:#fff;padding:10px 18px;border-radius:8px;z-index:9999;font-size:13px;';
     toast.textContent = '✓ No asymmetric OSPF links detected';
     document.body.appendChild(toast);
-    setTimeout(function() { toast.remove(); }, 3000);
+    setTimeout(function () { toast.remove(); }, 3000);
     return;
   }
-  var rows = asymmetric.slice(0, 20).map(function(a) {
+  var rows = asymmetric.slice(0, 20).map(function (a) {
     return '<tr><td style="padding:3px 8px;font-size:11px;white-space:nowrap;">' +
       _nodeLabel(a.from) + ' ↔ ' + _nodeLabel(a.to) + '</td>' +
       '<td style="padding:3px 8px;color:#f72585;font-size:11px;white-space:nowrap;">' +
       a.fwdCost + ' / ' + a.revCost + '</td></tr>';
   }).join('');
   var panel = document.createElement('div');
-  panel.id  = 'asymPanel';
+  panel.id = 'asymPanel';
   panel.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;' +
     'background:#1e2330;border:1px solid #f72585;border-radius:10px;' +
     'box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;' +
@@ -6213,7 +6707,7 @@ function _buildAsymmetricPanel(asymmetric) {
     '<th style="text-align:left;font-size:10px;color:#778;padding:3px 8px;">Fwd / Rev</th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table>' +
     (asymmetric.length > 20 ? '<div style="color:#778;text-align:center;margin-top:4px;font-size:10px;">…and ' +
-      (asymmetric.length-20) + ' more</div>' : '') + '</div>';
+      (asymmetric.length - 20) + ' more</div>' : '') + '</div>';
   document.body.appendChild(panel);
 }
 
@@ -6224,7 +6718,7 @@ function _initNodeInspector() {
   _inspectorWired = true;
   if (!document.getElementById('niPanelStyle')) {
     var style = document.createElement('style');
-    style.id  = 'niPanelStyle';
+    style.id = 'niPanelStyle';
     style.textContent =
       '#niPanel{position:fixed;bottom:20px;left:20px;z-index:9997;' +
       'background:#1e2330;border:1px solid #3a4560;border-radius:10px;' +
@@ -6239,7 +6733,7 @@ function _initNodeInspector() {
   }
   if (!document.getElementById('niPanel')) {
     var panel = document.createElement('div');
-    panel.id  = 'niPanel';
+    panel.id = 'niPanel';
     panel.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;' +
       'padding:8px 12px;border-bottom:1px solid #3a4560;background:#262d42;border-radius:10px 10px 0 0;">' +
@@ -6249,7 +6743,7 @@ function _initNodeInspector() {
       '<div id="niBody" style="padding:8px 0;"></div>';
     document.body.appendChild(panel);
   }
-  network.on('click', function(params) {
+  network.on('click', function (params) {
     if (params.nodes && params.nodes.length === 1) {
       var n = nodes.get(params.nodes[0]);
       if (n) _showNodeInspector(n);
@@ -6263,19 +6757,19 @@ function _initNodeInspector() {
 
 function _showNodeInspector(node) {
   var panel = document.getElementById('niPanel');
-  var body  = document.getElementById('niBody');
+  var body = document.getElementById('niBody');
   if (!panel || !body) return;
   var edgeCnt = 0;
   if (typeof edges !== 'undefined' && edges) {
-    edges.get().forEach(function(e) { if (e.from === node.id || e.to === node.id) edgeCnt++; });
+    edges.get().forEach(function (e) { if (e.from === node.id || e.to === node.id) edgeCnt++; });
   }
   var rows = [
-    _niRow('Router ID',  node.name || node.label || '-'),
-    _niRow('Hostname',   node.hostname || '-'),
-    _niRow('Country',    node.country  || node.group || '-'),
-    _niRow('Gateway',    node.is_gateway ? '✓ Yes' : 'No'),
-    _niRow('Degree',     edgeCnt + ' edge' + (edgeCnt !== 1 ? 's' : '')),
-    _niRow('Node ID',    node.id),
+    _niRow('Router ID', node.name || node.label || '-'),
+    _niRow('Hostname', node.hostname || '-'),
+    _niRow('Country', node.country || node.group || '-'),
+    _niRow('Gateway', node.is_gateway ? '✓ Yes' : 'No'),
+    _niRow('Degree', edgeCnt + ' edge' + (edgeCnt !== 1 ? 's' : '')),
+    _niRow('Node ID', node.id),
   ];
   body.innerHTML = '<table>' + rows.join('') + '</table>';
   panel.style.display = 'block';
@@ -6292,16 +6786,16 @@ function _buildUnkPanel() {
   var old = document.getElementById('unkPanel');
   if (old) old.remove();
   if (typeof nodes === 'undefined' || !nodes) return;
-  var unkNodes = nodes.get().filter(function(n) {
+  var unkNodes = nodes.get().filter(function (n) {
     return (n.country || n.group || '').toUpperCase() === 'UNK';
   });
   if (!unkNodes.length) { console.log('[EN-F4] No UNK nodes'); return; }
-  var rows = unkNodes.slice(0, 20).map(function(n) {
+  var rows = unkNodes.slice(0, 20).map(function (n) {
     return '<li style="margin:2px 0;font-size:11px;">' +
       (n.hostname || n.label || n.name || String(n.id)) + '</li>';
   }).join('');
   var panel = document.createElement('div');
-  panel.id  = 'unkPanel';
+  panel.id = 'unkPanel';
   panel.style.cssText = 'position:fixed;top:80px;left:20px;z-index:9996;' +
     'background:#1e2330;border:1px solid #f4a261;border-radius:10px;' +
     'box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;' +
@@ -6317,7 +6811,7 @@ function _buildUnkPanel() {
     '<p style="font-size:11px;color:#f4a261;margin:0 0 8px;">No hostname mapping in host file:</p>' +
     '<ul style="margin:0;padding-left:16px;max-height:180px;overflow-y:auto;">' + rows + '</ul>' +
     (unkNodes.length > 20 ? '<div style="color:#778;text-align:center;margin-top:4px;font-size:10px;">…and ' +
-      (unkNodes.length-20) + ' more</div>' : '') +
+      (unkNodes.length - 20) + ' more</div>' : '') +
     '<button onclick="_downloadUnkCsv()" style="margin-top:10px;width:100%;padding:5px;' +
     'background:#2a3248;border:1px solid #3a4560;border-radius:5px;' +
     'color:#88aaff;cursor:pointer;font-size:11px;">⬇ Download CSV</button></div>';
@@ -6327,16 +6821,16 @@ function _buildUnkPanel() {
 
 function _downloadUnkCsv() {
   if (typeof nodes === 'undefined' || !nodes) return;
-  var unkNodes = nodes.get().filter(function(n) {
+  var unkNodes = nodes.get().filter(function (n) {
     return (n.country || n.group || '').toUpperCase() === 'UNK';
   });
-  var csv = 'router_id,label\n' + unkNodes.map(function(n) {
+  var csv = 'router_id,label\n' + unkNodes.map(function (n) {
     return (n.name || n.label || String(n.id)) + ',' + (n.label || '');
   }).join('\n');
   var blob = new Blob([csv], { type: 'text/csv' });
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  a.href   = url; a.download = 'unk-nodes.csv'; a.click();
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'unk-nodes.csv'; a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -6352,7 +6846,7 @@ function _toggleConnectivityMatrix() {
     var pan = document.getElementById('matrixPanel');
     if (pan) pan.remove();
     if (typeof edges !== 'undefined' && edges) {
-      edges.update(edges.get().map(function(e) {
+      edges.update(edges.get().map(function (e) {
         return { id: e.id, color: undefined, width: undefined };
       }));
     }
@@ -6365,41 +6859,41 @@ function buildConnectivityMatrix() {
   if (typeof nodes === 'undefined' || !nodes) return;
   if (typeof edges === 'undefined' || !edges) return;
   var countrySet = {};
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     var c = (n.country || n.group || 'UNK').toUpperCase();
     if (c !== 'UNK') countrySet[c] = true;
   });
   var countries = Object.keys(countrySet).sort();
   if (!countries.length) return;
   var nodeCountry = {};
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     nodeCountry[n.id] = (n.country || n.group || 'UNK').toUpperCase();
   });
   var matrix = {}, pairEdges = {};
-  countries.forEach(function(a) {
-    countries.forEach(function(b) { matrix[a+'|'+b] = 0; pairEdges[a+'|'+b] = []; });
+  countries.forEach(function (a) {
+    countries.forEach(function (b) { matrix[a + '|' + b] = 0; pairEdges[a + '|' + b] = []; });
   });
-  edges.get().forEach(function(e) {
+  edges.get().forEach(function (e) {
     var ca = nodeCountry[e.from] || 'UNK', cb = nodeCountry[e.to] || 'UNK';
     if (ca === 'UNK' || cb === 'UNK' || ca === cb) return;
-    [ca+'|'+cb, cb+'|'+ca].forEach(function(k) {
+    [ca + '|' + cb, cb + '|' + ca].forEach(function (k) {
       if (matrix[k] !== undefined) { matrix[k]++; pairEdges[k].push(e.id); }
     });
   });
   var maxVal = Math.max.apply(null, Object.values(matrix).concat([0]));
-  var headerCells = countries.map(function(c) {
+  var headerCells = countries.map(function (c) {
     return '<th style="padding:3px 6px;font-size:10px;color:#9ba8c0;white-space:nowrap;">' + c + '</th>';
   }).join('');
-  var bodyRows = countries.map(function(r) {
-    var cells = countries.map(function(col) {
+  var bodyRows = countries.map(function (r) {
+    var cells = countries.map(function (col) {
       if (r === col) return '<td style="background:#2a3248;padding:3px 6px;"></td>';
-      var cnt = matrix[r+'|'+col] || 0;
-      var t   = maxVal > 0 ? cnt / maxVal : 0;
-      var bg  = cnt === 0 ? '#1a2035' : _lerpColor('#1a5276','#27ae60',t);
-      var fg  = cnt === 0 ? '#3a4560' : '#fff';
-      var ej  = JSON.stringify(pairEdges[r+'|'+col] || []);
+      var cnt = matrix[r + '|' + col] || 0;
+      var t = maxVal > 0 ? cnt / maxVal : 0;
+      var bg = cnt === 0 ? '#1a2035' : _lerpColor('#1a5276', '#27ae60', t);
+      var fg = cnt === 0 ? '#3a4560' : '#fff';
+      var ej = JSON.stringify(pairEdges[r + '|' + col] || []);
       return '<td style="padding:3px 6px;text-align:center;background:' + bg +
-        ';color:' + fg + ';cursor:' + (cnt?'pointer':'default') + ';font-size:11px;"' +
+        ';color:' + fg + ';cursor:' + (cnt ? 'pointer' : 'default') + ';font-size:11px;"' +
         (cnt ? ' onclick="_highlightEdges(' + ej + ')" title="' + r + '→' + col + ': ' + cnt + ' link(s)"' : '') +
         '>' + (cnt || '') + '</td>';
     }).join('');
@@ -6407,7 +6901,7 @@ function buildConnectivityMatrix() {
       'white-space:nowrap;background:#262d42;">' + r + '</td>' + cells + '</tr>';
   }).join('');
   var panel = document.createElement('div');
-  panel.id  = 'matrixPanel';
+  panel.id = 'matrixPanel';
   panel.style.cssText = 'position:fixed;top:140px;left:20px;z-index:9997;' +
     'background:#1e2330;border:1px solid #3a4560;border-radius:10px;' +
     'box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;' +
@@ -6433,16 +6927,18 @@ function buildConnectivityMatrix() {
 function _highlightEdges(edgeIds) {
   if (typeof edges === 'undefined' || !edges) return;
   if (!Array.isArray(edgeIds)) return;
-  edges.update(edges.get().map(function(e) {
+  edges.update(edges.get().map(function (e) {
     var hi = edgeIds.indexOf(e.id) !== -1;
-    return { id: e.id,
-      color: hi ? { color:'#f1c40f', highlight:'#f1c40f' }
-                : { color:'rgba(150,150,150,0.2)' },
-      width: hi ? 3 : 1 };
+    return {
+      id: e.id,
+      color: hi ? { color: '#f1c40f', highlight: '#f1c40f' }
+        : { color: 'rgba(150,150,150,0.2)' },
+      width: hi ? 3 : 1
+    };
   }));
-  setTimeout(function() {
+  setTimeout(function () {
     if (typeof edges !== 'undefined' && edges) {
-      edges.update(edges.get().map(function(e) { return { id: e.id, color: undefined, width: undefined }; }));
+      edges.update(edges.get().map(function (e) { return { id: e.id, color: undefined, width: undefined }; }));
     }
   }, 3000);
 }
@@ -6452,23 +6948,23 @@ function _highlightEdges(edgeIds) {
 function applyRedundancyScore() {
   if (typeof nodes === 'undefined' || !nodes) return;
   if (typeof edges === 'undefined' || !edges) return;
-  var gwNodes = nodes.get().filter(function(n) { return n.is_gateway; });
+  var gwNodes = nodes.get().filter(function (n) { return n.is_gateway; });
   if (!gwNodes.length) {
     console.warn('[GW-F4] No gateway nodes found — run push-to-ui.py first');
     return;
   }
   var gwCountry = {};
-  gwNodes.forEach(function(n) { gwCountry[n.id] = (n.country || n.group || 'UNK').toUpperCase(); });
+  gwNodes.forEach(function (n) { gwCountry[n.id] = (n.country || n.group || 'UNK').toUpperCase(); });
   var countryGWs = {};  // country → [nodeId,...]
-  gwNodes.forEach(function(n) {
+  gwNodes.forEach(function (n) {
     var c = gwCountry[n.id];
     if (!countryGWs[c]) countryGWs[c] = [];
     countryGWs[c].push(n.id);
   });
   // gwForeignLinks[gwId] = { foreignCountry: count }
   var gwForeignLinks = {};
-  gwNodes.forEach(function(n) { gwForeignLinks[n.id] = {}; });
-  edges.get().forEach(function(e) {
+  gwNodes.forEach(function (n) { gwForeignLinks[n.id] = {}; });
+  edges.get().forEach(function (e) {
     var ca = gwCountry[e.from], cb = gwCountry[e.to];
     if (!ca || !cb || ca === cb) return;
     if (gwForeignLinks[e.from] !== undefined) {
@@ -6479,13 +6975,13 @@ function applyRedundancyScore() {
     }
   });
   var spofs = [], updates = [];
-  gwNodes.forEach(function(n) {
+  gwNodes.forEach(function (n) {
     var myC = gwCountry[n.id];
     var myGWs = countryGWs[myC] || [];
     var foreignCs = Object.keys(gwForeignLinks[n.id] || {});
     var isSPOF = false;
-    foreignCs.forEach(function(fc) {
-      var others = myGWs.filter(function(id) {
+    foreignCs.forEach(function (fc) {
+      var others = myGWs.filter(function (id) {
         return id !== n.id && gwForeignLinks[id] && gwForeignLinks[id][fc];
       });
       if (!others.length) {
@@ -6493,26 +6989,34 @@ function applyRedundancyScore() {
         spofs.push({ gateway: n.id, country: myC, foreignCountry: fc });
       }
     });
-    var R    = foreignCs.length;
+    var R = foreignCs.length;
     var col, bw, suffix;
     if (isSPOF) {
-      col    = { background:'#e74c3c', border:'#c0392b',
-                 highlight:{ background:'#ff6b6b', border:'#e74c3c' },
-                 hover:    { background:'#ff6b6b', border:'#e74c3c' } };
-      bw     = 4; suffix = '\n⚠ SPOF — sole gateway to ' + foreignCs.join(', ');
+      col = {
+        background: '#e74c3c', border: '#c0392b',
+        highlight: { background: '#ff6b6b', border: '#e74c3c' },
+        hover: { background: '#ff6b6b', border: '#e74c3c' }
+      };
+      bw = 4; suffix = '\n⚠ SPOF — sole gateway to ' + foreignCs.join(', ');
     } else if (R >= 3) {
-      col    = { background:'#27ae60', border:'#1e8449',
-                 highlight:{ background:'#58d68d', border:'#27ae60' },
-                 hover:    { background:'#58d68d', border:'#27ae60' } };
-      bw     = 2; suffix = '\n✓ Resilient (R=' + R + ')';
+      col = {
+        background: '#27ae60', border: '#1e8449',
+        highlight: { background: '#58d68d', border: '#27ae60' },
+        hover: { background: '#58d68d', border: '#27ae60' }
+      };
+      bw = 2; suffix = '\n✓ Resilient (R=' + R + ')';
     } else {
-      col    = { background:'#f39c12', border:'#d68910',
-                 highlight:{ background:'#f8c471', border:'#f39c12' },
-                 hover:    { background:'#f8c471', border:'#f39c12' } };
-      bw     = 2; suffix = '\n~ Dual-homed (R=' + R + ')';
+      col = {
+        background: '#f39c12', border: '#d68910',
+        highlight: { background: '#f8c471', border: '#f39c12' },
+        hover: { background: '#f8c471', border: '#f39c12' }
+      };
+      bw = 2; suffix = '\n~ Dual-homed (R=' + R + ')';
     }
-    updates.push({ id: n.id, color: col, borderWidth: bw,
-                   title: (n.title || n.label || '') + suffix });
+    updates.push({
+      id: n.id, color: col, borderWidth: bw,
+      title: (n.title || n.label || '') + suffix
+    });
   });
   if (updates.length) nodes.update(updates);
   _buildRedundancyPanel(spofs);
@@ -6529,14 +7033,14 @@ function _buildRedundancyPanel(spofs) {
   } else {
     spofHTML = '<p style="color:#e74c3c;margin:0 0 6px;font-size:12px;">⚠ ' + spofs.length + ' SPOF condition(s):</p>' +
       '<ul style="margin:0;padding-left:16px;max-height:160px;overflow-y:auto;">' +
-      spofs.slice(0,15).map(function(s) {
+      spofs.slice(0, 15).map(function (s) {
         return '<li style="font-size:11px;margin:2px 0;">' +
           _nodeLabel(s.gateway) + ' (' + s.country + ' → ' + s.foreignCountry + ')</li>';
       }).join('') + '</ul>' +
-      (spofs.length > 15 ? '<div style="color:#778;text-align:center;font-size:10px;">…and ' + (spofs.length-15) + ' more</div>' : '');
+      (spofs.length > 15 ? '<div style="color:#778;text-align:center;font-size:10px;">…and ' + (spofs.length - 15) + ' more</div>' : '');
   }
   var panel = document.createElement('div');
-  panel.id  = 'redundancyPanel';
+  panel.id = 'redundancyPanel';
   panel.style.cssText = 'position:fixed;bottom:20px;right:300px;z-index:9997;' +
     'background:#1e2330;border:1px solid ' + borderCol + ';border-radius:10px;' +
     'box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;' +
@@ -6564,24 +7068,24 @@ function buildInterCountryCostTable() {
   if (typeof nodes === 'undefined' || !nodes) return;
   if (typeof edges === 'undefined' || !edges) return;
   var nodeCountry = {};
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     nodeCountry[n.id] = (n.country || n.group || 'UNK').toUpperCase();
   });
   var pairCosts = {};   // "A|B" → [cost,...]
-  edges.get().forEach(function(e) {
+  edges.get().forEach(function (e) {
     var ca = nodeCountry[e.from] || 'UNK', cb = nodeCountry[e.to] || 'UNK';
     if (ca === 'UNK' || cb === 'UNK' || ca === cb) return;
     var key = [ca, cb].sort().join('|');
     if (!pairCosts[key]) pairCosts[key] = [];
     pairCosts[key].push(_edgeCost(e));
   });
-  var tableRows = Object.keys(pairCosts).sort().map(function(key) {
+  var tableRows = Object.keys(pairCosts).sort().map(function (key) {
     var parts = key.split('|');
     var costs = pairCosts[key];
-    var minC  = Math.min.apply(null, costs);
-    var maxC  = Math.max.apply(null, costs);
-    var avgC  = Math.round(costs.reduce(function(a,b){return a+b;},0)/costs.length);
-    var fc    = costs.length === 1 ? 'color:#e74c3c;' : costs.length === 2 ? 'color:#f39c12;' : 'color:#27ae60;';
+    var minC = Math.min.apply(null, costs);
+    var maxC = Math.max.apply(null, costs);
+    var avgC = Math.round(costs.reduce(function (a, b) { return a + b; }, 0) / costs.length);
+    var fc = costs.length === 1 ? 'color:#e74c3c;' : costs.length === 2 ? 'color:#f39c12;' : 'color:#27ae60;';
     return '<tr><td style="padding:3px 10px;font-weight:600;font-size:11px;">' + parts[0] + '</td>' +
       '<td style="padding:3px 4px;font-size:11px;">↔</td>' +
       '<td style="padding:3px 10px;font-weight:600;font-size:11px;">' + parts[1] + '</td>' +
@@ -6594,7 +7098,7 @@ function buildInterCountryCostTable() {
     tableRows = '<tr><td colspan="7" style="padding:10px;text-align:center;color:#778;">No inter-country edges found</td></tr>';
   }
   var panel = document.createElement('div');
-  panel.id  = 'costTablePanel';
+  panel.id = 'costTablePanel';
   panel.style.cssText = 'position:fixed;bottom:20px;left:20px;z-index:9997;' +
     'background:#1e2330;border:1px solid #3a4560;border-radius:10px;' +
     'box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;' +
@@ -6641,12 +7145,12 @@ function buildInterCountryCostTable() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 // ── Sprint 3: shared state ────────────────────────────────────────────────────
-var _unkHighlightActive  = false;   // A: UNK orange highlight toggle
-var _unkOrigColors       = {};      // A: saved node colors before highlight
-var _hostnameMap         = {};      // A: {router_id → {hostname, country}}
-var _matrixData          = null;    // B: last computed matrix { countries, dist }
-var _whatIfEdgeId        = null;    // C: currently selected edge for what-if
-var _whatIfOrigCost      = null;    // C: original cost of selected edge
+var _unkHighlightActive = false;   // A: UNK orange highlight toggle
+var _unkOrigColors = {};      // A: saved node colors before highlight
+var _hostnameMap = {};      // A: {router_id → {hostname, country}}
+var _matrixData = null;    // B: last computed matrix { countries, dist }
+var _whatIfEdgeId = null;    // C: currently selected edge for what-if
+var _whatIfOrigCost = null;    // C: original cost of selected edge
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  FEATURE A — Unclassified-Node Highlight + Hostname Upload
@@ -6667,7 +7171,7 @@ function _toggleUnkHighlight() {
     // Save original colors and paint UNK nodes orange
     _unkOrigColors = {};
     var updates = [];
-    nodes.get().forEach(function(n) {
+    nodes.get().forEach(function (n) {
       var country = (n.country || n.group || '').toUpperCase();
       if (country === 'UNK') {
         _unkOrigColors[n.id] = { color: n.color, borderWidth: n.borderWidth, size: n.size };
@@ -6695,7 +7199,7 @@ function _toggleUnkHighlight() {
   } else {
     // Restore original colors
     var restores = [];
-    Object.keys(_unkOrigColors).forEach(function(id) {
+    Object.keys(_unkOrigColors).forEach(function (id) {
       var orig = _unkOrigColors[id];
       restores.push({ id: id, color: orig.color || undefined, borderWidth: orig.borderWidth || 1, size: orig.size || 15 });
     });
@@ -6720,7 +7224,7 @@ function buildHostnameUploadPanel() {
   if (old) { old.remove(); return; }
 
   var panel = document.createElement('div');
-  panel.id  = 'hostnameUploadPanel';
+  panel.id = 'hostnameUploadPanel';
   panel.style.cssText =
     'position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:10000;' +
     'background:#1e2330;border:1px solid #3a4560;border-radius:12px;' +
@@ -6736,15 +7240,15 @@ function buildHostnameUploadPanel() {
     'style="background:none;border:none;color:#aab;cursor:pointer;font-size:18px;">×</button></div>' +
 
     '<div style="padding:16px;">' +
-    (function() {
-      var nodeTotal = (typeof nodes!=='undefined'&&nodes) ? nodes.get().length : 0;
-      var unkTotal  = (typeof nodes!=='undefined'&&nodes) ?
-        nodes.get().filter(function(n){return(n.country||n.group||'').toUpperCase()==='UNK';}).length : 0;
+    (function () {
+      var nodeTotal = (typeof nodes !== 'undefined' && nodes) ? nodes.get().length : 0;
+      var unkTotal = (typeof nodes !== 'undefined' && nodes) ?
+        nodes.get().filter(function (n) { return (n.country || n.group || '').toUpperCase() === 'UNK'; }).length : 0;
       return '<div style="background:#141824;border-radius:6px;padding:6px 12px;margin-bottom:10px;' +
         'display:flex;gap:16px;font-size:11px;">' +
         '<span style="color:#9ba8c0;">Graph nodes: <b style="color:#e0e6f0;">' + nodeTotal + '</b></span>' +
-        '<span style="color:#9ba8c0;">Classified: <b style="color:#27ae60;">' + (nodeTotal-unkTotal) + '</b></span>' +
-        '<span style="color:#9ba8c0;">Unclassified (UNK): <b style="color:' + (unkTotal>0?'#f4a261':'#27ae60') + ';">' + unkTotal + '</b></span>' +
+        '<span style="color:#9ba8c0;">Classified: <b style="color:#27ae60;">' + (nodeTotal - unkTotal) + '</b></span>' +
+        '<span style="color:#9ba8c0;">Unclassified (UNK): <b style="color:' + (unkTotal > 0 ? '#f4a261' : '#27ae60') + ';">' + unkTotal + '</b></span>' +
         '</div>';
     })() +
     '<p style="color:#9ba8c0;margin:0 0 10px;font-size:12px;">' +
@@ -6798,11 +7302,11 @@ function buildHostnameUploadPanel() {
   // Wire the file picker
   var picker = document.getElementById('hostFilePicker');
   if (picker) {
-    picker.addEventListener('change', function(evt) {
+    picker.addEventListener('change', function (evt) {
       var file = evt.target.files[0];
       if (!file) return;
       var reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = function (e) {
         _applyHostnameMapping(e.target.result, file.name);
       };
       reader.readAsText(file);
@@ -6821,12 +7325,12 @@ function buildHostnameUploadPanel() {
 function _applyHostnameMapping(csvText, filename) {
   var status = document.getElementById('hostFileStatus');
   function setStatus(msg, color) {
-    if (status) status.innerHTML = '<span style="color:' + (color||'#9ba8c0') + ';">' + msg + '</span>';
+    if (status) status.innerHTML = '<span style="color:' + (color || '#9ba8c0') + ';">' + msg + '</span>';
   }
 
   if (!csvText || !csvText.trim()) { setStatus('Empty file.', '#e74c3c'); return; }
 
-  var lines = csvText.trim().split(/\r?\n/).filter(function(l) { return l.trim(); });
+  var lines = csvText.trim().split(/\r?\n/).filter(function (l) { return l.trim(); });
   if (!lines.length) { setStatus('No data rows found.', '#e74c3c'); return; }
 
   var idToHostname = {};
@@ -6836,8 +7340,8 @@ function _applyHostnameMapping(csvText, filename) {
     if (!rawLine || rawLine.startsWith('#')) continue;
 
     var cols = rawLine.indexOf(',') >= 0
-      ? rawLine.split(',').map(function(c) { return c.trim(); })
-      : rawLine.split(/\s+/, 2).map(function(c) { return c.trim(); });
+      ? rawLine.split(',').map(function (c) { return c.trim(); })
+      : rawLine.split(/\s+/, 2).map(function (c) { return c.trim(); });
 
     if (cols.length < 2) continue;
 
@@ -6848,7 +7352,7 @@ function _applyHostnameMapping(csvText, filename) {
     var c1l = c1.toLowerCase();
 
     if (c0l === 'router_id' || c0l === 'device_ip_address' || c0l === 'hostname_prefix' ||
-        c0l === 'hostname' || c0l === 'id' || c1l === 'hostname' || c1l === 'device_name' || c1l === 'country') {
+      c0l === 'hostname' || c0l === 'id' || c1l === 'hostname' || c1l === 'device_name' || c1l === 'country') {
       continue;
     }
 
@@ -6864,13 +7368,13 @@ function _applyHostnameMapping(csvText, filename) {
 
   var updated = 0, unkCount = 0, matched = 0;
   var allNodes = nodes.get();
-  var updates  = [];
+  var updates = [];
 
-  allNodes.forEach(function(n) {
-    var nodeId   = String(n.name || n.router_id || n.label || n.id || '').trim();
+  allNodes.forEach(function (n) {
+    var nodeId = String(n.name || n.router_id || n.label || n.id || '').trim();
     var currentHostname = String(n.hostname || '').trim();
     var hostname = idToHostname[nodeId] || currentHostname;
-    var country  = hostname ? _deriveCountryCodeFromHostname(hostname) : 'UNK';
+    var country = hostname ? _deriveCountryCodeFromHostname(hostname) : 'UNK';
     if (!country) country = 'UNK';
 
     if (country) {
@@ -6893,10 +7397,10 @@ function _applyHostnameMapping(csvText, filename) {
         is_gateway: n.is_gateway === true
       });
       if ((n.country || 'UNK').toUpperCase() !== country ||
-          (hostname && hostname !== currentHostname) ||
-          (n.group || 'UNK').toUpperCase() !== country ||
-          n.label !== nextLabel ||
-          n.title !== nextTitle) {
+        (hostname && hostname !== currentHostname) ||
+        (n.group || 'UNK').toUpperCase() !== country ||
+        n.label !== nextLabel ||
+        n.title !== nextTitle) {
         updates.push({ id: n.id, hostname: hostname || currentHostname, country: country, group: country, label: nextLabel, title: nextTitle });
         updated++;
       }
@@ -6911,7 +7415,7 @@ function _applyHostnameMapping(csvText, filename) {
 
   // Persist to _hostnameMap for reference
   _hostnameMap = idToHostname;
-  try { localStorage.setItem('_topolograph_hostname_map', JSON.stringify(idToHostname)); } catch(e2) {}
+  try { localStorage.setItem('_topolograph_hostname_map', JSON.stringify(idToHostname)); } catch (e2) { }
 
   // Re-apply country colours
   if (typeof applyCountryColors === 'function') applyCountryColors();
@@ -6936,7 +7440,7 @@ function _reapplySavedHostnameMapping() {
     var saved = JSON.parse(raw);
     if (!saved || typeof saved !== 'object') return false;
     var lines = [];
-    Object.keys(saved).forEach(function(routerId) {
+    Object.keys(saved).forEach(function (routerId) {
       var hostname = String(saved[routerId] || '').trim();
       if (routerId && hostname) lines.push(routerId + ',' + hostname);
     });
@@ -6951,15 +7455,15 @@ function _reapplySavedHostnameMapping() {
 
 /** Manually reclassify a single node from the upload panel. */
 function _applyManualNodeCountry() {
-  var idEl  = document.getElementById('hostManualId');
-  var cEl   = document.getElementById('hostManualCountry');
+  var idEl = document.getElementById('hostManualId');
+  var cEl = document.getElementById('hostManualCountry');
   if (!idEl || !cEl) return;
-  var rid     = (idEl.value || '').trim();
+  var rid = (idEl.value || '').trim();
   var country = (cEl.value || '').trim().toUpperCase();
   if (!rid || !country) { alert('Both Router ID and Country are required.'); return; }
   if (typeof nodes === 'undefined' || !nodes) return;
 
-  var n = nodes.get().find(function(n) { return (n.name || n.label || String(n.id)) === rid; });
+  var n = nodes.get().find(function (n) { return (n.name || n.label || String(n.id)) === rid; });
   if (!n) { alert('Router ID not found: ' + rid); return; }
   nodes.update([{ id: n.id, country: country }]);
   if (typeof applyCountryColors === 'function') applyCountryColors();
@@ -6986,18 +7490,18 @@ function _showUnkNodesList() { _buildUnkPanel(); }
 function _MinHeap() {
   this._h = [];
 }
-_MinHeap.prototype.push = function(item) {
+_MinHeap.prototype.push = function (item) {
   this._h.push(item);
   this._siftUp(this._h.length - 1);
 };
-_MinHeap.prototype.pop = function() {
+_MinHeap.prototype.pop = function () {
   var top = this._h[0];
   var last = this._h.pop();
   if (this._h.length > 0) { this._h[0] = last; this._siftDown(0); }
   return top;
 };
-_MinHeap.prototype.isEmpty = function() { return this._h.length === 0; };
-_MinHeap.prototype._siftUp = function(i) {
+_MinHeap.prototype.isEmpty = function () { return this._h.length === 0; };
+_MinHeap.prototype._siftUp = function (i) {
   var h = this._h;
   while (i > 0) {
     var p = (i - 1) >> 1;
@@ -7005,10 +7509,10 @@ _MinHeap.prototype._siftUp = function(i) {
     var tmp = h[p]; h[p] = h[i]; h[i] = tmp; i = p;
   }
 };
-_MinHeap.prototype._siftDown = function(i) {
+_MinHeap.prototype._siftDown = function (i) {
   var h = this._h, n = h.length;
   while (true) {
-    var l = 2*i+1, r = 2*i+2, s = i;
+    var l = 2 * i + 1, r = 2 * i + 2, s = i;
     if (l < n && h[l].dist < h[s].dist) s = l;
     if (r < n && h[r].dist < h[s].dist) s = r;
     if (s === i) break;
@@ -7032,8 +7536,8 @@ function _dijkstraSingle(srcId, adjList) {
     if (u.dist > (dist.get(u.id) || Infinity)) continue;  // stale entry
     var nbrs = adjList.get(u.id) || [];
     for (var i = 0; i < nbrs.length; i++) {
-      var v    = nbrs[i].to;
-      var nd   = u.dist + nbrs[i].cost;
+      var v = nbrs[i].to;
+      var nd = u.dist + nbrs[i].cost;
       if (nd < (dist.get(v) !== undefined ? dist.get(v) : Infinity)) {
         dist.set(v, nd);
         heap.push({ dist: nd, id: v });
@@ -7052,7 +7556,7 @@ function _buildAdjList(overrides) {
   overrides = overrides || {};
   var adj = new Map();
   if (typeof edges === 'undefined' || !edges) return adj;
-  edges.get().forEach(function(e) {
+  edges.get().forEach(function (e) {
     if (e.hidden === true) return;            // respect current visibility
     var cost = overrides.hasOwnProperty(e.id) ? overrides[e.id] : _edgeCost(e);
     if (cost <= 0) cost = 1;
@@ -7083,7 +7587,7 @@ function _computeCountryMatrix(adjListOverride) {
   // Build country → gateway node IDs mapping
   var countryGWs = {};
   var countryAllNodes = {};
-  nodes.get().forEach(function(n) {
+  nodes.get().forEach(function (n) {
     var c = (n.country || n.group || 'UNK').toUpperCase();
     if (!countryAllNodes[c]) countryAllNodes[c] = [];
     countryAllNodes[c].push(n.id);
@@ -7099,12 +7603,12 @@ function _computeCountryMatrix(adjListOverride) {
   // Per-country: for each gateway in this country, run Dijkstra; union results
   var countryDist = {};  // { country → Map<nodeId → minDist> }
 
-  countries.forEach(function(c) {
+  countries.forEach(function (c) {
     var gws = countryGWs[c] || [];
     var merged = new Map();
-    gws.forEach(function(gwId) {
+    gws.forEach(function (gwId) {
       var d = _dijkstraSingle(gwId, adj);
-      d.forEach(function(dist, nodeId) {
+      d.forEach(function (dist, nodeId) {
         if (!merged.has(nodeId) || dist < merged.get(nodeId)) {
           merged.set(nodeId, dist);
         }
@@ -7115,13 +7619,13 @@ function _computeCountryMatrix(adjListOverride) {
 
   // Aggregate to country-level NxN matrix
   var matDist = {};
-  countries.forEach(function(src) {
+  countries.forEach(function (src) {
     matDist[src] = {};
     var srcDist = countryDist[src];
-    countries.forEach(function(dst) {
+    countries.forEach(function (dst) {
       if (src === dst) { matDist[src][dst] = 0; return; }
       var minCost = Infinity;
-      (countryAllNodes[dst] || []).forEach(function(dstNodeId) {
+      (countryAllNodes[dst] || []).forEach(function (dstNodeId) {
         if (srcDist.has(dstNodeId) && srcDist.get(dstNodeId) < minCost) {
           minCost = srcDist.get(dstNodeId);
         }
@@ -7145,12 +7649,12 @@ function buildOspfCostMatrix() {
   if (!_matrixData) return;
 
   var countries = _matrixData.countries;
-  var dist      = _matrixData.dist;
+  var dist = _matrixData.dist;
 
   // Find min/max for heat-map colour scaling (exclude 0-diagonal)
   var allCosts = [];
-  countries.forEach(function(src) {
-    countries.forEach(function(dst) {
+  countries.forEach(function (src) {
+    countries.forEach(function (dst) {
       if (src !== dst && dist[src][dst] !== null) allCosts.push(dist[src][dst]);
     });
   });
@@ -7159,22 +7663,22 @@ function buildOspfCostMatrix() {
 
   function cellColor(val) {
     if (val === null) return '#2a2a3a';
-    if (val === 0)    return '#1e2330';
+    if (val === 0) return '#1e2330';
     var t = (val - minCost) / Math.max(1, maxCost - minCost);
     return _lerpColor('#27ae60', '#e74c3c', t);
   }
 
   // Build table HTML
   var colHeaders = '<th style="padding:4px 8px;background:#262d42;font-size:10px;color:#9ba8c0;"></th>' +
-    countries.map(function(c) {
+    countries.map(function (c) {
       return '<th style="padding:4px 6px;background:#262d42;font-size:10px;color:#9ba8c0;' +
         'white-space:nowrap;">' + c + '</th>';
     }).join('');
 
-  var rows = countries.map(function(src) {
-    var cells = countries.map(function(dst) {
+  var rows = countries.map(function (src) {
+    var cells = countries.map(function (dst) {
       var val = dist[src][dst];
-      var bg  = cellColor(val);
+      var bg = cellColor(val);
       var txt = (val === null) ? 'N/R' : (val === 0) ? '—' : String(val);
       var fgColor = (val === null) ? '#445' : (val === 0) ? '#3a4a5a' : '#fff';
       return '<td data-src="' + src + '" data-dst="' + dst + '" ' +
@@ -7189,7 +7693,7 @@ function buildOspfCostMatrix() {
   }).join('');
 
   var panel = document.createElement('div');
-  panel.id  = 'ospfCostMatrixPanel';
+  panel.id = 'ospfCostMatrixPanel';
   panel.style.cssText =
     'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9998;' +
     'background:#1e2330;border:1px solid #3a4560;border-radius:12px;' +
@@ -7206,7 +7710,7 @@ function buildOspfCostMatrix() {
   var legendStops = '';
   for (var ls = 0; ls <= 100; ls += 10) {
     legendStops += '<span style="display:inline-block;width:9%;height:10px;background:' +
-      _lerpColor('#27ae60','#e74c3c', ls/100) + ';"></span>';
+      _lerpColor('#27ae60', '#e74c3c', ls / 100) + ';"></span>';
   }
   var legendBar =
     '<div style="padding:8px 14px 6px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #262d42;">' +
@@ -7270,27 +7774,27 @@ function _matrixCellClick(srcCountry, dstCountry) {
   var adj = _buildAdjList();
 
   // Gather source nodes (gateways in srcCountry)
-  var srcNodes = nodes.get().filter(function(n) {
+  var srcNodes = nodes.get().filter(function (n) {
     return (n.country || n.group || '').toUpperCase() === srcCountry;
-  }).map(function(n) { return n.id; });
+  }).map(function (n) { return n.id; });
 
   // Gather destination nodes
-  var dstNodeSet = new Set(nodes.get().filter(function(n) {
+  var dstNodeSet = new Set(nodes.get().filter(function (n) {
     return (n.country || n.group || '').toUpperCase() === dstCountry;
-  }).map(function(n) { return n.id; }));
+  }).map(function (n) { return n.id; }));
 
   // Run Dijkstra with predecessor tracking from each srcNode, pick best
   var bestDist = Infinity, bestPrev = null;
-  srcNodes.forEach(function(srcId) {
+  srcNodes.forEach(function (srcId) {
     var distMap = new Map();
-    var prev    = new Map();
-    var heap    = new _MinHeap();
+    var prev = new Map();
+    var heap = new _MinHeap();
     distMap.set(srcId, 0);
     heap.push({ dist: 0, id: srcId });
     while (!heap.isEmpty()) {
       var u = heap.pop();
       if (u.dist > (distMap.get(u.id) || Infinity)) continue;
-      (adj.get(u.id) || []).forEach(function(nb) {
+      (adj.get(u.id) || []).forEach(function (nb) {
         var nd = u.dist + nb.cost;
         if (nd < (distMap.get(nb.to) !== undefined ? distMap.get(nb.to) : Infinity)) {
           distMap.set(nb.to, nd);
@@ -7300,7 +7804,7 @@ function _matrixCellClick(srcCountry, dstCountry) {
       });
     }
     // Find closest dstNode
-    dstNodeSet.forEach(function(dstId) {
+    dstNodeSet.forEach(function (dstId) {
       var d = distMap.get(dstId);
       if (d !== undefined && d < bestDist) { bestDist = d; bestPrev = { prev: prev, endId: dstId }; }
     });
@@ -7310,7 +7814,7 @@ function _matrixCellClick(srcCountry, dstCountry) {
 
   // Reconstruct path
   var path = [];
-  var cur  = bestPrev.endId;
+  var cur = bestPrev.endId;
   var prev2 = bestPrev.prev;
   while (prev2.has(cur)) { path.unshift(cur); cur = prev2.get(cur); }
   path.unshift(cur);
@@ -7319,13 +7823,13 @@ function _matrixCellClick(srcCountry, dstCountry) {
   var pathEdgeIds = [];
   var pathSet = new Set(path);
   if (typeof edges !== 'undefined' && edges) {
-    edges.get().forEach(function(e) {
+    edges.get().forEach(function (e) {
       if (pathSet.has(e.from) && pathSet.has(e.to)) pathEdgeIds.push(e.id);
     });
   }
 
   _highlightEdges(pathEdgeIds);
-  console.log('[SP3-B] Path ' + srcCountry + '→' + dstCountry + ': cost=' + bestDist + ' hops=' + (path.length-1));
+  console.log('[SP3-B] Path ' + srcCountry + '→' + dstCountry + ': cost=' + bestDist + ' hops=' + (path.length - 1));
 }
 
 /**
@@ -7339,13 +7843,13 @@ function _exportMatrixToExcel() {
     var XLSX = window.XLSX;
     if (!XLSX) { alert('SheetJS failed to load. Check internet connection.'); return; }
     var countries = _matrixData.countries;
-    var dist      = _matrixData.dist;
+    var dist = _matrixData.dist;
 
     // Build data array (header row + one row per source country)
     var data = [['From \\ To'].concat(countries)];
-    countries.forEach(function(src) {
+    countries.forEach(function (src) {
       var row = [src];
-      countries.forEach(function(dst) {
+      countries.forEach(function (dst) {
         var v = dist[src][dst];
         row.push(v === null ? 'N/A' : v);
       });
@@ -7356,7 +7860,7 @@ function _exportMatrixToExcel() {
 
     // Style header row (sheetjs CE only supports basic styles)
     var range = XLSX.utils.decode_range(ws['!ref']);
-    ws['!cols'] = [{ wch: 8 }].concat(countries.map(function() { return { wch: 8 }; }));
+    ws['!cols'] = [{ wch: 8 }].concat(countries.map(function () { return { wch: 8 }; }));
 
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'OSPF Cost Matrix');
@@ -7372,7 +7876,7 @@ function _exportMatrixToExcel() {
     var ws2 = XLSX.utils.aoa_to_sheet(meta);
     XLSX.utils.book_append_sheet(wb, ws2, 'Metadata');
 
-    XLSX.writeFile(wb, 'ospf-cost-matrix-' + new Date().toISOString().slice(0,10) + '.xlsx');
+    XLSX.writeFile(wb, 'ospf-cost-matrix-' + new Date().toISOString().slice(0, 10) + '.xlsx');
     console.log('[SP3-B] Excel export complete');
   }
 
@@ -7381,8 +7885,8 @@ function _exportMatrixToExcel() {
   } else {
     var script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-    script.onload  = doExport;
-    script.onerror = function() { alert('Could not load SheetJS from CDN.'); };
+    script.onload = doExport;
+    script.onerror = function () { alert('Could not load SheetJS from CDN.'); };
     document.head.appendChild(script);
   }
 }
@@ -7401,13 +7905,13 @@ function buildOspfWhatIf() {
   if (typeof edges === 'undefined' || !edges) return;
 
   // Build edge list for picker (sorted by cost desc)
-  var edgeList = edges.get().slice().sort(function(a, b) {
+  var edgeList = edges.get().slice().sort(function (a, b) {
     return _edgeCost(b) - _edgeCost(a);
   });
 
   var nodeCountry = {};
   if (typeof nodes !== 'undefined' && nodes) {
-    nodes.get().forEach(function(n) {
+    nodes.get().forEach(function (n) {
       nodeCountry[n.id] = (n.country || n.group || 'UNK').toUpperCase();
     });
   }
@@ -7415,16 +7919,16 @@ function buildOspfWhatIf() {
   function edgeLabel(e) {
     var srcC = nodeCountry[e.from] || '?', dstC = nodeCountry[e.to] || '?';
     var srcLbl = (typeof nodes !== 'undefined' && nodes) ? (nodes.get(e.from) || {}).label || e.from : e.from;
-    var dstLbl = (typeof nodes !== 'undefined' && nodes) ? (nodes.get(e.to)   || {}).label || e.to   : e.to;
+    var dstLbl = (typeof nodes !== 'undefined' && nodes) ? (nodes.get(e.to) || {}).label || e.to : e.to;
     return srcC + ':' + srcLbl + ' → ' + dstC + ':' + dstLbl + '  (cost: ' + _edgeCost(e) + ')';
   }
 
-  var optionsHtml = edgeList.map(function(e) {
+  var optionsHtml = edgeList.map(function (e) {
     return '<option value="' + e.id + '">' + edgeLabel(e) + '</option>';
   }).join('');
 
   var panel = document.createElement('div');
-  panel.id  = 'ospfWhatIfPanel';
+  panel.id = 'ospfWhatIfPanel';
   panel.style.cssText =
     'position:fixed;top:70px;left:50%;transform:translateX(20%);z-index:9997;' +
     'background:#1e2330;border:1px solid #3a4560;border-radius:12px;' +
@@ -7439,7 +7943,7 @@ function buildOspfWhatIf() {
     '<span><b>🔬 What-If / Impact Analysis</b>' +
     '<span style="font-size:10px;background:#3a1a0e;border:1px solid #8b3a0e;' +
     'border-radius:4px;padding:2px 7px;margin-left:8px;color:#ff8c42;font-weight:600;">' +
-    (typeof _viewMode!=='undefined'?_viewMode:'ENRICHED').toUpperCase() + '</span></span>' +
+    (typeof _viewMode !== 'undefined' ? _viewMode : 'ENRICHED').toUpperCase() + '</span></span>' +
     '<div style="display:flex;gap:8px;align-items:center;">' +
     '<button onclick="WhatIfScenarioManager.showScenarioList()" ' +
     'style="padding:4px 10px;background:#2a3248;border:1px solid #3a4560;border-radius:6px;color:#88aaff;cursor:pointer;font-size:11px;" ' +
@@ -7492,9 +7996,9 @@ function buildOspfWhatIf() {
   var oldCostEl = document.getElementById('wiOldCost');
   function syncCost() {
     var eid = picker.value;
-    var e   = edges.get(eid);
+    var e = edges.get(eid);
     if (e) {
-      _whatIfEdgeId   = eid;
+      _whatIfEdgeId = eid;
       _whatIfOrigCost = _edgeCost(e);
       if (oldCostEl) oldCostEl.value = _whatIfOrigCost;
     }
@@ -7515,13 +8019,13 @@ var _whatIfLastResult = null;
  *   5. Show risk score (# of affected pairs)
  */
 function _runWhatIfAnalysis() {
-  var picker  = document.getElementById('wiEdgePicker');
+  var picker = document.getElementById('wiEdgePicker');
   var newCostEl = document.getElementById('wiNewCost');
-  var resultEl  = document.getElementById('wiImpactResult');
-  var applyBtn  = document.getElementById('wiApplyBtn');
+  var resultEl = document.getElementById('wiImpactResult');
+  var applyBtn = document.getElementById('wiApplyBtn');
   if (!picker || !newCostEl || !resultEl) return;
 
-  var edgeId  = picker.value;
+  var edgeId = picker.value;
   var newCost = parseInt(newCostEl.value, 10);
   if (!edgeId || isNaN(newCost) || newCost < 1) {
     resultEl.innerHTML = '<span style="color:#e74c3c;">Please select an edge and enter a valid cost (≥1).</span>';
@@ -7531,12 +8035,12 @@ function _runWhatIfAnalysis() {
   resultEl.innerHTML = '<span style="color:#9ba8c0;">⏳ Running Dijkstra…</span>';
 
   // Run async to let browser render the "running" message
-  setTimeout(function() {
-    var baseline  = _computeCountryMatrix();
-    var override  = {};
+  setTimeout(function () {
+    var baseline = _computeCountryMatrix();
+    var override = {};
     override[edgeId] = newCost;
-    var adjOver   = _buildAdjList(override);
-    var proposed  = _computeCountryMatrix(adjOver);
+    var adjOver = _buildAdjList(override);
+    var proposed = _computeCountryMatrix(adjOver);
 
     if (!baseline || !proposed) {
       resultEl.innerHTML = '<span style="color:#e74c3c;">Graph not ready.</span>';
@@ -7544,14 +8048,14 @@ function _runWhatIfAnalysis() {
     }
 
     var countries = baseline.countries;
-    var affected  = [];
+    var affected = [];
     var oldEdgeCost = _whatIfOrigCost || _edgeCost(edges.get(edgeId));
 
-    countries.forEach(function(src) {
-      countries.forEach(function(dst) {
+    countries.forEach(function (src) {
+      countries.forEach(function (dst) {
         if (src === dst) return;
         var before = baseline.dist[src] && baseline.dist[src][dst];
-        var after  = proposed.dist[src]  && proposed.dist[src][dst];
+        var after = proposed.dist[src] && proposed.dist[src][dst];
         if (before !== after) {
           var delta = (after !== null && before !== null) ? (after - before) : null;
           affected.push({
@@ -7565,27 +8069,27 @@ function _runWhatIfAnalysis() {
     // Risk score (from the IBM / Juniper change-impact model):
     // score = (#affected_pairs / total_pairs) * 100
     var totalPairs = countries.length * (countries.length - 1);
-    var riskPct    = totalPairs > 0 ? Math.round(100 * affected.length / totalPairs) : 0;
-    var riskColor  = riskPct < 20 ? '#27ae60' : riskPct < 50 ? '#f39c12' : '#e74c3c';
-    var riskLabel  = riskPct < 20 ? 'LOW' : riskPct < 50 ? 'MEDIUM' : 'HIGH';
+    var riskPct = totalPairs > 0 ? Math.round(100 * affected.length / totalPairs) : 0;
+    var riskColor = riskPct < 20 ? '#27ae60' : riskPct < 50 ? '#f39c12' : '#e74c3c';
+    var riskLabel = riskPct < 20 ? 'LOW' : riskPct < 50 ? 'MEDIUM' : 'HIGH';
 
     _whatIfLastResult = {
       edgeId: edgeId, oldCost: oldEdgeCost, newCost: newCost,
       affected: affected, riskPct: riskPct, countries: countries,
       generatedAt: new Date().toISOString()
     };
-    _whatIfEdgeId   = edgeId;
+    _whatIfEdgeId = edgeId;
 
     var rows = '';
     if (!affected.length) {
       rows = '<tr><td colspan="5" style="padding:8px;text-align:center;color:#27ae60;">' +
         'No country-pair paths affected by this cost change.</td></tr>';
     } else {
-      rows = affected.slice(0, 30).map(function(r) {
-        var dStr = r.delta !== null ? (r.delta > 0 ? '+'+r.delta : String(r.delta)) : 'N/A→finite';
+      rows = affected.slice(0, 30).map(function (r) {
+        var dStr = r.delta !== null ? (r.delta > 0 ? '+' + r.delta : String(r.delta)) : 'N/A→finite';
         var dColor = r.better ? '#27ae60' : '#e74c3c';
         var bStr = r.before !== null ? r.before : '∞';
-        var aStr = r.after  !== null ? r.after  : '∞';
+        var aStr = r.after !== null ? r.after : '∞';
         return '<tr>' +
           '<td style="padding:3px 8px;font-size:10px;font-weight:600;">' + r.src + '</td>' +
           '<td style="padding:3px 4px;font-size:10px;">→</td>' +
@@ -7606,7 +8110,7 @@ function _runWhatIfAnalysis() {
       '<div style="font-size:10px;color:#9ba8c0;">Edge cost change</div>' +
       '<div style="font-size:13px;font-weight:700;">' + oldEdgeCost + ' → ' + newCost +
       ' <span style="font-size:10px;color:' + (newCost < oldEdgeCost ? '#27ae60' : '#e74c3c') + ';">' +
-      (newCost < oldEdgeCost ? '▼' : '▲') + Math.abs(newCost-oldEdgeCost) + '</span></div></div>' +
+      (newCost < oldEdgeCost ? '▼' : '▲') + Math.abs(newCost - oldEdgeCost) + '</span></div></div>' +
       '<div style="flex:1;background:#141824;border-radius:6px;padding:6px 10px;">' +
       '<div style="font-size:10px;color:#9ba8c0;">Affected country pairs</div>' +
       '<div style="font-size:13px;font-weight:700;">' + affected.length + ' / ' + totalPairs + '</div></div>' +
@@ -7636,7 +8140,7 @@ function _runWhatIfAnalysis() {
 function _applyWhatIf() {
   if (!_whatIfEdgeId || !_whatIfLastResult) { alert('Run analysis first.'); return; }
   var newCost = _whatIfLastResult.newCost;
-  var eId     = _whatIfEdgeId;
+  var eId = _whatIfEdgeId;
 
   if (typeof edges === 'undefined' || !edges) return;
   var e = edges.get(eId);
@@ -7644,12 +8148,12 @@ function _applyWhatIf() {
 
   // Apply cost — update whichever field the edge uses
   var update = { id: eId };
-  if (typeof e.cost !== 'undefined')   update.cost   = newCost;
+  if (typeof e.cost !== 'undefined') update.cost = newCost;
   if (typeof e.weight !== 'undefined') update.weight = newCost;
-  if (typeof e.value  !== 'undefined') update.value  = newCost;
+  if (typeof e.value !== 'undefined') update.value = newCost;
   // Update the title/label for visible display
   var newLabel = String(newCost);
-  if (typeof e.label  !== 'undefined') update.label  = newLabel;
+  if (typeof e.label !== 'undefined') update.label = newLabel;
   edges.update([update]);
 
   // Refresh Cost Matrix if open
@@ -7691,15 +8195,15 @@ function _exportWhatIfReport() {
     'Risk %,' + r.riskPct,
     '',
     'From,To,Before,After,Delta'
-  ].concat(r.affected.map(function(a) {
+  ].concat(r.affected.map(function (a) {
     return [a.src, a.dst, a.before, a.after, a.delta].join(',');
   }));
-  var csv  = lines.join('\n');
+  var csv = lines.join('\n');
   var blob = new Blob([csv], { type: 'text/csv' });
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  a.href   = url;
-  a.download = 'ospf-whatif-' + new Date().toISOString().slice(0,10) + '.csv';
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'ospf-whatif-' + new Date().toISOString().slice(0, 10) + '.csv';
   a.click();
   URL.revokeObjectURL(url);
   console.log('[SP3-C] What-If report exported');

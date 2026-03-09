@@ -360,3 +360,32 @@ if _old_add:
 if _old_del:
     app.view_functions['delete_auth_source_ip_net'] = _wrap_old_del
 
+
+@app.route('/country-overrides/save', methods=['POST'], endpoint='security_countries_save')
+def security_countries_save():
+    login = _login() or 'anonymous'
+    
+    data = request.json or {}
+    graph_time = data.get('graph_time')
+    overrides = data.get('overrides')
+    
+    if not graph_time or not isinstance(overrides, dict):
+        return jsonify({'error': 'Missing graph_time or overrides dict'}), 400
+
+    col = _db['custom_country_mappings']
+    doc = col.find_one({'graph_time': graph_time})
+    if not doc:
+        col.insert_one({'graph_time': graph_time, 'overrides': overrides, 'updated_by': login, 'updated_at': _now()})
+    else:
+        current_overrides = doc.get('overrides', {})
+        current_overrides.update(overrides)
+        col.update_one({'_id': doc['_id']}, {'$set': {'overrides': current_overrides, 'updated_by': login, 'updated_at': _now()}})
+
+    return jsonify({'status': 'ok', 'saved': len(overrides)})
+
+@app.route('/country-overrides/<path:graph_time>', methods=['GET'], endpoint='security_countries_get')
+def security_countries_get(graph_time):
+    col = _db['custom_country_mappings']
+    doc = col.find_one({'graph_time': graph_time})
+    return jsonify({'overrides': doc.get('overrides', {}) if doc else {}})
+
