@@ -82,9 +82,12 @@
     const positions = network.getPositions();
     const formatted = {};
     Object.keys(positions || {}).forEach(function (id) {
+      const node = nodes.get(id);
       formatted[String(id)] = {
         x: positions[id].x,
-        y: positions[id].y
+        y: positions[id].y,
+        physics: node ? node.physics : undefined,
+        fixed: node && node.fixed ? { x: !!node.fixed.x, y: !!node.fixed.y } : undefined
       };
     });
     return {
@@ -112,7 +115,9 @@
       return {
         id: Number.isNaN(numericId) ? id : numericId,
         x: raw.x,
-        y: raw.y
+        y: raw.y,
+        physics: raw.physics,
+        fixed: raw.fixed || (raw.physics === false ? { x: true, y: true } : undefined)
       };
     });
     if (updates.length) {
@@ -126,6 +131,7 @@
         ? '<img src="/static/start_button.png"/>Unfreeze network'
         : '<img src="/static/stop_button.png"/>Freeze network';
     }
+    // Stabilize viewport
     setTimeout(function () {
       if (data.viewport && data.viewport.position && typeof network.moveTo === 'function') {
         network.moveTo({
@@ -140,7 +146,7 @@
         const numericId = Number(data.selected_node_id);
         network.selectNodes([Number.isNaN(numericId) ? data.selected_node_id : numericId]);
       }
-    }, 120);
+    }, 150);
     return updates.length > 0;
   }
 
@@ -383,7 +389,7 @@
       originalBuildViewModeButtons.apply(this, arguments);
       ensureControls();
       setTimeout(function () {
-        loadLayout(false).catch(function () {});
+        loadLayout(false).catch(function () { });
       }, 180);
     };
   }
@@ -393,7 +399,7 @@
     window.setViewMode = function (mode) {
       const result = originalSetViewMode.apply(this, arguments);
       setTimeout(function () {
-        loadLayout(false).catch(function () {});
+        loadLayout(false).catch(function () { });
       }, 180);
       return result;
     };

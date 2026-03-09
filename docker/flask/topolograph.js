@@ -3637,14 +3637,36 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
   });
   // progress bar end
 
+  network.on("dragEnd", function (params) {
+    if (params.nodes && params.nodes.length > 0) {
+      var updates = params.nodes.map(function (nodeId) {
+        return { id: nodeId, physics: false, fixed: { x: true, y: true } };
+      });
+      nodes.update(updates);
+      console.log("[LAYOUT] Pinned " + updates.length + " nodes via dragEnd");
+    }
+  });
+
+  function _updateBulkCount() {
+    var cCount = document.getElementById('cfBulkCount');
+    if (cCount) {
+      cCount.textContent = network.getSelectedNodes().length;
+    }
+  }
+
   network.on("selectNode", function (params) {
     // console.log('selectNode Event:', params);
+    _updateBulkCount();
 
     $('div.PopUpFormBackupNonBackupNets').fadeToggle();
     //$( 'div.PopUpFormBackupNonBackupNets' ).fadeIn();
 
     get_node_details(graph_id, params.nodes[0]);
   });
+
+  network.on("deselectNode", _updateBulkCount);
+  network.on("selectEdge", _updateBulkCount);
+  network.on("deselectEdge", _updateBulkCount);
 
   network.on("selectEdge", function (params) {
     var pressed_button = _pressed_button_name(); // GeneralView, NetworkReactionOnFailure
@@ -3733,7 +3755,7 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
   network.on("hidePopup", function () {
       console.log('hidePopup Event');
   });
-  
+   
   network.on("hoverNode", function (params) {
       console.log('hoverNode Event:', params);
       //document.getElementById('eventSpan').innerHTML = '<h2>hoverNode event: </h2>' + JSON.stringify(params.node, null, 4);
@@ -4696,12 +4718,14 @@ function _ensureOriginalCountryStateRecorded() {
   if (typeof nodes === 'undefined' || !nodes) return;
   nodes.get().forEach(function (n) {
     if (!_originalCountryState[n.id]) {
+      var nodeFmt = _classifyNodeFmt(n);
       _originalCountryState[n.id] = {
         country: String(n.country || n.group || 'UNK').toUpperCase(),
         group: String(n.group || n.country || 'UNK').toUpperCase(),
         label: n.label,
         title: n.title,
-        color: n.color
+        color: JSON.parse(JSON.stringify(n.color || {})),
+        fmt: nodeFmt
       };
     }
   });
@@ -4960,21 +4984,52 @@ function _matchHostnamePattern(hostname, pattern) {
   return hostname.toLowerCase() === pattern.toLowerCase();
 }
 
+function _classifyNodeFmt(node) {
+  var host = String(node.hostname || node.label || '').split('\n')[0].trim();
+  if (!host) return 'C';
+  var ipRegex = /^\d+\.\d+\.\d+\.\d+$/;
+  if (ipRegex.test(host)) return 'C';
+
+  // A-type: country-airport-city-role (e.g. JAP-LON-PER-PE01)
+  // Pattern: [3-letter-country]-[3-letter-airport]-[3-letter-city]-[ROLE][NUM]
+  // Roles: P, PE, PPE, RR, BDR
+  var aTypeRegex = /^[A-Z]{3}-[A-Z]{3}-[A-Z]{3}-(P|PE|PPE|RR|BDR)\d+.*$/i;
+  if (aTypeRegex.test(host)) return 'A';
+
+  // B-type: country-role-vendor-xxx (e.g. DUB-P-NCS550-R01 or BOM-PE-7750-02)
+  // Pattern: [3-letter-city/area]-[ROLE]-[VENDOR/MODEL]-...
+  // Roles: P, PE, MCON, CE, RR
+  var bTypeRegex = /^[A-Z]{3}-(P|PE|PPE|MCON|CE|RR)-(NCS|ASR|7750|7770|MORAN|MOCAN).*/i;
+  var bTypeFallback = /^[A-Z]{3}-(P|PE|MCON|CE|RR)-.*/i;
+  if (bTypeRegex.test(host) || bTypeFallback.test(host)) return 'B';
+
+  return 'C'; // Default to C-type if no standard pattern matches
+}
+
 function applyTextFilters() {
   if (typeof nodes === 'undefined' || !nodes) return;
   var updates = [];
   var ipPat = (_activeIpFilter || '').trim();
   var hPat = (_activeHostnameFilter || '').trim();
+
+  // Network Format checkboxes
+  var enabledFmts = { 'A': true, 'B': true, 'C': true };
+  document.querySelectorAll('.cfFmtCheck').forEach(function (cb) {
+    enabledFmts[cb.dataset.fmt] = cb.checked;
+  });
+
   nodes.get().forEach(function (n) {
     var ip = n.ip_address || n.router_id || String(n.id || '');
     var host = n.hostname || n.label || '';
     if (typeof host === 'string' && host.indexOf('\n') !== -1) host = host.split('\n')[0];
 
+    var fmt = _classifyNodeFmt(n);
     var hIp = ipPat ? !_matchIpPattern(ip, ipPat) : false;
     var hHost = hPat ? !_matchHostnamePattern(host, hPat) : false;
+    var hFmt = !enabledFmts[fmt];
 
-    if (!!n._ipFilterHidden !== hIp || !!n._hostnameFilterHidden !== hHost) {
-      updates.push({ id: n.id, _ipFilterHidden: hIp, _hostnameFilterHidden: hHost });
+    if (!!n._ipFilterHidden !== hIp || !!n._hostnameFilterHidden !== hHost || !!n._fmtFilterHidden !== hFmt) {
+      updates.push({ id: n.id, _ipFilterHidden: hIp, _hostnameFilterHidden: hHost, _fmtFilterHidden: hFmt });
     }
   });
   if (updates.length > 0) nodes.update(updates);
@@ -4985,29 +5040,23 @@ function applyTextFilters() {
 //  selected: Set of country codes
 function filterNodesByCountry(mode, selected) {
   if (typeof nodes === 'undefined' || !nodes) return;
-  // Collect enabled hostname format types from the filter panel checkboxes
-  var enabledFmts = { 'A': true, 'B': true, 'C': true };
-  document.querySelectorAll('.cfFmtCheck').forEach(function (cb) {
-    enabledFmts[cb.dataset.fmt] = cb.checked;
-  });
   var allNodes = nodes.get();
   var updates = [];
   allNodes.forEach(function (n) {
     var code = (n.country || 'UNK').toUpperCase();
-    var fmt = n.hostnameFormatType || 'A';
     var hidden = false;
-    // Format-type filter (overrides country filter when format is disabled)
-    if (!enabledFmts[fmt]) { hidden = true; }
-    else if (mode === 'exclude') { hidden = selected.has(code); }
+    if (mode === 'exclude') { hidden = selected.has(code); }
     else if (mode === 'show_only') { hidden = !selected.has(code); }
-    updates.push({ id: n.id, _filterHidden: hidden });
+    if (!!n._filterHidden !== hidden) {
+      updates.push({ id: n.id, _filterHidden: hidden });
+    }
   });
-  nodes.update(updates);
+  if (updates.length > 0) nodes.update(updates);
   _syncEdgeVisibility();
 }
 
 function _nodeHiddenByRules(node) {
-  return !!(node && (node._modeHidden || node._filterHidden || node._collapseHidden || node._ipFilterHidden || node._hostnameFilterHidden));
+  return !!(node && (node._modeHidden || node._filterHidden || node._collapseHidden || node._ipFilterHidden || node._hostnameFilterHidden || node._fmtFilterHidden));
 }
 
 function _syncEdgeVisibility() {
@@ -5294,6 +5343,11 @@ function buildCountryFilterPanel() {
   document.getElementById('cfApplyHostname').addEventListener('click', function () {
     _activeHostnameFilter = document.getElementById('cfHostFilterInput').value;
     applyTextFilters();
+  });
+
+  // ── Network Format checkboxes ─────────────────────────────────────────────
+  document.querySelectorAll('.cfFmtCheck').forEach(function (cb) {
+    cb.addEventListener('change', applyTextFilters);
   });
 
   // ── Bulk Editor bindings ────────────────────────────────────────────────────
