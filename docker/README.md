@@ -40,38 +40,34 @@ per-view-mode vis.js node position persistence backed by `layout-db`
 
 ```bash
 # 1. Clone the repository
-gh repo clone zumanm1/topologygraph_clone
-# or: git clone https://github.com/zumanm1/topologygraph_clone.git
+git clone https://github.com/zumanm1/topologygraph_clone.git
 cd topologygraph_clone
 
-# 2. Copy environment config
-cp .env.example .env          # edit passwords if needed
-
-# 3. Build custom images (flask, webserver, pipeline, layout-api)
+# 2. Build and start all services
 docker compose build
-
-# 4. Start all 7 core services
 docker compose up -d
 
-# 5. Verify containers are up
-docker compose ps
+# 3. Wait for initialization
+sleep 30
 
-# 6. Start the Docker test container
-docker compose --profile test up -d e2e-runner
+# 4. Verify services are running
+docker ps
+curl -s http://localhost:8081/__security/health
 
-# 7. Run the canonical all-Docker validation
-bash 08-STEP-BY-STEP/scripts/run-all-docker-validation.sh
-
-# 8. Run the updated full Web UI user-journey validation
-bash 10-STEP-BY-STEP/scripts/run-updated-webui-validation.sh
-
-# 9. Open browser
+# 5. Open browser
 #    http://localhost:8081/
 #    Login: ospf@topolograph.com / ospf
 ```
 
-Use `08-STEP-BY-STEP` when you want the canonical rebuild + security + Docker-native regression path.
-Use `10-STEP-BY-STEP` when you want the updated full browser upload/import/view/filter/feature/layout validation pack.
+### Optional: Run Validation Tests
+
+```bash
+# Start test container
+docker compose --profile test up -d e2e-runner
+
+# Run full E2E validation (127 checks)
+docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh
+```
 
 ---
 
@@ -104,17 +100,14 @@ docker/
 ## Running the Pipeline
 
 ```bash
-# Default packaged test fixtures (54 routers + 34 mapped hosts + 20 UNK)
-docker compose exec pipeline bash docker/scripts/docker-pipeline.sh
-
-# Explicit packaged 54-router UNK validation pair
+# Using test fixtures from INPUT-FOLDER
 docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
-  --ospf-file=ospf-database-54-unk-test.txt \
-  --host-file=Load-hosts-54-unk-test.txt
+  --ospf-file=INPUT-FOLDER/ospf-database-54-unk-test.txt \
+  --host-file=INPUT-FOLDER/Load-hosts-metro-level.csv
 
-# With different OSPF file
+# Without hostname mapping (nodes appear as UNK)
 docker compose exec pipeline bash docker/scripts/docker-pipeline.sh \
-  --ospf-file=ospf-database-3b.txt
+  --ospf-file=INPUT-FOLDER/ospf-database-54-unk-test.txt
 
 # Dry run (skip upload)
 docker compose exec pipeline bash docker/scripts/docker-pipeline.sh --dry-run
@@ -127,6 +120,8 @@ Or use the host-side wrapper:
 ```bash
 bash docker/scripts/run-pipeline-in-docker.sh
 ```
+
+**Note:** The application uses a dynamic hostname upload workflow. Upload OSPF database and hostname mappings via the Web UI at http://localhost:8081 for interactive use.
 
 ### Output files (on host)
 
