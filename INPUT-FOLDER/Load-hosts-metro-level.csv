@@ -1,9 +1,9 @@
 device_ip_address,device_name
-9.9.9.1,esp-mad-cha-r1
-9.9.9.2,esp-mad-cha-r2
-9.9.9.3,esp-mad-sal-r1
-10.10.10.1,esp-bcn-gra-r1
-10.10.10.2,esp-bcn-eix-r1
+9.9.9.1,can-tor-kem-r1
+9.9.9.2,can-tor-kem-r2
+9.9.9.3,can-tor-san-r1
+10.10.10.1,can-van-cbd-r1
+10.10.10.2,can-van-tbl-r1
 11.11.11.1,usa-nyc-man-r1
 11.11.11.2,usa-nyc-man-r2
 11.11.11.3,usa-nyc-bro-r1
