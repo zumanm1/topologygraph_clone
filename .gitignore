@@ -52,6 +52,12 @@ OUTPUT/
 
 # Backup hostname files
 INPUT-FOLDER copy/
+
+# Allow test data files (sample files for users)
+!INPUT-FOLDER/Load-hosts-metro-level.csv
+!INPUT-FOLDER/ospf-database-54-unk-test.txt
+
+# Ignore all other INPUT-FOLDER files (user uploads)
 INPUT-FOLDER/*.csv
 INPUT-FOLDER/*.txt
 
