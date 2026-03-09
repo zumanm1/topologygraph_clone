@@ -32,6 +32,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_country_overrides_updated_at ON country_overrides;
 CREATE TRIGGER trigger_country_overrides_updated_at
     BEFORE UPDATE ON country_overrides
     FOR EACH ROW

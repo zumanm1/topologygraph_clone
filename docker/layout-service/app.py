@@ -5,12 +5,14 @@ import os
 import re
 import time
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, List, Optional
 
 import psycopg
 from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
+
+from spf_calculator import apply_scenario
 
 DB_HOST = os.getenv("LAYOUT_DB_HOST", "layout-db")
 DB_PORT = int(os.getenv("LAYOUT_DB_PORT", "5432"))
@@ -57,6 +59,54 @@ class CountryOverride(BaseModel):
 
 class CountryOverrideBulk(BaseModel):
     overrides: list[CountryOverride]
+
+
+class WhatIfScenario(BaseModel):
+    graph_id: str = Field(min_length=1)
+    graph_time: str = Field(min_length=1)
+    scenario_name: str = Field(min_length=1, max_length=255)
+    scenario_type: str = Field(pattern='^(node_failure|link_failure|cost_change|multi_change)$')
+    scenario_config: dict[str, Any]
+    baseline_matrix: dict[str, Any]
+    modified_matrix: dict[str, Any]
+    statistics: Optional[dict[str, Any]] = None
+    description: Optional[str] = None
+    is_public: bool = False
+    created_by: Optional[str] = None
+
+
+class WhatIfScenarioCreate(BaseModel):
+    graph_id: str = Field(min_length=1)
+    graph_time: str = Field(min_length=1)
+    scenario_name: str = Field(min_length=1, max_length=255)
+    scenario_type: str = Field(pattern='^(node_failure|link_failure|cost_change|multi_change)$')
+    scenario_config: dict[str, Any]
+    description: Optional[str] = None
+    is_public: bool = False
+
+
+class WhatIfScenarioResponse(BaseModel):
+    id: int
+    graph_id: str
+    graph_time: str
+    scenario_name: str
+    scenario_type: str
+    scenario_config: dict[str, Any]
+    baseline_matrix: dict[str, Any]
+    modified_matrix: dict[str, Any]
+    statistics: Optional[dict[str, Any]]
+    description: Optional[str]
+    is_public: bool
+    created_at: str
+    updated_at: str
+    created_by: Optional[str]
+
+
+class WhatIfComparison(BaseModel):
+    comparison_name: str
+    scenario_ids: List[int]
+    graph_id: str
+    graph_time: str
 
 
 @contextmanager
@@ -463,3 +513,290 @@ def export_country_overrides_csv() -> Response:
         media_type='text/csv',
         headers={'Content-Disposition': 'attachment; filename="country-overrides.csv"'}
     )
+
+
+# ============================================================================
+# What-If Scenario Management Endpoints
+# ============================================================================
+
+@app.post("/whatif/scenarios", response_model=WhatIfScenarioResponse, status_code=201)
+def create_whatif_scenario(scenario: WhatIfScenarioCreate, topology_data: dict = None):
+    """Create a new what-if scenario with baseline and modified cost matrices."""
+    if not topology_data:
+        raise HTTPException(status_code=400, detail="topology_data is required in request body")
+    
+    try:
+        # Apply scenario and calculate matrices
+        baseline_matrix, modified_matrix, statistics = apply_scenario(
+            topology_data, 
+            scenario.scenario_config
+        )
+        
+        # Store in database
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO whatif_scenarios 
+                    (graph_id, graph_time, scenario_name, scenario_type, scenario_config, 
+                     baseline_matrix, modified_matrix, statistics, description, is_public)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id, created_at, updated_at
+                    """,
+                    (
+                        scenario.graph_id,
+                        scenario.graph_time,
+                        scenario.scenario_name,
+                        scenario.scenario_type,
+                        json.dumps(scenario.scenario_config),
+                        json.dumps(baseline_matrix),
+                        json.dumps(modified_matrix),
+                        json.dumps(statistics),
+                        scenario.description,
+                        scenario.is_public
+                    )
+                )
+                row = cur.fetchone()
+                scenario_id = row[0]
+                created_at = row[1]
+                updated_at = row[2]
+            conn.commit()
+        
+        return WhatIfScenarioResponse(
+            id=scenario_id,
+            graph_id=scenario.graph_id,
+            graph_time=scenario.graph_time,
+            scenario_name=scenario.scenario_name,
+            scenario_type=scenario.scenario_type,
+            scenario_config=scenario.scenario_config,
+            baseline_matrix=baseline_matrix,
+            modified_matrix=modified_matrix,
+            statistics=statistics,
+            description=scenario.description,
+            is_public=scenario.is_public,
+            created_at=created_at.isoformat(),
+            updated_at=updated_at.isoformat(),
+            created_by=None
+        )
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating scenario: {str(e)}")
+
+
+@app.get("/whatif/scenarios", response_model=List[WhatIfScenarioResponse])
+def list_whatif_scenarios(
+    graph_id: str = None,
+    graph_time: str = None,
+    scenario_type: str = None,
+    is_public: bool = None
+):
+    """List all what-if scenarios with optional filtering."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            query = "SELECT id, graph_id, graph_time, scenario_name, scenario_type, scenario_config, baseline_matrix, modified_matrix, statistics, description, is_public, created_at, updated_at, created_by FROM whatif_scenarios WHERE 1=1"
+            params = []
+            
+            if graph_id:
+                query += " AND graph_id = %s"
+                params.append(graph_id)
+            if graph_time:
+                query += " AND graph_time = %s"
+                params.append(graph_time)
+            if scenario_type:
+                query += " AND scenario_type = %s"
+                params.append(scenario_type)
+            if is_public is not None:
+                query += " AND is_public = %s"
+                params.append(is_public)
+            
+            query += " ORDER BY created_at DESC"
+            
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            
+            return [
+                WhatIfScenarioResponse(
+                    id=row[0],
+                    graph_id=row[1],
+                    graph_time=row[2],
+                    scenario_name=row[3],
+                    scenario_type=row[4],
+                    scenario_config=row[5],
+                    baseline_matrix=row[6],
+                    modified_matrix=row[7],
+                    statistics=row[8],
+                    description=row[9],
+                    is_public=row[10],
+                    created_at=row[11].isoformat(),
+                    updated_at=row[12].isoformat(),
+                    created_by=row[13]
+                )
+                for row in rows
+            ]
+
+
+@app.get("/whatif/scenarios/{scenario_id}", response_model=WhatIfScenarioResponse)
+def get_whatif_scenario(scenario_id: int):
+    """Get a specific what-if scenario by ID."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, graph_id, graph_time, scenario_name, scenario_type, 
+                       scenario_config, baseline_matrix, modified_matrix, statistics,
+                       description, is_public, created_at, updated_at, created_by
+                FROM whatif_scenarios
+                WHERE id = %s
+                """,
+                (scenario_id,)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                raise HTTPException(status_code=404, detail="Scenario not found")
+            
+            return WhatIfScenarioResponse(
+                id=row[0],
+                graph_id=row[1],
+                graph_time=row[2],
+                scenario_name=row[3],
+                scenario_type=row[4],
+                scenario_config=row[5],
+                baseline_matrix=row[6],
+                modified_matrix=row[7],
+                statistics=row[8],
+                description=row[9],
+                is_public=row[10],
+                created_at=row[11].isoformat(),
+                updated_at=row[12].isoformat(),
+                created_by=row[13]
+            )
+
+
+@app.delete("/whatif/scenarios/{scenario_id}", status_code=204)
+def delete_whatif_scenario(scenario_id: int):
+    """Delete a what-if scenario."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM whatif_scenarios WHERE id = %s RETURNING id", (scenario_id,))
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Scenario not found")
+        conn.commit()
+    return Response(status_code=204)
+
+
+@app.post("/whatif/compare")
+def compare_whatif_scenarios(comparison: WhatIfComparison):
+    """Compare multiple what-if scenarios and return aggregated statistics."""
+    if len(comparison.scenario_ids) < 2:
+        raise HTTPException(status_code=400, detail="At least 2 scenarios required for comparison")
+    
+    if len(comparison.scenario_ids) > 4:
+        raise HTTPException(status_code=400, detail="Maximum 4 scenarios can be compared at once")
+    
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            # Fetch all scenarios
+            cur.execute(
+                """
+                SELECT id, scenario_name, scenario_type, scenario_config, 
+                       baseline_matrix, modified_matrix, statistics
+                FROM whatif_scenarios
+                WHERE id = ANY(%s) AND graph_id = %s AND graph_time = %s
+                """,
+                (comparison.scenario_ids, comparison.graph_id, comparison.graph_time)
+            )
+            rows = cur.fetchall()
+            
+            if len(rows) != len(comparison.scenario_ids):
+                raise HTTPException(status_code=404, detail="One or more scenarios not found")
+            
+            scenarios = [
+                {
+                    "id": row[0],
+                    "scenario_name": row[1],
+                    "scenario_type": row[2],
+                    "scenario_config": row[3],
+                    "baseline_matrix": row[4],
+                    "modified_matrix": row[5],
+                    "statistics": row[6]
+                }
+                for row in rows
+            ]
+            
+            # Store comparison in database
+            cur.execute(
+                """
+                INSERT INTO whatif_comparisons (comparison_name, scenario_ids, graph_id, graph_time, comparison_result)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+                """,
+                (
+                    comparison.comparison_name,
+                    comparison.scenario_ids,
+                    comparison.graph_id,
+                    comparison.graph_time,
+                    json.dumps({"scenarios": scenarios})
+                )
+            )
+            comparison_id = cur.fetchone()[0]
+        conn.commit()
+    
+    return {
+        "comparison_id": comparison_id,
+        "scenarios": scenarios,
+        "summary": {
+            "total_scenarios": len(scenarios),
+            "scenario_types": list(set(s["scenario_type"] for s in scenarios))
+        }
+    }
+
+
+@app.get("/whatif/matrix-diff/{scenario_id}")
+def get_matrix_diff(scenario_id: int):
+    """Get the cost matrix differences for a specific scenario."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT baseline_matrix, modified_matrix, statistics
+                FROM whatif_scenarios
+                WHERE id = %s
+                """,
+                (scenario_id,)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                raise HTTPException(status_code=404, detail="Scenario not found")
+            
+            baseline = row[0]
+            modified = row[1]
+            statistics = row[2] or {}
+            
+            # Calculate differences
+            diff = {}
+            for src in baseline:
+                if src not in diff:
+                    diff[src] = {}
+                for dst in baseline[src]:
+                    baseline_cost = baseline[src][dst]
+                    modified_cost = modified.get(src, {}).get(dst, float('inf'))
+                    
+                    if baseline_cost != modified_cost:
+                        diff[src][dst] = {
+                            "baseline": baseline_cost,
+                            "modified": modified_cost,
+                            "delta": modified_cost - baseline_cost if modified_cost != float('inf') else None,
+                            "status": "lost" if modified_cost == float('inf') else ("improved" if modified_cost < baseline_cost else "degraded")
+                        }
+            
+            return {
+                "scenario_id": scenario_id,
+                "baseline_matrix": baseline,
+                "modified_matrix": modified,
+                "diff": diff,
+                "statistics": statistics
+            }
