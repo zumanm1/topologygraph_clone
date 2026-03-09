@@ -5107,7 +5107,10 @@ function _collapseEdgeIds(coreNodeIdSet, countryCode) {
  * Aggregate multiple parallel gateway-to-gateway links into meta-edges.
  * 
  * When multiple links exist between the same gateway pair, bundle them into
- * a single visual "meta-edge" showing link count + total cost.
+ * a single visual "meta-edge" showing the PRIMARY ROUTE (minimum cost path).
+ * 
+ * SPF Principle: OSPF selects the shortest path, not the sum of all paths.
+ * The primary route is the link with minimum cost (forward + reverse if bidirectional).
  * 
  * @param {Array} crossCountryEdges  Array of edge objects to potentially aggregate
  * @returns {{ metaEdges: Array, bundledEdgeIds: Set }}
@@ -5135,15 +5138,27 @@ function _aggregateGatewayLinks(crossCountryEdges) {
     var group = edgeGroups[key];
     
     if (group.length > 1) {
-      // Multiple links - create aggregated meta-edge
-      var totalCost = 0;
+      // Multiple links - find PRIMARY ROUTE (minimum cost)
+      var minCost = Infinity;
+      var primaryLink = null;
       var costDetails = [];
       
       group.forEach(function(e) {
         var cost = _edgeCost(e);
-        totalCost += cost;
-        costDetails.push('  • ' + (e.label || 'Link ' + e.id) + ': cost ' + cost);
+        if (cost < minCost) {
+          minCost = cost;
+          primaryLink = e;
+        }
+        var marker = cost === minCost ? '★ PRIMARY: ' : '  • ';
+        costDetails.push(marker + (e.label || 'Link ' + e.id) + ': cost ' + cost);
         bundledEdgeIds.add(e.id);
+      });
+      
+      // Sort details to show primary first
+      costDetails.sort(function(a, b) {
+        if (a.startsWith('★')) return -1;
+        if (b.startsWith('★')) return 1;
+        return 0;
       });
       
       var metaEdge = {
@@ -5153,12 +5168,13 @@ function _aggregateGatewayLinks(crossCountryEdges) {
         _isMetaEdge: true,
         _bundledEdgeIds: group.map(function(e) { return e.id; }),
         _linkCount: group.length,
-        _totalCost: totalCost,
+        _primaryCost: minCost,
+        _primaryLinkId: primaryLink ? primaryLink.id : null,
         width: Math.min(10, 2 + group.length),
-        label: group.length + ' links | Σ' + totalCost,
+        label: group.length + ' links | min=' + minCost,
         color: { color: '#FF6B35', highlight: '#FF8C42' },
         font: { size: 12, color: '#333', background: '#FFE5D9' },
-        title: 'Bundled gateway links (' + group.length + '):\n' + costDetails.join('\n') + '\nTotal cost: ' + totalCost,
+        title: 'Bundled gateway links (' + group.length + '):\n' + costDetails.join('\n') + '\n\nPrimary route cost: ' + minCost + ' (SPF shortest path)',
         arrows: group[0].arrows || { to: { enabled: false } }
       };
       
