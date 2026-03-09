@@ -7424,8 +7424,12 @@ function buildOspfWhatIf() {
     '<span style="font-size:10px;background:#3a1a0e;border:1px solid #8b3a0e;' +
     'border-radius:4px;padding:2px 7px;margin-left:8px;color:#ff8c42;font-weight:600;">' +
     (typeof _viewMode!=='undefined'?_viewMode:'ENRICHED').toUpperCase() + '</span></span>' +
+    '<div style="display:flex;gap:8px;align-items:center;">' +
+    '<button onclick="WhatIfScenarioManager.showScenarioCreator()" ' +
+    'style="padding:4px 10px;background:#0d6efd;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:11px;font-weight:500;" ' +
+    'title="Create advanced scenarios with node/link failures and cost changes">📊 Advanced Scenarios</button>' +
     '<button onclick="document.getElementById(\'ospfWhatIfPanel\').remove();" ' +
-    'style="background:none;border:none;color:#aab;cursor:pointer;font-size:18px;">×</button></div>' +
+    'style="background:none;border:none;color:#aab;cursor:pointer;font-size:18px;">×</button></div></div>' +
 
     '<div style="padding:14px;">' +
     '<p style="color:#9ba8c0;margin:0 0 12px;font-size:11px;">' +
