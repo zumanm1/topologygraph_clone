@@ -3,8 +3,46 @@ import os
 import re
 from typing import Dict, Iterable, List, Tuple
 
+try:
+    import psycopg
+    HAS_PSYCOPG = True
+except ImportError:
+    HAS_PSYCOPG = False
 
-def load_overrides(path: str) -> Dict[str, str]:
+
+def load_overrides_from_db() -> Dict[str, str]:
+    """Load country overrides from PostgreSQL database."""
+    if not HAS_PSYCOPG:
+        return {}
+    
+    db_host = os.getenv('LAYOUT_DB_HOST', 'layout-db')
+    db_port = int(os.getenv('LAYOUT_DB_PORT', '5432'))
+    db_name = os.getenv('LAYOUT_DB_NAME', 'topolograph_layouts')
+    db_user = os.getenv('LAYOUT_DB_USER', 'layout_user')
+    db_password = os.getenv('LAYOUT_DB_PASSWORD', 'layout_password')
+    
+    overrides: Dict[str, str] = {}
+    
+    try:
+        dsn = f"dbname={db_name} user={db_user} password={db_password} host={db_host} port={db_port}"
+        with psycopg.connect(dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT prefix, country_code FROM country_overrides ORDER BY prefix"
+                )
+                for row in cur.fetchall():
+                    prefix = (row[0] or "").strip().lower()
+                    country_code = (row[1] or "").strip().upper()
+                    if prefix and country_code:
+                        overrides[prefix] = country_code
+    except Exception:
+        pass
+    
+    return overrides
+
+
+def load_overrides_from_csv(path: str) -> Dict[str, str]:
+    """Load country overrides from CSV file."""
     overrides: Dict[str, str] = {}
     if not path or not os.path.exists(path):
         return overrides
@@ -22,11 +60,31 @@ def load_overrides(path: str) -> Dict[str, str]:
     return overrides
 
 
+def load_overrides(path: str | None = None) -> Dict[str, str]:
+    """Load country overrides from database first, then CSV as fallback.
+    
+    Args:
+        path: Optional path to CSV file for fallback/override
+    
+    Returns:
+        Dictionary mapping prefix to country code
+    """
+    overrides = load_overrides_from_db()
+    
+    if path:
+        csv_overrides = load_overrides_from_csv(path)
+        overrides.update(csv_overrides)
+    
+    return overrides
+
+
 def _looks_like_ip(value: str) -> bool:
     return bool(re.fullmatch(r"\d{1,3}(?:\.\d{1,3}){3}", value.strip()))
 
 
 def derive_country_code(hostname: str, overrides: Dict[str, str] | None = None) -> str:
+    if overrides is None:
+        overrides = load_overrides_from_db()
     overrides = overrides or {}
     host = (hostname or "").strip()
     if not host or _looks_like_ip(host):
