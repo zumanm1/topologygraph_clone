@@ -44,3 +44,4 @@ EXIT=
 echo
 tests/EXIT=
 tests/echo
+INPUT-FOLDER/Load-hosts.csv
