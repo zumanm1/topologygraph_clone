@@ -594,6 +594,7 @@ function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic
         if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
         if (typeof applyCountryColors === 'function') { applyCountryColors(); }
         if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
+        if (typeof buildNetworkTypePanel === 'function' && document.getElementById('networkTypePanel')) { buildNetworkTypePanel(); }
         if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }       // EN-F4
         if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
         if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
@@ -3542,6 +3543,7 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
       if (!appliedHostnameSync && typeof _reapplySavedHostnameMapping === 'function') { _reapplySavedHostnameMapping(); }
       if (typeof applyCountryColors === 'function') { applyCountryColors(); }
       if (typeof buildCountryFilterPanel === 'function') { buildCountryFilterPanel(); }
+      if (typeof buildNetworkTypePanel === 'function' && document.getElementById('networkTypePanel')) { buildNetworkTypePanel(); }
       if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }
       if (typeof _resetCollapseState === 'function') { _resetCollapseState(); }
       if (typeof buildViewModeButtons === 'function') { buildViewModeButtons(); }
@@ -4990,17 +4992,17 @@ function _classifyNodeFmt(node) {
   var ipRegex = /^\d+\.\d+\.\d+\.\d+$/;
   if (ipRegex.test(host)) return 'C';
 
-  // A-type: country-airport-city-role (e.g. JAP-LON-PER-PE01)
+  // A-type: country-airport-city-role (e.g. JAP-LON-PER-PE01, JAP-LON-PER-DBR01)
   // Pattern: [3-letter-country]-[3-letter-airport]-[3-letter-city]-[ROLE][NUM]
-  // Roles: P, PE, PPE, RR, BDR
-  var aTypeRegex = /^[A-Z]{3}-[A-Z]{3}-[A-Z]{3}-(P|PE|PPE|RR|BDR)\d+.*$/i;
+  // Roles: P, PE, PPE, RR, BDR, DBR
+  var aTypeRegex = /^[A-Z]{3}-[A-Z]{3}-[A-Z]{3}-(P|PE|PPE|RR|BDR|DBR)\d+.*$/i;
   if (aTypeRegex.test(host)) return 'A';
 
-  // B-type: country-role-vendor-xxx (e.g. DUB-P-NCS550-R01 or BOM-PE-7750-02)
+  // B-type: city-role-vendor-xxx (e.g. DUB-P-NCS550-R01, LAX-MORAN-ASR7750, LAX-RR-ASR7750)
   // Pattern: [3-letter-city/area]-[ROLE]-[VENDOR/MODEL]-...
-  // Roles: P, PE, MCON, CE, RR
-  var bTypeRegex = /^[A-Z]{3}-(P|PE|PPE|MCON|CE|RR)-(NCS|ASR|7750|7770|MORAN|MOCAN).*/i;
-  var bTypeFallback = /^[A-Z]{3}-(P|PE|MCON|CE|RR)-.*/i;
+  // Roles: P, PE, PPE, MCON, MORAN, MOCAN, CE, RR  (MORAN/MOCAN are roles, not vendors)
+  var bTypeRegex = /^[A-Z]{3}-(P|PE|PPE|MCON|MORAN|MOCAN|CE|RR)-(NCS|ASR|7750|7770).*/i;
+  var bTypeFallback = /^[A-Z]{3}-(P|PE|MCON|MORAN|MOCAN|CE|RR)-.*/i;
   if (bTypeRegex.test(host) || bTypeFallback.test(host)) return 'B';
 
   return 'C'; // Default to C-type if no standard pattern matches
@@ -5012,11 +5014,12 @@ function applyTextFilters() {
   var ipPat = (_activeIpFilter || '').trim();
   var hPat = (_activeHostnameFilter || '').trim();
 
-  // Network Format checkboxes
+  // Network Format checkboxes — prefer standalone Net Type panel (.ntFmtCheck),
+  // fall back to the hidden section inside Country Filter panel (.cfFmtCheck)
   var enabledFmts = { 'A': true, 'B': true, 'C': true };
-  document.querySelectorAll('.cfFmtCheck').forEach(function (cb) {
-    enabledFmts[cb.dataset.fmt] = cb.checked;
-  });
+  var _fmtCbs = document.querySelectorAll('.ntFmtCheck');
+  if (!_fmtCbs.length) _fmtCbs = document.querySelectorAll('.cfFmtCheck');
+  _fmtCbs.forEach(function (cb) { enabledFmts[cb.dataset.fmt] = cb.checked; });
 
   nodes.get().forEach(function (n) {
     var ip = n.ip_address || n.router_id || String(n.id || '');
@@ -5459,6 +5462,219 @@ function buildCountryFilterPanel() {
   document.addEventListener('mouseup', function () { isDragging = false; });
 
   _cfPanelBuilt = true;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  NETWORK TYPE FILTER PANEL  (🔤 Net Type button)
+//  ─────────────────────────────────────────────────────────────────────────────
+//  Standalone A / B / C type filter panel — mirrors Country Filter UX.
+//  A-type : COUNTRY-AIRPORT-CITY-ROLE   e.g. JAP-LON-PER-PE01
+//  B-type : CITY-ROLE-VENDOR            e.g. DUB-P-NCS550-R01, LAX-MORAN-ASR7750
+//  C-type : IP address / no hostname    e.g. 10.0.0.3
+// ══════════════════════════════════════════════════════════════════════════════
+
+var _ntPanelBuilt = false;
+
+function buildNetworkTypePanel() {
+  var existing = document.getElementById('networkTypePanel');
+  if (existing) existing.remove();
+  _ntPanelBuilt = false;
+  if (typeof nodes === 'undefined' || !nodes) return;
+
+  // Count nodes per type
+  var counts = { A: 0, B: 0, C: 0 };
+  nodes.get().forEach(function (n) {
+    var f = _classifyNodeFmt(n);
+    if (f === 'A') counts.A++;
+    else if (f === 'B') counts.B++;
+    else counts.C++;
+  });
+  var total = counts.A + counts.B + counts.C;
+
+  // Inject CSS once
+  if (!document.getElementById('ntPanelStyle')) {
+    var s = document.createElement('style');
+    s.id = 'ntPanelStyle';
+    s.textContent = [
+      '#networkTypePanel{position:fixed;top:80px;right:300px;z-index:9997;',
+      'background:#1e2330;border:1px solid #3a4560;border-radius:10px;',
+      'box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;',
+      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;',
+      'font-size:13px;min-width:250px;max-width:300px;user-select:none;}',
+      '#ntHeader{display:flex;align-items:center;justify-content:space-between;',
+      'padding:10px 14px;cursor:move;border-bottom:1px solid #3a4560;',
+      'border-radius:10px 10px 0 0;background:#262d42;}',
+      '#ntHeader h4{margin:0;font-size:14px;font-weight:600;letter-spacing:.5px;}',
+      '#ntToggleBtn{background:none;border:none;color:#aab;cursor:pointer;font-size:18px;line-height:1;padding:0 0 0 8px;}',
+      '#ntBody{padding:10px 14px 12px;}',
+      '.ntQuickRow{display:flex;gap:5px;margin-bottom:10px;}',
+      '.ntQuickBtn{flex:1;padding:4px 2px;border:1px solid #3a4560;border-radius:6px;',
+      'background:#2a3248;color:#c8d0e8;cursor:pointer;font-size:11px;text-align:center;transition:.15s;}',
+      '.ntQuickBtn:hover{background:#3a4560;}',
+      '.ntTypeList{margin-bottom:10px;}',
+      '.ntTypeItem{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #2a3248;}',
+      '.ntTypeItem:last-child{border-bottom:none;}',
+      '.ntSwatch{width:13px;height:13px;border-radius:3px;flex-shrink:0;margin-top:2px;border:1px solid rgba(255,255,255,.2);}',
+      '.ntFmtCheck{accent-color:#3d6aff;width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-top:2px;}',
+      '.ntLabelWrap{flex:1;min-width:0;}',
+      '.ntLabelName{font-size:12px;font-weight:600;}',
+      '.ntLabelDesc{font-size:10px;color:#778;margin-top:1px;}',
+      '.ntCount{font-size:11px;background:#2a3248;border-radius:10px;padding:2px 8px;min-width:28px;text-align:center;flex-shrink:0;}',
+      '.ntActionRow{display:flex;gap:6px;margin-top:4px;}',
+      '.ntBtn{flex:1;padding:5px 0;border:1px solid #3a4560;border-radius:6px;',
+      'background:#2a3248;color:#c8d0e8;cursor:pointer;font-size:12px;text-align:center;}',
+      '.ntBtn:hover{background:#3a4560;}',
+      '.ntBtn.ntApply{background:#3d6aff;border-color:#3d6aff;color:#fff;}',
+      '.ntBtn.ntApply:hover{background:#5580ff;}',
+      '.ntInfo{font-size:11px;color:#667;margin-top:6px;text-align:center;}'
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  var panel = document.createElement('div');
+  panel.id = 'networkTypePanel';
+
+  panel.innerHTML =
+    '<div id="ntHeader"><h4>🔤 Network Type Filter</h4>' +
+    '<button id="ntToggleBtn" title="Collapse / Expand">−</button></div>' +
+    '<div id="ntBody">' +
+    '<div class="ntQuickRow">' +
+    '<button class="ntQuickBtn" id="ntBtnAll">All ✓</button>' +
+    '<button class="ntQuickBtn" id="ntBtnAonly">A Only</button>' +
+    '<button class="ntQuickBtn" id="ntBtnBonly">B Only</button>' +
+    '<button class="ntQuickBtn" id="ntBtnConly">C Only</button>' +
+    '</div>' +
+    '<div class="ntTypeList">' +
+    '<div class="ntTypeItem">' +
+    '<input type="checkbox" class="ntFmtCheck" data-fmt="A" id="ntChkA" checked>' +
+    '<span class="ntSwatch" style="background:#4a9eff;"></span>' +
+    '<div class="ntLabelWrap">' +
+    '<div class="ntLabelName"><label for="ntChkA" style="cursor:pointer;">A-type</label></div>' +
+    '<div class="ntLabelDesc">COUNTRY-AIRPORT-CITY-ROLE e.g. JAP-LON-PER-PE01</div>' +
+    '</div>' +
+    '<span class="ntCount" id="ntCntA" style="color:#4a9eff;">' + counts.A + '</span>' +
+    '</div>' +
+    '<div class="ntTypeItem">' +
+    '<input type="checkbox" class="ntFmtCheck" data-fmt="B" id="ntChkB" checked>' +
+    '<span class="ntSwatch" style="background:#ff9f40;"></span>' +
+    '<div class="ntLabelWrap">' +
+    '<div class="ntLabelName"><label for="ntChkB" style="cursor:pointer;">B-type</label></div>' +
+    '<div class="ntLabelDesc">CITY-ROLE-VENDOR e.g. DUB-P-NCS550-R01</div>' +
+    '</div>' +
+    '<span class="ntCount" id="ntCntB" style="color:#ff9f40;">' + counts.B + '</span>' +
+    '</div>' +
+    '<div class="ntTypeItem">' +
+    '<input type="checkbox" class="ntFmtCheck" data-fmt="C" id="ntChkC" checked>' +
+    '<span class="ntSwatch" style="background:#a0a8c0;"></span>' +
+    '<div class="ntLabelWrap">' +
+    '<div class="ntLabelName"><label for="ntChkC" style="cursor:pointer;">C-type</label></div>' +
+    '<div class="ntLabelDesc">IP address / no hostname (e.g. 10.0.0.3)</div>' +
+    '</div>' +
+    '<span class="ntCount" id="ntCntC" style="color:#a0a8c0;">' + counts.C + '</span>' +
+    '</div>' +
+    '</div>' +
+    '<div class="ntActionRow">' +
+    '<button class="ntBtn" id="ntBtnReset">Reset</button>' +
+    '<button class="ntBtn ntApply" id="ntBtnApply">Apply Filter</button>' +
+    '</div>' +
+    '<div class="ntInfo" id="ntInfo">Showing all ' + total + ' nodes</div>' +
+    '</div>';
+
+  document.body.appendChild(panel);
+  _ntPanelBuilt = true;
+
+  // ── Collapse / Expand
+  var ntBody = document.getElementById('ntBody');
+  var ntToggleBtn = document.getElementById('ntToggleBtn');
+  var _ntCollapsed = false;
+  ntToggleBtn.addEventListener('click', function () {
+    _ntCollapsed = !_ntCollapsed;
+    ntBody.style.display = _ntCollapsed ? 'none' : '';
+    ntToggleBtn.textContent = _ntCollapsed ? '+' : '−';
+  });
+
+  // ── Quick buttons
+  document.getElementById('ntBtnAll').addEventListener('click', function () { _ntSetAll(true); });
+  document.getElementById('ntBtnAonly').addEventListener('click', function () { _ntShowOnly('A'); });
+  document.getElementById('ntBtnBonly').addEventListener('click', function () { _ntShowOnly('B'); });
+  document.getElementById('ntBtnConly').addEventListener('click', function () { _ntShowOnly('C'); });
+  document.getElementById('ntBtnReset').addEventListener('click', function () { _ntSetAll(true); });
+  document.getElementById('ntBtnApply').addEventListener('click', function () { applyTextFilters(); _ntUpdateInfo(); });
+
+  // ── Live filter on checkbox change
+  document.querySelectorAll('.ntFmtCheck').forEach(function (cb) {
+    cb.addEventListener('change', function () { applyTextFilters(); _ntUpdateInfo(); });
+  });
+
+  // ── Drag to reposition (mirrors countryFilterPanel pattern)
+  var hdr = document.getElementById('ntHeader');
+  var isDragging = false, dragX = 0, dragY = 0;
+  hdr.addEventListener('mousedown', function (e) {
+    if (e.target === ntToggleBtn) return;
+    isDragging = true;
+    dragX = e.clientX - panel.getBoundingClientRect().left;
+    dragY = e.clientY - panel.getBoundingClientRect().top;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (!isDragging) return;
+    panel.style.right = 'auto';
+    panel.style.left = (e.clientX - dragX) + 'px';
+    panel.style.top  = (e.clientY - dragY) + 'px';
+  });
+  document.addEventListener('mouseup', function () { isDragging = false; });
+}
+
+function _ntShowOnly(fmt) {
+  document.querySelectorAll('.ntFmtCheck').forEach(function (cb) {
+    cb.checked = (cb.dataset.fmt === fmt);
+  });
+  applyTextFilters(); _ntUpdateInfo();
+}
+
+function _ntSetAll(checked) {
+  document.querySelectorAll('.ntFmtCheck').forEach(function (cb) { cb.checked = checked; });
+  applyTextFilters(); _ntUpdateInfo();
+}
+
+function _ntUpdateInfo() {
+  var infoEl = document.getElementById('ntInfo');
+  if (!infoEl || typeof nodes === 'undefined' || !nodes) return;
+  var enabled = { A: true, B: true, C: true };
+  document.querySelectorAll('.ntFmtCheck').forEach(function (cb) {
+    enabled[cb.dataset.fmt] = cb.checked;
+  });
+  var shown = 0, cntA = 0, cntB = 0, cntC = 0;
+  nodes.get().forEach(function (n) {
+    var f = _classifyNodeFmt(n);
+    if (f === 'A') cntA++;
+    else if (f === 'B') cntB++;
+    else cntC++;
+    if (enabled[f]) shown++;
+  });
+  var total = cntA + cntB + cntC;
+  var a = document.getElementById('ntCntA'), b = document.getElementById('ntCntB'), c = document.getElementById('ntCntC');
+  if (a) a.textContent = cntA;
+  if (b) b.textContent = cntB;
+  if (c) c.textContent = cntC;
+  var types = [];
+  if (enabled.A) types.push('A'); if (enabled.B) types.push('B'); if (enabled.C) types.push('C');
+  var label = types.length === 3 ? 'all types' : types.length === 0 ? 'none (all hidden)' : types.join('+') + '-type only';
+  infoEl.textContent = 'Showing ' + shown + ' / ' + total + ' nodes — ' + label;
+}
+
+function toggleNetworkTypePanel() {
+  var panel = document.getElementById('networkTypePanel');
+  var btn   = document.getElementById('btnTypeFilter');
+  if (!panel) {
+    buildNetworkTypePanel();
+    panel = document.getElementById('networkTypePanel');
+    if (btn) btn.classList.add('active');
+    return;
+  }
+  var isVisible = panel.style.display !== 'none';
+  panel.style.display = isVisible ? 'none' : '';
+  if (btn) btn.classList.toggle('active', !isVisible);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -6061,7 +6277,8 @@ function buildViewModeButtons() {
     /* ── Sprint 4: Multi-format hostname filter ──────────────────────── */
     '<span class="vmSep">│</span>' +
     '<button class="vmToolBtn" id="btnCountryFilter" title="Filter by country, IP range, and hostname format (A/B/C-type)" onclick="toggleCountryFilterPanel()">🌍 Countries</button>' +
-    '<button class="vmToolBtn" id="btnUnkFilter"     title="Show only UNK (unclassified) nodes — quick filter by IP range" onclick="toggleUnkFilterPanel()">⚠ UNK Filter</button>';
+    '<button class="vmToolBtn" id="btnUnkFilter"     title="Show only UNK (unclassified) nodes — quick filter by IP range" onclick="toggleUnkFilterPanel()">⚠ UNK Filter</button>' +
+    '<button class="vmToolBtn" id="btnTypeFilter"   title="Filter by Network Type — A-type (country-airport-city-role), B-type (city-role-vendor), C-type (IP-only)" onclick="toggleNetworkTypePanel()">🔤 Net Type</button>';
 
   // Wire click handlers
   bar.querySelectorAll('.vmBtn').forEach(function (btn) {
