@@ -5116,7 +5116,247 @@ function filterNodesByCountry(mode, selected) {
 }
 
 function _nodeHiddenByRules(node) {
-  return !!(node && (node._modeHidden || node._filterHidden || node._collapseHidden || node._ipFilterHidden || node._hostnameFilterHidden || node._fmtFilterHidden));
+  return !!(node && (node._modeHidden || node._filterHidden || node._collapseHidden ||
+    node._ipFilterHidden || node._hostnameFilterHidden || node._fmtFilterHidden ||
+    node._atypeGroupHidden));  // PRD-04: A-type group filter
+}
+
+// ── PRD-04: A-type Groups Panel ──────────────────────────────────────────────
+var _atGroupHidden  = {};    // {country: bool, 'country:city': bool}
+var _atGroupBuilt   = false; // panel built flag
+
+/**
+ * Build tree: { FRA: { PAR: [nodeId,...], MAR: [...] }, CAN: {...} }
+ * Non-A-type nodes or unparseable hostnames go under 'UNK:UNK'.
+ */
+function _buildAtypeTree() {
+  var tree = {};
+  if (typeof nodes === 'undefined' || !nodes) return tree;
+  nodes.get().forEach(function (n) {
+    if (_classifyNodeFmt(n) !== 'A') return;
+    var host = String(n.hostname || n.label || '').split('\n')[0].trim();
+    var parsed = _parseAtypeHostname(host);
+    var country = parsed ? parsed.country : 'UNK';
+    var city    = parsed ? parsed.city    : 'UNK';
+    if (!tree[country]) tree[country] = {};
+    if (!tree[country][city]) tree[country][city] = [];
+    tree[country][city].push(n.id);
+  });
+  return tree;
+}
+
+/**
+ * Apply _atypeGroupHidden to nodes based on _atGroupHidden dict.
+ * Keys can be 'COUNTRY' (hide whole country) or 'COUNTRY:CITY' (hide city).
+ */
+function _applyAtypeGroupFilter() {
+  if (typeof nodes === 'undefined' || !nodes) return;
+  var updates = [];
+  nodes.get().forEach(function (n) {
+    if (_classifyNodeFmt(n) !== 'A') {
+      if (n._atypeGroupHidden) updates.push({ id: n.id, _atypeGroupHidden: false });
+      return;
+    }
+    var host = String(n.hostname || n.label || '').split('\n')[0].trim();
+    var parsed = _parseAtypeHostname(host);
+    var country = parsed ? parsed.country : 'UNK';
+    var cityKey = parsed ? (parsed.country + ':' + parsed.city) : 'UNK:UNK';
+    var hidden  = !!_atGroupHidden[country] || !!_atGroupHidden[cityKey];
+    if (!!n._atypeGroupHidden !== hidden) updates.push({ id: n.id, _atypeGroupHidden: hidden });
+  });
+  if (updates.length) nodes.update(updates);
+  _syncEdgeVisibility();
+}
+
+/**
+ * Build and show the A-Type Groups floating panel.
+ * Shows A-type nodes organised as country → city → node tree with checkboxes.
+ */
+function buildAtypeGroupsPanel() {
+  var existing = document.getElementById('atypeGroupsPanel');
+  if (existing) { existing.style.display = ''; _atGroupBuilt = true; return; }
+
+  var tree = _buildAtypeTree();
+  var countries = Object.keys(tree).sort();
+  if (countries.length === 0) return;
+
+  // ── CSS ──────────────────────────────────────────────────────────────────────
+  if (!document.getElementById('atgPanelStyle')) {
+    var style = document.createElement('style');
+    style.id = 'atgPanelStyle';
+    style.textContent = [
+      '#atypeGroupsPanel{position:fixed;top:80px;left:20px;z-index:9999;',
+      '  background:#1e2330;border:1px solid #3a4560;border-radius:10px;',
+      '  box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;',
+      '  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;',
+      '  font-size:13px;min-width:240px;max-width:280px;user-select:none;}',
+      '#atgHeader{display:flex;align-items:center;justify-content:space-between;',
+      '  padding:10px 14px;cursor:move;border-bottom:1px solid #3a4560;',
+      '  border-radius:10px 10px 0 0;background:#262d42;}',
+      '#atgHeader h4{margin:0;font-size:14px;font-weight:600;letter-spacing:.5px;}',
+      '#atgToggle{background:none;border:none;color:#aab;cursor:pointer;',
+      '  font-size:18px;line-height:1;padding:0 0 0 8px;}',
+      '#atgBody{padding:10px 14px 12px;}',
+      '.atgBulkRow{display:flex;gap:8px;margin-bottom:8px;}',
+      '.atgBulkBtn{flex:1;padding:4px;border:1px solid #3a4560;border-radius:5px;',
+      '  background:#2a3248;color:#c8d0e8;cursor:pointer;font-size:11px;text-align:center;}',
+      '.atgBulkBtn:hover{background:#3a4560;}',
+      '.atgList{max-height:360px;overflow-y:auto;}',
+      '.atgCountryRow{display:flex;align-items:center;gap:6px;padding:4px 2px;cursor:pointer;}',
+      '.atgCountryRow:hover{background:rgba(255,255,255,.05);border-radius:4px;}',
+      '.atgCountryArrow{font-size:10px;color:#778;width:12px;flex-shrink:0;}',
+      '.atgCountryCb{flex-shrink:0;cursor:pointer;}',
+      '.atgCountryLabel{font-weight:600;font-size:12px;flex:1;}',
+      '.atgCountryCount{font-size:11px;color:#778;}',
+      '.atgCityBlock{padding-left:18px;display:none;}',
+      '.atgCityBlock.open{display:block;}',
+      '.atgCityRow{display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:pointer;}',
+      '.atgCityRow:hover{background:rgba(255,255,255,.04);border-radius:4px;}',
+      '.atgCityCb{flex-shrink:0;cursor:pointer;}',
+      '.atgCityLabel{font-size:12px;color:#aac;flex:1;}',
+      '.atgCityCount{font-size:11px;color:#778;}',
+    ].join('');
+    document.head.appendChild(style);
+  }
+
+  // ── HTML ─────────────────────────────────────────────────────────────────────
+  var listHTML = '<div class="atgList" id="atgList">';
+  countries.forEach(function (country) {
+    var cities = Object.keys(tree[country]).sort();
+    var totalNodes = cities.reduce(function (s, c) { return s + tree[country][c].length; }, 0);
+    listHTML +=
+      '<div class="atgCountryRow" data-country="' + country + '">' +
+      '<span class="atgCountryArrow" id="atgArrow_' + country + '">▶</span>' +
+      '<input type="checkbox" class="atgCountryCb" id="atgCb_' + country + '" data-country="' + country + '" checked>' +
+      '<span class="atgCountryLabel">' + country + '</span>' +
+      '<span class="atgCountryCount">(' + totalNodes + ')</span>' +
+      '</div>' +
+      '<div class="atgCityBlock" id="atgBlock_' + country + '">';
+    cities.forEach(function (city) {
+      var cityKey = country + ':' + city;
+      listHTML +=
+        '<div class="atgCityRow" data-city="' + cityKey + '">' +
+        '<input type="checkbox" class="atgCityCb" id="atgCb_' + cityKey + '" data-citykey="' + cityKey + '" checked>' +
+        '<span class="atgCityLabel">' + city + '</span>' +
+        '<span class="atgCityCount">(' + tree[country][city].length + ')</span>' +
+        '</div>';
+    });
+    listHTML += '</div>';
+  });
+  listHTML += '</div>';
+
+  var panel = document.createElement('div');
+  panel.id = 'atypeGroupsPanel';
+  panel.innerHTML =
+    '<div id="atgHeader"><h4>🗂 A-Type Groups</h4>' +
+    '<button id="atgToggle" title="Collapse/expand panel">−</button></div>' +
+    '<div id="atgBody">' +
+    '<div class="atgBulkRow">' +
+    '<button class="atgBulkBtn" id="atgShowAll">Show All</button>' +
+    '<button class="atgBulkBtn" id="atgHideAll">Hide All</button>' +
+    '</div>' + listHTML + '</div>';
+
+  document.body.appendChild(panel);
+
+  // ── Panel minimize toggle ────────────────────────────────────────────────────
+  var atgBody = document.getElementById('atgBody');
+  document.getElementById('atgToggle').addEventListener('click', function () {
+    var min = atgBody.style.display === 'none';
+    atgBody.style.display = min ? '' : 'none';
+    this.textContent = min ? '−' : '+';
+  });
+
+  // ── Bulk buttons ─────────────────────────────────────────────────────────────
+  document.getElementById('atgShowAll').addEventListener('click', function () {
+    _atGroupHidden = {};
+    document.querySelectorAll('.atgCountryCb, .atgCityCb').forEach(function (cb) { cb.checked = true; });
+    _applyAtypeGroupFilter();
+  });
+  document.getElementById('atgHideAll').addEventListener('click', function () {
+    countries.forEach(function (c) { _atGroupHidden[c] = true; });
+    document.querySelectorAll('.atgCountryCb, .atgCityCb').forEach(function (cb) { cb.checked = false; });
+    _applyAtypeGroupFilter();
+  });
+
+  // ── Country row: toggle city block + checkbox ────────────────────────────────
+  document.querySelectorAll('.atgCountryRow').forEach(function (row) {
+    row.addEventListener('click', function (e) {
+      if (e.target.classList.contains('atgCountryCb')) return; // handled by checkbox below
+      var country = row.dataset.country;
+      var block = document.getElementById('atgBlock_' + country);
+      var arrow = document.getElementById('atgArrow_' + country);
+      if (block) {
+        var open = block.classList.toggle('open');
+        if (arrow) arrow.textContent = open ? '▼' : '▶';
+      }
+    });
+  });
+
+  // ── Country checkbox ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.atgCountryCb').forEach(function (cb) {
+    cb.addEventListener('change', function (e) {
+      e.stopPropagation();
+      var country = cb.dataset.country;
+      if (cb.checked) {
+        delete _atGroupHidden[country];
+      } else {
+        _atGroupHidden[country] = true;
+      }
+      // Sync city checkboxes
+      document.querySelectorAll('.atgCityCb[data-citykey^="' + country + ':"]').forEach(function (c) {
+        c.checked = cb.checked;
+        if (cb.checked) delete _atGroupHidden[c.dataset.citykey];
+        else _atGroupHidden[c.dataset.citykey] = true;
+      });
+      _applyAtypeGroupFilter();
+    });
+  });
+
+  // ── City checkbox ────────────────────────────────────────────────────────────
+  document.querySelectorAll('.atgCityCb').forEach(function (cb) {
+    cb.addEventListener('change', function (e) {
+      e.stopPropagation();
+      var cityKey = cb.dataset.citykey;
+      if (cb.checked) delete _atGroupHidden[cityKey];
+      else _atGroupHidden[cityKey] = true;
+      _applyAtypeGroupFilter();
+    });
+  });
+
+  // ── Drag to reposition ───────────────────────────────────────────────────────
+  var header = document.getElementById('atgHeader');
+  var isDrag = false, dx = 0, dy = 0;
+  header.addEventListener('mousedown', function (e) {
+    if (e.target.id === 'atgToggle') return;
+    isDrag = true;
+    dx = e.clientX - panel.getBoundingClientRect().left;
+    dy = e.clientY - panel.getBoundingClientRect().top;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (!isDrag) return;
+    panel.style.left = (e.clientX - dx) + 'px';
+    panel.style.top  = (e.clientY - dy) + 'px';
+  });
+  document.addEventListener('mouseup', function () { isDrag = false; });
+
+  _atGroupBuilt = true;
+}
+
+/**
+ * Toggle A-Type Groups panel visibility. Called from toolbar button.
+ */
+function toggleAtypeGroupsPanel() {
+  var panel = document.getElementById('atypeGroupsPanel');
+  var btn   = document.getElementById('btnAtypeGroups');
+  if (!panel) {
+    buildAtypeGroupsPanel();
+    if (btn) btn.classList.add('active');
+    return;
+  }
+  var isVis = panel.style.display !== 'none';
+  panel.style.display = isVis ? 'none' : '';
+  if (btn) btn.classList.toggle('active', !isVis);
 }
 
 function _syncEdgeVisibility() {
@@ -6522,7 +6762,8 @@ function buildViewModeButtons() {
     '<span class="vmSep">│</span>' +
     '<button class="vmToolBtn" id="btnCountryFilter" title="Filter by country, IP range, and hostname format (A/B/C-type)" onclick="toggleCountryFilterPanel()">🌍 Countries</button>' +
     '<button class="vmToolBtn" id="btnUnkFilter"     title="Show only UNK (unclassified) nodes — quick filter by IP range" onclick="toggleUnkFilterPanel()">⚠ UNK Filter</button>' +
-    '<button class="vmToolBtn" id="btnTypeFilter"   title="Filter by Network Type — A-type (country-airport-city-role), B-type (city-role-vendor), C-type (IP-only)" onclick="toggleNetworkTypePanel()">🔤 Net Type</button>';
+    '<button class="vmToolBtn" id="btnTypeFilter"   title="Filter by Network Type — A-type (country-airport-city-role), B-type (city-role-vendor), C-type (IP-only)" onclick="toggleNetworkTypePanel()">🔤 Net Type</button>' +
+    '<button class="vmToolBtn" id="btnAtypeGroups" title="A-Type Groups panel — filter/collapse by country→city→node tree" onclick="toggleAtypeGroupsPanel()">🗂 A-Groups</button>';
 
   // Wire click handlers — legacy mode buttons
   bar.querySelectorAll('.vmBtn').forEach(function (btn) {
