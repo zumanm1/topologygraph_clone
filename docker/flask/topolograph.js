@@ -5038,6 +5038,24 @@ function _parseAtypeHostname(hostname) {
   };
 }
 
+/**
+ * Classify an edge by the types of its two endpoint nodes.
+ * Returns 'A', 'B', or 'C'. Priority: C > B > A
+ *   A-A → A,  A-B → B,  A-C → C
+ *   B-B → B,  B-C → C,  C-C → C
+ */
+function _classifyEdgeFmt(edge) {
+  if (typeof nodes === 'undefined' || !nodes) return 'C';
+  var fromNode = nodes.get(edge.from);
+  var toNode   = nodes.get(edge.to);
+  if (!fromNode || !toNode) return 'C';
+  var fmtFrom = _classifyNodeFmt(fromNode);
+  var fmtTo   = _classifyNodeFmt(toNode);
+  if (fmtFrom === 'C' || fmtTo === 'C') return 'C';
+  if (fmtFrom === 'B' || fmtTo === 'B') return 'B';
+  return 'A';
+}
+
 function applyTextFilters() {
   if (typeof nodes === 'undefined' || !nodes) return;
   var updates = [];
@@ -5109,7 +5127,8 @@ function _syncEdgeVisibility() {
   var edgeUpdates = [];
   edges.get().forEach(function (e) {
     var h = !!e._collapseHidden || !!e._bundledHidden || hiddenNodes.has(e.from) || hiddenNodes.has(e.to);
-    if (!!e.hidden !== h) edgeUpdates.push({ id: e.id, hidden: h });
+    var ef = _classifyEdgeFmt(e);
+    if (!!e.hidden !== h || e._edgeFmt !== ef) edgeUpdates.push({ id: e.id, hidden: h, _edgeFmt: ef });
   });
   if (edgeUpdates.length) edges.update(edgeUpdates);
 }

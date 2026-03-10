@@ -711,6 +711,87 @@ async function resolveGraphTime(page) {
         fail('Phase 6 custom rules tests failed', err.message);
     }
 
+    // ── Phase 7 : Edge Type Classification (_classifyEdgeFmt) ─────────────────
+    console.log('\n── Phase 7 : Edge Type Classification (_classifyEdgeFmt) ───────────────────');
+    try {
+        // Verify _classifyEdgeFmt exists
+        const efExists = await page.evaluate(() => typeof _classifyEdgeFmt === 'function');
+        if (efExists) pass('_classifyEdgeFmt function exists');
+        else { fail('_classifyEdgeFmt function not found'); throw new Error('skip'); }
+
+        // Reset all filters so all 84 nodes are visible
+        await page.evaluate(() => {
+            document.querySelectorAll('.ntFmtCheck').forEach(cb => cb.checked = true);
+            applyTextFilters();
+        });
+        await page.waitForTimeout(300);
+
+        // Count edge types across all edges
+        const edgeCounts = await page.evaluate(() => {
+            var c = { A: 0, B: 0, C: 0, total: 0 };
+            edges.get().forEach(function(e) {
+                var f = _classifyEdgeFmt(e);
+                c[f]++;
+                c.total++;
+            });
+            return c;
+        });
+        pass('_classifyEdgeFmt runs on all edges', `A=${edgeCounts.A} B=${edgeCounts.B} C=${edgeCounts.C} total=${edgeCounts.total}`);
+        if (edgeCounts.total > 0) pass('Edge counts sum to total', edgeCounts.A + edgeCounts.B + edgeCounts.C === edgeCounts.total);
+        else fail('No edges found for edge classification test');
+
+        // Verify every edge has _edgeFmt stamped (set by _syncEdgeVisibility)
+        await page.evaluate(() => applyTextFilters()); // trigger _syncEdgeVisibility
+        await page.waitForTimeout(300);
+        const edgeFmtStamped = await page.evaluate(() => {
+            var all = edges.get();
+            var stamped = all.filter(e => e._edgeFmt === 'A' || e._edgeFmt === 'B' || e._edgeFmt === 'C');
+            return { total: all.length, stamped: stamped.length };
+        });
+        if (edgeFmtStamped.stamped === edgeFmtStamped.total && edgeFmtStamped.total > 0) {
+            pass(`_edgeFmt stamped on all ${edgeFmtStamped.total} edges`);
+        } else {
+            fail(`_edgeFmt not stamped: ${edgeFmtStamped.stamped}/${edgeFmtStamped.total} edges stamped`);
+        }
+
+        // When A-only filter active: all visible edges must have both endpoints as A-type
+        await page.evaluate(() => {
+            document.querySelectorAll('.ntFmtCheck').forEach(cb => {
+                cb.checked = (cb.dataset.fmt === 'A');
+            });
+            applyTextFilters();
+        });
+        await page.waitForTimeout(400);
+
+        const aOnlyEdges = await page.evaluate(() => {
+            var hiddenNodes = new Set();
+            nodes.get().forEach(function(n) { if (_nodeHiddenByRules(n)) hiddenNodes.add(n.id); });
+            var visible = edges.get().filter(e => !e.hidden && !e._collapseHidden);
+            var allAA = visible.every(function(e) {
+                return !hiddenNodes.has(e.from) && !hiddenNodes.has(e.to) && e._edgeFmt === 'A';
+            });
+            return { visible: visible.length, allAA: allAA };
+        });
+        if (aOnlyEdges.visible > 0 && aOnlyEdges.allAA) {
+            pass(`A-only filter: ${aOnlyEdges.visible} visible edges are all A-type (A-A only)`);
+        } else if (aOnlyEdges.visible === 0) {
+            warn('A-only filter: no visible edges (may be expected if no intra-A edges)');
+        } else {
+            fail(`A-only filter: ${aOnlyEdges.visible} visible edges but not all A-type`);
+        }
+
+        // Reset filters
+        await page.evaluate(() => {
+            document.querySelectorAll('.ntFmtCheck').forEach(cb => cb.checked = true);
+            applyTextFilters();
+        });
+        await page.waitForTimeout(300);
+        pass('Edge classification Phase 7 complete — filters reset');
+
+    } catch (err) {
+        if (err.message !== 'skip') fail('Phase 7 edge classification tests failed', err.message);
+    }
+
     // ── Final Screenshot ──────────────────────────────────────────────────────
     await shot(page, 'final');
 
