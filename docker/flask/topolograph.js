@@ -4992,10 +4992,14 @@ function _classifyNodeFmt(node) {
   var ipRegex = /^\d+\.\d+\.\d+\.\d+$/;
   if (ipRegex.test(host)) return 'C';
 
-  // A-type: country-airport-city-role (e.g. JAP-LON-PER-PE01, JAP-LON-PER-DBR01)
-  // Pattern: [3-letter-country]-[3-letter-airport]-[3-letter-city]-[ROLE][NUM]
-  // Roles: P, PE, PPE, RR, BDR, DBR
-  var aTypeRegex = /^[A-Z]{3}-[A-Z]{3}-[A-Z]{3}-(P|PE|PPE|RR|BDR|DBR)\d+.*$/i;
+  // Custom user-defined rules take priority (applied before base classification)
+  var customFmt = _ntMatchCustomRules(host);
+  if (customFmt) return customFmt;
+
+  // A-type: country-airport-city-role (e.g. JAP-LON-PER-PE01, fra-par-mar-r2, can-tor-kem-r1)
+  // Pattern: [3-alpha]-[3-alpha]-[3-alpha]-[ALPHA-ROLE+][DIGITS...]
+  // All lowercase `r`-prefix generic routers are A-type (fra-par-mar-r2 etc.)
+  var aTypeRegex = /^[A-Za-z]{3}-[A-Za-z]{3}-[A-Za-z]{3}-[A-Za-z]+\d+.*$/;
   if (aTypeRegex.test(host)) return 'A';
 
   // B-type: city-role-vendor-xxx (e.g. DUB-P-NCS550-R01, LAX-MORAN-ASR7750, LAX-RR-ASR7750)
@@ -5005,7 +5009,8 @@ function _classifyNodeFmt(node) {
   var bTypeFallback = /^[A-Z]{3}-(P|PE|MCON|MORAN|MOCAN|CE|RR)-.*/i;
   if (bTypeRegex.test(host) || bTypeFallback.test(host)) return 'B';
 
-  return 'C'; // Default to C-type if no standard pattern matches
+  // A-type = NOT C-type (IP/empty) AND NOT B-type (vendor hardware) — per user definition
+  return 'A';
 }
 
 function applyTextFilters() {
@@ -5473,6 +5478,80 @@ function buildCountryFilterPanel() {
 //  C-type : IP address / no hostname    e.g. 10.0.0.3
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ── Custom Network Type Rules — user-editable, persisted in localStorage
+var _ntCustomRules = { A: [], B: [], C: [] };
+
+function _ntLoadCustomRules() {
+  try {
+    var raw = localStorage.getItem('ntCustomRules');
+    if (raw) _ntCustomRules = JSON.parse(raw);
+    if (!_ntCustomRules.A) _ntCustomRules.A = [];
+    if (!_ntCustomRules.B) _ntCustomRules.B = [];
+    if (!_ntCustomRules.C) _ntCustomRules.C = [];
+  } catch (e) { _ntCustomRules = { A: [], B: [], C: [] }; }
+}
+
+function _ntSaveCustomRules() {
+  try { localStorage.setItem('ntCustomRules', JSON.stringify(_ntCustomRules)); } catch (e) {}
+}
+
+function _ntMatchCustomRules(host) {
+  if (!host) return null;
+  var types = ['A', 'B', 'C'];
+  for (var t = 0; t < types.length; t++) {
+    var rules = (_ntCustomRules[types[t]] || []);
+    for (var r = 0; r < rules.length; r++) {
+      var rule = rules[r];
+      try {
+        var matched = rule.type === 'regex'
+          ? new RegExp(rule.pattern, 'i').test(host)
+          : host.toLowerCase().indexOf(rule.pattern.toLowerCase()) !== -1;
+        if (matched) return types[t];
+      } catch (e) { /* invalid regex — skip */ }
+    }
+  }
+  return null;
+}
+
+function _ntRenderRules(fmt) {
+  var list = document.getElementById('ntRulesList-' + fmt);
+  if (!list) return;
+  list.innerHTML = '';
+  var rules = _ntCustomRules[fmt] || [];
+  if (rules.length === 0) {
+    list.innerHTML = '<div class="ntRulesEmpty">No custom rules — base regex applies</div>';
+    return;
+  }
+  rules.forEach(function (rule, idx) {
+    var entry = document.createElement('div');
+    entry.className = 'ntRuleEntry';
+    var tag = rule.type === 'regex'
+      ? '/' + rule.pattern.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '/i'
+      : '"' + rule.pattern.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '"';
+    entry.innerHTML =
+      '<span class="ntRuleTag">' + tag + '</span>' +
+      '<button class="ntRuleX" data-fmt="' + fmt + '" data-idx="' + idx + '" title="Remove rule">✕</button>';
+    list.appendChild(entry);
+  });
+  list.querySelectorAll('.ntRuleX').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      _ntCustomRules[btn.dataset.fmt].splice(parseInt(btn.dataset.idx), 1);
+      _ntSaveCustomRules();
+      _ntRenderRules(btn.dataset.fmt);
+      applyTextFilters(); _ntUpdateInfo();
+    });
+  });
+}
+
+function _ntAddRule(fmt, type, pattern) {
+  if (!pattern.trim()) return;
+  if (!_ntCustomRules[fmt]) _ntCustomRules[fmt] = [];
+  _ntCustomRules[fmt].push({ type: type, pattern: pattern.trim() });
+  _ntSaveCustomRules();
+  _ntRenderRules(fmt);
+  applyTextFilters(); _ntUpdateInfo();
+}
+
 var _ntPanelBuilt = false;
 
 function buildNetworkTypePanel() {
@@ -5480,6 +5559,9 @@ function buildNetworkTypePanel() {
   if (existing) existing.remove();
   _ntPanelBuilt = false;
   if (typeof nodes === 'undefined' || !nodes) return;
+
+  // Load custom rules from localStorage (so classification uses them for counting)
+  _ntLoadCustomRules();
 
   // Count nodes per type
   var counts = { A: 0, B: 0, C: 0 };
@@ -5491,44 +5573,89 @@ function buildNetworkTypePanel() {
   });
   var total = counts.A + counts.B + counts.C;
 
-  // Inject CSS once
-  if (!document.getElementById('ntPanelStyle')) {
-    var s = document.createElement('style');
-    s.id = 'ntPanelStyle';
-    s.textContent = [
-      '#networkTypePanel{position:fixed;top:80px;right:300px;z-index:9997;',
-      'background:#1e2330;border:1px solid #3a4560;border-radius:10px;',
-      'box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;',
-      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;',
-      'font-size:13px;min-width:250px;max-width:300px;user-select:none;}',
-      '#ntHeader{display:flex;align-items:center;justify-content:space-between;',
-      'padding:10px 14px;cursor:move;border-bottom:1px solid #3a4560;',
-      'border-radius:10px 10px 0 0;background:#262d42;}',
-      '#ntHeader h4{margin:0;font-size:14px;font-weight:600;letter-spacing:.5px;}',
-      '#ntToggleBtn{background:none;border:none;color:#aab;cursor:pointer;font-size:18px;line-height:1;padding:0 0 0 8px;}',
-      '#ntBody{padding:10px 14px 12px;}',
-      '.ntQuickRow{display:flex;gap:5px;margin-bottom:10px;}',
-      '.ntQuickBtn{flex:1;padding:4px 2px;border:1px solid #3a4560;border-radius:6px;',
-      'background:#2a3248;color:#c8d0e8;cursor:pointer;font-size:11px;text-align:center;transition:.15s;}',
-      '.ntQuickBtn:hover{background:#3a4560;}',
-      '.ntTypeList{margin-bottom:10px;}',
-      '.ntTypeItem{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #2a3248;}',
-      '.ntTypeItem:last-child{border-bottom:none;}',
-      '.ntSwatch{width:13px;height:13px;border-radius:3px;flex-shrink:0;margin-top:2px;border:1px solid rgba(255,255,255,.2);}',
-      '.ntFmtCheck{accent-color:#3d6aff;width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-top:2px;}',
-      '.ntLabelWrap{flex:1;min-width:0;}',
-      '.ntLabelName{font-size:12px;font-weight:600;}',
-      '.ntLabelDesc{font-size:10px;color:#778;margin-top:1px;}',
-      '.ntCount{font-size:11px;background:#2a3248;border-radius:10px;padding:2px 8px;min-width:28px;text-align:center;flex-shrink:0;}',
-      '.ntActionRow{display:flex;gap:6px;margin-top:4px;}',
-      '.ntBtn{flex:1;padding:5px 0;border:1px solid #3a4560;border-radius:6px;',
-      'background:#2a3248;color:#c8d0e8;cursor:pointer;font-size:12px;text-align:center;}',
-      '.ntBtn:hover{background:#3a4560;}',
-      '.ntBtn.ntApply{background:#3d6aff;border-color:#3d6aff;color:#fff;}',
-      '.ntBtn.ntApply:hover{background:#5580ff;}',
-      '.ntInfo{font-size:11px;color:#667;margin-top:6px;text-align:center;}'
-    ].join('');
-    document.head.appendChild(s);
+  // Inject CSS once (remove stale copy so it picks up new classes on rebuild)
+  var oldStyle = document.getElementById('ntPanelStyle');
+  if (oldStyle) oldStyle.remove();
+  var s = document.createElement('style');
+  s.id = 'ntPanelStyle';
+  s.textContent = [
+    '#networkTypePanel{position:fixed;top:80px;right:300px;z-index:9997;',
+    'background:#1e2330;border:1px solid #3a4560;border-radius:10px;',
+    'box-shadow:0 4px 24px rgba(0,0,0,.55);color:#e0e6f0;',
+    'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;',
+    'font-size:13px;min-width:260px;max-width:320px;user-select:none;}',
+    '#ntHeader{display:flex;align-items:center;justify-content:space-between;',
+    'padding:10px 14px;cursor:move;border-bottom:1px solid #3a4560;',
+    'border-radius:10px 10px 0 0;background:#262d42;}',
+    '#ntHeader h4{margin:0;font-size:14px;font-weight:600;letter-spacing:.5px;}',
+    '#ntToggleBtn{background:none;border:none;color:#aab;cursor:pointer;font-size:18px;line-height:1;padding:0 0 0 8px;}',
+    '#ntBody{padding:10px 14px 12px;}',
+    '.ntQuickRow{display:flex;gap:5px;margin-bottom:10px;}',
+    '.ntQuickBtn{flex:1;padding:4px 2px;border:1px solid #3a4560;border-radius:6px;',
+    'background:#2a3248;color:#c8d0e8;cursor:pointer;font-size:11px;text-align:center;transition:.15s;}',
+    '.ntQuickBtn:hover{background:#3a4560;}',
+    '.ntTypeList{margin-bottom:10px;}',
+    '.ntTypeItem{padding:6px 0;border-bottom:1px solid #2a3248;}',
+    '.ntTypeItem:last-child{border-bottom:none;}',
+    '.ntTypeItemMain{display:flex;align-items:flex-start;gap:8px;}',
+    '.ntSwatch{width:13px;height:13px;border-radius:3px;flex-shrink:0;margin-top:2px;border:1px solid rgba(255,255,255,.2);}',
+    '.ntFmtCheck{accent-color:#3d6aff;width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-top:2px;}',
+    '.ntLabelWrap{flex:1;min-width:0;}',
+    '.ntLabelName{font-size:12px;font-weight:600;}',
+    '.ntLabelDesc{font-size:10px;color:#778;margin-top:1px;}',
+    '.ntCount{font-size:11px;background:#2a3248;border-radius:10px;padding:2px 8px;min-width:28px;text-align:center;flex-shrink:0;}',
+    '.ntGearBtn{background:none;border:none;color:#778;cursor:pointer;font-size:13px;padding:0 2px;margin-top:1px;flex-shrink:0;}',
+    '.ntGearBtn:hover,.ntGearBtn.active{color:#3d6aff;}',
+    '.ntRulesSection{background:#161c2e;border-radius:6px;padding:6px 8px;margin-top:4px;}',
+    '.ntRuleEntry{display:flex;align-items:center;gap:4px;margin-bottom:3px;}',
+    '.ntRuleTag{background:#3d6aff22;border:1px solid #3d6aff55;border-radius:4px;padding:2px 6px;',
+    'color:#8ab;font-family:monospace;font-size:10px;word-break:break-all;flex:1;}',
+    '.ntRuleX{background:none;border:none;color:#f66;cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0;}',
+    '.ntRuleAddRow{display:flex;gap:4px;margin-top:4px;}',
+    '.ntRuleTypeSelect{background:#2a3248;border:1px solid #3a4560;color:#c8d0e8;',
+    'border-radius:4px;font-size:10px;padding:2px;}',
+    '.ntRuleInput{flex:1;background:#2a3248;border:1px solid #3a4560;color:#c8d0e8;',
+    'border-radius:4px;font-size:10px;padding:3px 6px;outline:none;}',
+    '.ntRuleInput:focus{border-color:#3d6aff;}',
+    '.ntRuleAddBtn{background:#3d6aff;border:none;color:#fff;border-radius:4px;',
+    'cursor:pointer;font-size:10px;padding:3px 8px;flex-shrink:0;}',
+    '.ntRuleAddBtn:hover{background:#5580ff;}',
+    '.ntRulesEmpty{font-size:10px;color:#556;font-style:italic;}',
+    '.ntActionRow{display:flex;gap:6px;margin-top:4px;}',
+    '.ntBtn{flex:1;padding:5px 0;border:1px solid #3a4560;border-radius:6px;',
+    'background:#2a3248;color:#c8d0e8;cursor:pointer;font-size:12px;text-align:center;}',
+    '.ntBtn:hover{background:#3a4560;}',
+    '.ntBtn.ntApply{background:#3d6aff;border-color:#3d6aff;color:#fff;}',
+    '.ntBtn.ntApply:hover{background:#5580ff;}',
+    '.ntInfo{font-size:11px;color:#667;margin-top:6px;text-align:center;}'
+  ].join('');
+  document.head.appendChild(s);
+
+  // Helper: build one type-row HTML (main row + hidden rules editor)
+  function _ntRowHtml(fmt, color, label, desc, count) {
+    return '<div class="ntTypeItem" id="ntItem-' + fmt + '">' +
+      '<div class="ntTypeItemMain">' +
+      '<input type="checkbox" class="ntFmtCheck" data-fmt="' + fmt + '" id="ntChk' + fmt + '" checked>' +
+      '<span class="ntSwatch" style="background:' + color + ';"></span>' +
+      '<div class="ntLabelWrap">' +
+      '<div class="ntLabelName"><label for="ntChk' + fmt + '" style="cursor:pointer;">' + label + '</label></div>' +
+      '<div class="ntLabelDesc">' + desc + '</div>' +
+      '</div>' +
+      '<span class="ntCount" id="ntCnt' + fmt + '" style="color:' + color + ';">' + count + '</span>' +
+      '<button class="ntGearBtn" id="ntGear' + fmt + '" title="Edit classification rules for ' + label + '">⚙</button>' +
+      '</div>' +
+      '<div class="ntRulesSection" id="ntRules-' + fmt + '" style="display:none;">' +
+      '<div id="ntRulesList-' + fmt + '"></div>' +
+      '<div class="ntRuleAddRow">' +
+      '<select class="ntRuleTypeSelect" id="ntRuleSel-' + fmt + '">' +
+      '<option value="regex">regex</option>' +
+      '<option value="string">string</option>' +
+      '</select>' +
+      '<input class="ntRuleInput" id="ntRuleInp-' + fmt + '" type="text" placeholder="pattern...">' +
+      '<button class="ntRuleAddBtn" id="ntRuleAdd-' + fmt + '">+</button>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
   }
 
   var panel = document.createElement('div');
@@ -5545,33 +5672,9 @@ function buildNetworkTypePanel() {
     '<button class="ntQuickBtn" id="ntBtnConly">C Only</button>' +
     '</div>' +
     '<div class="ntTypeList">' +
-    '<div class="ntTypeItem">' +
-    '<input type="checkbox" class="ntFmtCheck" data-fmt="A" id="ntChkA" checked>' +
-    '<span class="ntSwatch" style="background:#4a9eff;"></span>' +
-    '<div class="ntLabelWrap">' +
-    '<div class="ntLabelName"><label for="ntChkA" style="cursor:pointer;">A-type</label></div>' +
-    '<div class="ntLabelDesc">COUNTRY-AIRPORT-CITY-ROLE e.g. JAP-LON-PER-PE01</div>' +
-    '</div>' +
-    '<span class="ntCount" id="ntCntA" style="color:#4a9eff;">' + counts.A + '</span>' +
-    '</div>' +
-    '<div class="ntTypeItem">' +
-    '<input type="checkbox" class="ntFmtCheck" data-fmt="B" id="ntChkB" checked>' +
-    '<span class="ntSwatch" style="background:#ff9f40;"></span>' +
-    '<div class="ntLabelWrap">' +
-    '<div class="ntLabelName"><label for="ntChkB" style="cursor:pointer;">B-type</label></div>' +
-    '<div class="ntLabelDesc">CITY-ROLE-VENDOR e.g. DUB-P-NCS550-R01</div>' +
-    '</div>' +
-    '<span class="ntCount" id="ntCntB" style="color:#ff9f40;">' + counts.B + '</span>' +
-    '</div>' +
-    '<div class="ntTypeItem">' +
-    '<input type="checkbox" class="ntFmtCheck" data-fmt="C" id="ntChkC" checked>' +
-    '<span class="ntSwatch" style="background:#a0a8c0;"></span>' +
-    '<div class="ntLabelWrap">' +
-    '<div class="ntLabelName"><label for="ntChkC" style="cursor:pointer;">C-type</label></div>' +
-    '<div class="ntLabelDesc">IP address / no hostname (e.g. 10.0.0.3)</div>' +
-    '</div>' +
-    '<span class="ntCount" id="ntCntC" style="color:#a0a8c0;">' + counts.C + '</span>' +
-    '</div>' +
+    _ntRowHtml('A', '#4a9eff', 'A-type', 'COUNTRY-AIRPORT-CITY-ROLE e.g. fra-par-mar-r2', counts.A) +
+    _ntRowHtml('B', '#ff9f40', 'B-type', 'CITY-ROLE-VENDOR e.g. DUB-P-NCS550-R01', counts.B) +
+    _ntRowHtml('C', '#a0a8c0', 'C-type', 'IP address / no hostname (e.g. 10.0.0.3)', counts.C) +
     '</div>' +
     '<div class="ntActionRow">' +
     '<button class="ntBtn" id="ntBtnReset">Reset</button>' +
@@ -5582,6 +5685,9 @@ function buildNetworkTypePanel() {
 
   document.body.appendChild(panel);
   _ntPanelBuilt = true;
+
+  // Render existing custom rules for each type
+  _ntRenderRules('A'); _ntRenderRules('B'); _ntRenderRules('C');
 
   // ── Collapse / Expand
   var ntBody = document.getElementById('ntBody');
@@ -5604,6 +5710,30 @@ function buildNetworkTypePanel() {
   // ── Live filter on checkbox change
   document.querySelectorAll('.ntFmtCheck').forEach(function (cb) {
     cb.addEventListener('change', function () { applyTextFilters(); _ntUpdateInfo(); });
+  });
+
+  // ── Gear button + rules editor wiring
+  ['A', 'B', 'C'].forEach(function (fmt) {
+    var gearBtn      = document.getElementById('ntGear' + fmt);
+    var rulesSection = document.getElementById('ntRules-' + fmt);
+    var addBtn       = document.getElementById('ntRuleAdd-' + fmt);
+    var inp          = document.getElementById('ntRuleInp-' + fmt);
+    var sel          = document.getElementById('ntRuleSel-' + fmt);
+
+    gearBtn.addEventListener('click', function () {
+      var open = rulesSection.style.display !== 'none';
+      rulesSection.style.display = open ? 'none' : '';
+      gearBtn.classList.toggle('active', !open);
+    });
+
+    addBtn.addEventListener('click', function () {
+      _ntAddRule(fmt, sel.value, inp.value);
+      inp.value = '';
+    });
+
+    inp.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { _ntAddRule(fmt, sel.value, inp.value); inp.value = ''; }
+    });
   });
 
   // ── Drag to reposition (mirrors countryFilterPanel pattern)
