@@ -4996,10 +4996,9 @@ function _classifyNodeFmt(node) {
   var customFmt = _ntMatchCustomRules(host);
   if (customFmt) return customFmt;
 
-  // A-type: country-airport-city-role (e.g. JAP-LON-PER-PE01, fra-par-mar-r2, can-tor-kem-r1)
-  // Pattern: [3-alpha]-[3-alpha]-[3-alpha]-[ALPHA-ROLE+][DIGITS...]
-  // All lowercase `r`-prefix generic routers are A-type (fra-par-mar-r2 etc.)
-  var aTypeRegex = /^[A-Za-z]{3}-[A-Za-z]{3}-[A-Za-z]{3}-[A-Za-z]+\d+.*$/;
+  // A-type: country-city-airport-role (e.g. JAP-LON-PER-PE01, fra-par-mar-r2, ir-dub-dcr-p01)
+  // Pattern: [2-3α]-[2-3α]-[2-3α]-[ALPHA-ROLE+][DIGITS...]  (2-letter country codes allowed)
+  var aTypeRegex = /^[A-Za-z]{2,3}-[A-Za-z]{2,3}-[A-Za-z]{2,3}-[A-Za-z]+\d+.*$/;
   if (aTypeRegex.test(host)) return 'A';
 
   // B-type: city-role-vendor-xxx (e.g. DUB-P-NCS550-R01, LAX-MORAN-ASR7750, LAX-RR-ASR7750)
@@ -5011,6 +5010,32 @@ function _classifyNodeFmt(node) {
 
   // A-type = NOT C-type (IP/empty) AND NOT B-type (vendor hardware) — per user definition
   return 'A';
+}
+
+/**
+ * Parse an A-type hostname into its structured components.
+ * Format: [2-3α]-[2-3α]-[2-3α]-[role][num]
+ * Returns null if hostname does not match A-type pattern.
+ * Examples:
+ *   fra-par-mar-r2   → {country:'FRA', city:'PAR', airport:'MAR', role:'R',  num:'2'}
+ *   ir-dub-dcr-p01   → {country:'IR',  city:'DUB', airport:'DCR', role:'P',  num:'01'}
+ *   JAP-LON-PER-PE01 → {country:'JAP', city:'LON', airport:'PER', role:'PE', num:'01'}
+ *   9.9.9.1          → null
+ */
+function _parseAtypeHostname(hostname) {
+  var h = String(hostname || '').trim().toLowerCase();
+  if (!h) return null;
+  // Allow 2-3 letter country, 2-3 letter city, 2-3 letter airport, alpha role + digits/suffix
+  var m = h.match(/^([a-z]{2,3})-([a-z]{2,3})-([a-z]{2,3})-([a-z]+)(\d+.*)$/);
+  if (!m) return null;
+  return {
+    raw:     h,
+    country: m[1].toUpperCase(),
+    city:    m[2].toUpperCase(),
+    airport: m[3].toUpperCase(),
+    role:    m[4].toUpperCase(),
+    num:     m[5]
+  };
 }
 
 function applyTextFilters() {
