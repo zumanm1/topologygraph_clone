@@ -1,7 +1,11 @@
 'use strict';
 /**
- * Test 21 — Auto-Arrange Layout (PRD-06)
- * Validates autoArrangeByCountryCity() + ⟳ Auto-Arrange toolbar button.
+ * Test 21 — Auto-Arrange Layout (PRD-06 v2)
+ * Validates autoArrangeByCountryCity() deterministic geometry:
+ *   - country → city → node hierarchy enforced
+ *   - ≥100px spacing between nodes in same city
+ *   - city clusters tighter than country spread
+ *   - ⟳ Auto-Arrange toolbar button
  *
  * Usage: node tests/21-auto-arrange.cjs
  */
@@ -74,7 +78,7 @@ async function loadGraph84(page) {
 
 (async () => {
     console.log('\n════════════════════════════════════════════════════════════════════════');
-    console.log('  Test 21 — Auto-Arrange Layout  (PRD-06)');
+    console.log('  Test 21 — Auto-Arrange Layout  (PRD-06 v2 — deterministic geometry)');
     console.log('════════════════════════════════════════════════════════════════════════\n');
 
     const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
@@ -112,49 +116,31 @@ async function loadGraph84(page) {
     console.log('\n── Phase 3 : Capture Initial Positions ─────────────────────────────────');
     let initialPositions = {};
     try {
-        initialPositions = await page.evaluate(() => {
-            var pos = network.getPositions();
-            return pos;
-        });
+        initialPositions = await page.evaluate(() => network.getPositions());
         const nodeCount = Object.keys(initialPositions).length;
         if (nodeCount >= 80) pass(`Captured initial positions for ${nodeCount} nodes`);
         else fail(`Expected 80+ nodes, got ${nodeCount}`);
-        info(`Sample initial pos: node ${Object.keys(initialPositions)[0]} at x=${Math.round(initialPositions[Object.keys(initialPositions)[0]].x)}`);
+        const sampleId = Object.keys(initialPositions)[0];
+        info(`Sample initial pos: node ${sampleId} at x=${Math.round(initialPositions[sampleId].x)}`);
     } catch (err) {
         fail('Phase 3 failed', err.message);
     }
 
-    // ── Phase 4: Trigger auto-arrange + wait for stabilization ───────────────
-    console.log('\n── Phase 4 : Trigger Auto-Arrange + Wait for Stabilization ─────────────');
+    // ── Phase 4: Trigger auto-arrange (deterministic — no physics wait) ───────
+    console.log('\n── Phase 4 : Trigger Auto-Arrange ──────────────────────────────────────');
     try {
-        // Click the toolbar button
         const arrangeBtn = await page.$('#btnAutoArrange');
         if (arrangeBtn) {
             await arrangeBtn.click();
             pass('Clicked ⟳ Auto-Arrange button');
         } else {
             await page.evaluate(() => autoArrangeByCountryCity());
-            pass('Called autoArrangeByCountryCity() directly (button not found in DOM)');
+            pass('Called autoArrangeByCountryCity() directly (button not found)');
         }
-
-        // Wait for stabilized event (up to 20s) or position change
-        info('Waiting for physics stabilization (up to 20s)...');
-        const stabilized = await page.evaluate(() => {
-            return new Promise(function(resolve) {
-                var done = false;
-                var timer = setTimeout(function() {
-                    if (!done) { done = true; resolve('timeout'); }
-                }, 18000);
-                network.once('stabilized', function() {
-                    if (!done) { done = true; clearTimeout(timer); resolve('stabilized'); }
-                });
-            });
-        });
-        info(`Stabilization result: ${stabilized}`);
-        if (stabilized === 'stabilized') pass('Physics stabilization event fired');
-        else warn('Stabilization timed out — positions may still have changed');
-
-        await page.waitForTimeout(2000); // Wait for post-stabilize position saving
+        // Deterministic placement — positions applied synchronously in the JS call,
+        // no physics stabilization event to wait for.
+        await page.waitForTimeout(1500);
+        pass('Deterministic placement applied (no physics stabilization needed)');
         await shot(page, 'after-arrange');
     } catch (err) {
         fail('Phase 4 failed', err.message);
@@ -174,39 +160,38 @@ async function loadGraph84(page) {
             }
         });
         info(`Nodes moved vs initial: ${movedCount}/${nodeIds.length}`);
-        if (movedCount >= nodeIds.length * 0.5) pass(`${movedCount}/${nodeIds.length} nodes moved (≥50% — auto-arrange worked)`);
-        else if (movedCount > 0) warn(`Only ${movedCount}/${nodeIds.length} nodes moved (positions may have been pre-arranged)`);
+        if (movedCount >= nodeIds.length * 0.5) pass(`${movedCount}/${nodeIds.length} nodes moved — auto-arrange worked`);
+        else if (movedCount > 0) warn(`Only ${movedCount}/${nodeIds.length} nodes moved`);
         else fail('No nodes moved after auto-arrange');
     } catch (err) {
         fail('Phase 5 failed', err.message);
     }
 
-    // ── Phase 6: Verify same-country nodes are spatially clustered ────────────
-    console.log('\n── Phase 6 : Verify Country Spatial Clustering ─────────────────────────');
+    // ── Phase 6: Country-level spatial clustering ─────────────────────────────
+    // Verifies that inter-country centroid distance >> intra-country spread.
+    // Deterministic placement target: ratio ≥ 3× (typically ~7× for 12 countries).
+    console.log('\n── Phase 6 : Country-Level Clustering ──────────────────────────────────');
     try {
         const clusterData = await page.evaluate(() => {
             var pos = network.getPositions();
-            // Group node positions by country
             var countryPositions = {};
             nodes.get().forEach(function(n) {
-                var c = (n.country || '').toUpperCase() || 'UNK';
+                var c = (n.country || 'UNK').toUpperCase();
                 if (!countryPositions[c]) countryPositions[c] = [];
                 if (pos[n.id]) countryPositions[c].push(pos[n.id]);
             });
-            // Compute average intra-country distance vs inter-country centroid distance
             var countries = Object.keys(countryPositions).filter(c => countryPositions[c].length >= 2);
             if (countries.length < 2) return { countries: countries.length, ok: false };
 
-            // Compute centroid per country
             var centroids = {};
             countries.forEach(function(c) {
                 var pts = countryPositions[c];
-                var cx = pts.reduce(function(s,p){return s+p.x;},0) / pts.length;
-                var cy = pts.reduce(function(s,p){return s+p.y;},0) / pts.length;
-                centroids[c] = {x:cx, y:cy};
+                centroids[c] = {
+                    x: pts.reduce(function(s,p){return s+p.x;},0) / pts.length,
+                    y: pts.reduce(function(s,p){return s+p.y;},0) / pts.length
+                };
             });
 
-            // Avg inter-country centroid distance
             var interDists = [];
             for (var i=0; i<countries.length; i++) {
                 for (var j=i+1; j<countries.length; j++) {
@@ -217,40 +202,185 @@ async function loadGraph84(page) {
             }
             var avgInter = interDists.reduce(function(s,d){return s+d;},0) / interDists.length;
 
-            // Avg intra-country spread (max distance from centroid)
             var intraSpread = countries.map(function(c) {
-                var centroid = centroids[c];
-                var pts = countryPositions[c];
-                return Math.max.apply(null, pts.map(function(p) {
-                    var dx=p.x-centroid.x; var dy=p.y-centroid.y;
+                var ctr = centroids[c];
+                return Math.max.apply(null, countryPositions[c].map(function(p) {
+                    var dx=p.x-ctr.x; var dy=p.y-ctr.y;
                     return Math.sqrt(dx*dx+dy*dy);
                 }));
             });
             var avgIntra = intraSpread.reduce(function(s,d){return s+d;},0) / intraSpread.length;
 
-            return { countries: countries.length, avgInter: Math.round(avgInter), avgIntra: Math.round(avgIntra), ratio: Math.round(avgInter/avgIntra) };
+            return {
+                countries: countries.length,
+                avgInter:  Math.round(avgInter),
+                avgIntra:  Math.round(avgIntra),
+                ratio:     Math.round(avgInter / avgIntra)
+            };
         });
 
-        info(`Countries: ${clusterData.countries}, avg inter-country dist: ${clusterData.avgInter}, avg intra-country spread: ${clusterData.avgIntra}, ratio: ${clusterData.ratio}x`);
-        if (clusterData.countries < 2) warn('Need ≥2 countries for clustering verification');
-        else if (clusterData.ratio >= 2) pass(`Countries are spatially separated (inter/intra ratio: ${clusterData.ratio}x)`);
-        else warn(`Clustering ratio is ${clusterData.ratio}x (may improve with more stabilization time)`);
+        info(`Countries: ${clusterData.countries}, avg inter-country dist: ${clusterData.avgInter}px, avg intra-country spread: ${clusterData.avgIntra}px, ratio: ${clusterData.ratio}x`);
+        if (clusterData.countries < 2) {
+            warn('Need ≥2 countries for clustering verification');
+        } else if (clusterData.ratio >= 3) {
+            pass(`Countries well separated — inter/intra ratio: ${clusterData.ratio}x (≥3x required)`);
+        } else {
+            fail(`Country clustering ratio ${clusterData.ratio}x too low — hierarchy not preserved (need ≥3x)`);
+        }
     } catch (err) {
         fail('Phase 6 failed', err.message);
     }
 
-    // ── Phase 7: Nodes are pinned after arrange ───────────────────────────────
+    // ── Phase 6b: City-level clustering within countries ─────────────────────
+    // For each country with ≥2 cities: avg intra-city distance < 50% of avg cross-city distance.
+    console.log('\n── Phase 6b : City-Level Clustering Within Countries ────────────────────');
+    try {
+        const cityCluster = await page.evaluate(() => {
+            var pos = network.getPositions();
+            var map = {};  // country → city → [{x,y}]
+            nodes.get().forEach(function(n) {
+                var host   = String(n.hostname || n.label || '').split('\n')[0].trim();
+                var parsed = (typeof _parseAtypeHostname === 'function')
+                    ? _parseAtypeHostname(host) : null;
+                var country = parsed ? parsed.country : ((n.country||'').toUpperCase()||'UNK');
+                var city    = parsed ? parsed.city    : ((n.city   ||'').toUpperCase()||'UNK');
+                if (!map[country]) map[country] = {};
+                if (!map[country][city]) map[country][city] = [];
+                if (pos[n.id]) map[country][city].push(pos[n.id]);
+            });
+
+            var countriesTested = 0;
+            var failedCountries = [];
+            var worstRatio = 0;
+
+            Object.keys(map).forEach(function(country) {
+                var cities = Object.keys(map[country]).filter(c => map[country][c].length >= 2);
+                if (cities.length < 2) return;
+                countriesTested++;
+
+                // avg pairwise distance within same city
+                var intraDists = [];
+                cities.forEach(function(city) {
+                    var pts = map[country][city];
+                    for (var i=0; i<pts.length; i++) {
+                        for (var j=i+1; j<pts.length; j++) {
+                            var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+                            intraDists.push(Math.sqrt(dx*dx+dy*dy));
+                        }
+                    }
+                });
+                var avgIntra = intraDists.length
+                    ? intraDists.reduce(function(s,d){return s+d;},0)/intraDists.length : 0;
+
+                // avg pairwise distance between nodes of different cities (same country)
+                var crossDists = [];
+                for (var ci=0; ci<cities.length; ci++) {
+                    for (var cj=ci+1; cj<cities.length; cj++) {
+                        var ptsA = map[country][cities[ci]];
+                        var ptsB = map[country][cities[cj]];
+                        ptsA.forEach(function(a) {
+                            ptsB.forEach(function(b) {
+                                var dx=a.x-b.x, dy=a.y-b.y;
+                                crossDists.push(Math.sqrt(dx*dx+dy*dy));
+                            });
+                        });
+                    }
+                }
+                var avgCross = crossDists.length
+                    ? crossDists.reduce(function(s,d){return s+d;},0)/crossDists.length : 999999;
+
+                var ratio = avgIntra / avgCross;
+                if (ratio > worstRatio) worstRatio = ratio;
+                if (avgIntra >= avgCross * 0.5) {
+                    failedCountries.push(country + ' (intra=' + Math.round(avgIntra) +
+                        'px cross=' + Math.round(avgCross) + 'px)');
+                }
+            });
+
+            return { countriesTested, failedCountries,
+                     allPass: failedCountries.length === 0,
+                     worstRatio: Math.round(worstRatio * 100) / 100 };
+        });
+
+        info(`Countries tested for city clustering: ${cityCluster.countriesTested}, worst intra/cross ratio: ${cityCluster.worstRatio}`);
+        if (cityCluster.countriesTested === 0) {
+            warn('No country has ≥2 cities with ≥2 nodes — city clustering not measurable');
+        } else if (cityCluster.allPass) {
+            pass(`City clustering OK — same-city nodes closer than cross-city (${cityCluster.countriesTested} countries)`);
+        } else {
+            fail(`City clustering weak in: ${cityCluster.failedCountries.join(', ')}`);
+        }
+    } catch (err) {
+        fail('Phase 6b failed', err.message);
+    }
+
+    // ── Phase 6c: Minimum node spacing within each city ──────────────────────
+    // All same-city node pairs must be ≥100px apart so links are visible.
+    console.log('\n── Phase 6c : Minimum Node Spacing (same-city pairs) ────────────────────');
+    try {
+        const spacingData = await page.evaluate(() => {
+            var pos = network.getPositions();
+            var cityMap = {};  // 'COUNTRY:CITY' → [{x,y}]
+            nodes.get().forEach(function(n) {
+                var host   = String(n.hostname || n.label || '').split('\n')[0].trim();
+                var parsed = (typeof _parseAtypeHostname === 'function')
+                    ? _parseAtypeHostname(host) : null;
+                var country = parsed ? parsed.country : ((n.country||'').toUpperCase()||'UNK');
+                var city    = parsed ? parsed.city    : ((n.city   ||'').toUpperCase()||'UNK');
+                var key = country + ':' + city;
+                if (!cityMap[key]) cityMap[key] = [];
+                if (pos[n.id]) cityMap[key].push(pos[n.id]);
+            });
+
+            var minDist = Infinity;
+            var violatingPairs = 0;
+            var totalPairs = 0;
+            var THRESHOLD = 100;
+
+            Object.keys(cityMap).forEach(function(key) {
+                var pts = cityMap[key];
+                for (var i=0; i<pts.length; i++) {
+                    for (var j=i+1; j<pts.length; j++) {
+                        var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+                        var d = Math.sqrt(dx*dx+dy*dy);
+                        totalPairs++;
+                        if (d < minDist) minDist = d;
+                        if (d < THRESHOLD) violatingPairs++;
+                    }
+                }
+            });
+            return {
+                minDist:        totalPairs > 0 ? Math.round(minDist) : -1,
+                violatingPairs,
+                totalPairs
+            };
+        });
+
+        info(`Same-city node pairs: ${spacingData.totalPairs} total, min spacing: ${spacingData.minDist}px`);
+        if (spacingData.totalPairs === 0) {
+            warn('No same-city pairs found — spacing check skipped');
+        } else if (spacingData.violatingPairs === 0) {
+            pass(`All ${spacingData.totalPairs} same-city pairs have ≥100px spacing (min: ${spacingData.minDist}px)`);
+        } else {
+            warn(`${spacingData.violatingPairs}/${spacingData.totalPairs} pairs closer than 100px (min: ${spacingData.minDist}px)`);
+        }
+    } catch (err) {
+        fail('Phase 6c failed', err.message);
+    }
+
+    // ── Phase 7: Nodes pinned after arrange ───────────────────────────────────
     console.log('\n── Phase 7 : Nodes Pinned After Arrange ────────────────────────────────');
     try {
         const pinnedCount = await page.evaluate(() => {
             return nodes.get().filter(function(n) {
-                return n.physics === false && n.fixed && (n.fixed === true || (n.fixed.x && n.fixed.y));
+                return n.physics === false && n.fixed &&
+                       (n.fixed === true || (n.fixed.x && n.fixed.y));
             }).length;
         });
         const total = await page.evaluate(() => nodes.get().length);
         info(`Pinned: ${pinnedCount}/${total} nodes`);
         if (pinnedCount >= total * 0.8) pass(`${pinnedCount}/${total} nodes pinned after auto-arrange`);
-        else warn(`Only ${pinnedCount}/${total} nodes pinned`);
+        else fail(`Only ${pinnedCount}/${total} nodes pinned`);
     } catch (err) {
         fail('Phase 7 failed', err.message);
     }
@@ -277,7 +407,7 @@ async function loadGraph84(page) {
 
     console.log('\n════════════════════════════════════════════════════════════════════════');
     if (failed===0) console.log(`  Results: ${passed} passed, ${failed} failed, ${warned} warnings`);
-    else console.log(`  Results: ${passed} passed, ${failed} FAILED, ${warned} warnings`);
+    else            console.log(`  Results: ${passed} passed, ${failed} FAILED, ${warned} warnings`);
     console.log('════════════════════════════════════════════════════════════════════════');
     process.exit(failed > 0 ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

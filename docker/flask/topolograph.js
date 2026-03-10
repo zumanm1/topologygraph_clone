@@ -7008,101 +7008,105 @@ function buildViewModeButtons() {
  *   6. On stabilized: pin all nodes (physics=false, fixed=true), save positions
  */
 function autoArrangeByCountryCity() {
-  if (typeof nodes === 'undefined' || !nodes || typeof network === 'undefined' || !network) {
+  if (typeof nodes === 'undefined' || !nodes ||
+      typeof network === 'undefined' || !network) {
     console.warn('[AUTO-ARRANGE] nodes or network not available');
     return;
   }
 
-  // 1. Build spatial map: country → city → [nodeId, ...]
+  // 1. Build tree: country → city → [nodeIds]  (sorted alphabetically for repeatability)
   var tree = {};
   nodes.get().forEach(function (n) {
-    var host = String(n.hostname || n.label || '').split('\n')[0].trim();
-    var parsed = _parseAtypeHostname(host);
-    // Use parsed country from hostname; fallback to node.country property; then 'UNK'
-    var country = parsed ? parsed.country : ((n.country || '').toUpperCase() || 'UNK');
-    var city    = parsed ? parsed.city    : 'UNK';
+    var host    = String(n.hostname || n.label || '').split('\n')[0].trim();
+    var parsed  = _parseAtypeHostname(host);
+    var country = parsed ? parsed.country
+                         : ((n.country || '').toUpperCase() || 'UNK');
+    var city    = parsed ? parsed.city
+                         : ((n.city    || '').toUpperCase() || 'UNK');
     if (!tree[country]) tree[country] = {};
     if (!tree[country][city]) tree[country][city] = [];
     tree[country][city].push(n.id);
   });
 
-  // 2. Country centroids in a large circle
-  var countries = Object.keys(tree);
-  var R = Math.max(900, countries.length * 150);
+  var countries = Object.keys(tree).sort();
+
+  // 2. Country centroid ring — large enough to keep country clusters visibly separated.
+  //    R = max(1200, countries * 500) gives ~3000px gap between adjacent centroids
+  //    for 12 countries (R=6000), so clusters never bleed into neighbours.
+  var R = Math.max(1200, countries.length * 500);
   var positions = {};
 
   countries.forEach(function (country, ci) {
-    var cAngle = (2 * Math.PI * ci) / countries.length;
+    // Start at -π/2 so first country appears at the top of the ring
+    var cAngle = (2 * Math.PI * ci) / countries.length - Math.PI / 2;
     var cx = R * Math.cos(cAngle);
     var cy = R * Math.sin(cAngle);
 
-    // 3. City sub-circle within country
-    var cities = Object.keys(tree[country]);
-    var r = Math.max(220, cities.length * 90);
+    var cities = Object.keys(tree[country]).sort();
+
+    // 3. City centroid sub-ring within country.
+    //    Single city → place directly on the country centroid (r = 0).
+    //    Multiple cities → sub-ring large enough to separate city clusters.
+    var r = cities.length === 1
+      ? 0
+      : Math.max(250, cities.length * 150);
+
     cities.forEach(function (city, cityI) {
       var cityAngle = cities.length > 1
-        ? (2 * Math.PI * cityI) / cities.length
+        ? (2 * Math.PI * cityI) / cities.length - Math.PI / 2
         : 0;
-      var cityX = cx + r * Math.cos(cityAngle);
-      var cityY = cy + r * Math.sin(cityAngle);
+      var cityCx = cx + r * Math.cos(cityAngle);
+      var cityCy = cy + r * Math.sin(cityAngle);
 
-      // 4. Nodes in tight cluster around city centroid
-      var jitter = 70;
-      tree[country][city].forEach(function (id) {
+      var cityNodes = tree[country][city];
+      var n = cityNodes.length;
+
+      // 4. Node ring radius ρ — guarantee arc between adjacent nodes ≥ 130px so links
+      //    are clearly visible.  Formula: arc = 2ρ·sin(π/n) ≥ 130  →  ρ ≥ 130/(2·sin(π/n))
+      var rho;
+      if      (n === 1) { rho = 0; }
+      else if (n === 2) { rho = 80; }                              // separation = 160px
+      else              { rho = Math.max(80,
+                            Math.ceil(130 / (2 * Math.sin(Math.PI / n)))); }
+
+      cityNodes.forEach(function (id, ni) {
+        var nodeAngle = n > 1
+          ? (2 * Math.PI * ni) / n - Math.PI / 2
+          : 0;
         positions[id] = {
-          x: cityX + (Math.random() - 0.5) * jitter,
-          y: cityY + (Math.random() - 0.5) * jitter
+          x: cityCx + rho * Math.cos(nodeAngle),
+          y: cityCy + rho * Math.sin(nodeAngle)
         };
       });
     });
   });
 
-  // 5. Apply positions and enable physics for stabilization
-  network.setOptions({ physics: { enabled: true } });
-  var nodeUpdates = Object.keys(positions).map(function (id) {
-    return { id: id, x: positions[id].x, y: positions[id].y, physics: true, fixed: false };
+  // 5. Disable physics, apply exact deterministic positions, pin immediately.
+  //    NO stabilization — physics would scatter nodes and destroy the hierarchy.
+  network.setOptions({ physics: { enabled: false } });
+  var updates = Object.keys(positions).map(function (id) {
+    return { id: id,
+             x: positions[id].x, y: positions[id].y,
+             physics: false, fixed: { x: true, y: true } };
   });
-  nodes.update(nodeUpdates);
+  nodes.update(updates);
+  network.fit();   // zoom canvas so all nodes are visible
 
-  // 6. After stabilize: pin nodes and save
-  var _arranged = false;
-  network.once('stabilized', function () {
-    if (_arranged) return;
-    _arranged = true;
-    network.setOptions({ physics: { enabled: false } });
-    var finalPos = network.getPositions();
-    var pinUpdates = Object.keys(finalPos).map(function (id) {
-      return { id: id, physics: false, fixed: { x: true, y: true },
-               x: finalPos[id].x, y: finalPos[id].y };
-    });
-    nodes.update(pinUpdates);
-    if (typeof show_instant_notification === 'function') {
-      show_instant_notification('Auto-arranged by country & city', 2000);
-    }
-    if (typeof save_nodes_position === 'function') {
-      setTimeout(save_nodes_position, 800);
-    }
-    var btn = document.getElementById('btnAutoArrange');
-    if (btn) { btn.textContent = '✓ Arranged'; setTimeout(function () { btn.textContent = '⟳ Auto-Arrange'; }, 2500); }
-  });
-
-  // Fallback: if stabilized doesn't fire within 15s, pin manually
-  setTimeout(function () {
-    if (!_arranged) {
-      _arranged = true;
-      network.stopSimulation();
-      network.setOptions({ physics: { enabled: false } });
-      var finalPos = network.getPositions();
-      var pinUpdates = Object.keys(finalPos).map(function (id) {
-        return { id: id, physics: false, fixed: { x: true, y: true } };
-      });
-      nodes.update(pinUpdates);
-      if (typeof save_nodes_position === 'function') setTimeout(save_nodes_position, 500);
-    }
-  }, 15000);
-
-  network.startSimulation();
-  console.log('[AUTO-ARRANGE] Started — ' + Object.keys(positions).length + ' nodes positioned across ' + countries.length + ' countries');
+  // 6. Save positions + UI feedback
+  if (typeof save_nodes_position === 'function') {
+    setTimeout(save_nodes_position, 800);
+  }
+  if (typeof show_instant_notification === 'function') {
+    show_instant_notification('Auto-arranged: country \u2192 city \u2192 nodes', 2000);
+  }
+  var btn = document.getElementById('btnAutoArrange');
+  if (btn) {
+    btn.textContent = '\u2713 Arranged';
+    setTimeout(function () { btn.textContent = '\u27f3 Auto-Arrange'; }, 2500);
+  }
+  console.log('[AUTO-ARRANGE] Placed ' + Object.keys(positions).length +
+    ' nodes across ' + countries.length +
+    ' countries (deterministic geometry, no physics)');
 }
 
 // ── SP4: Country Filter Panel toggle (toolbar button handler) ────────────────
