@@ -386,7 +386,7 @@ async function loadGraph84(page) {
     }
 
     // ── Phase 9: Spacing controls exist + +/- buttons work ──────────────────
-    console.log('\n── Phase 9 : Spacing Controls (+/- % buttons) ───────────────────────────');
+    console.log('\n── Phase 9 : Spacing Controls (+/- % buttons, Live toggle, Coarse steps) ─');
     try {
         // 9a: Panel and all % labels present
         const panelExists = await page.$('#aaSpacingPanel') !== null;
@@ -402,21 +402,62 @@ async function loadGraph84(page) {
         if (labels.node && labels.city && labels.country) pass('All three % labels present (aaNodePct, aaCityPct, aaCountryPct)');
         else fail('One or more % labels missing');
 
-        // 9b: Click Node+ → label updates to 110%
+        // 9a2: Live toggle button exists and defaults to OFF
+        const liveToggleInfo = await page.evaluate(() => {
+            var btn = document.getElementById('aaLiveToggle');
+            return btn ? { exists: true, text: btn.textContent, liveApply: typeof _aaLiveApply !== 'undefined' ? _aaLiveApply : null } : { exists: false };
+        });
+        info(`Live toggle: exists=${liveToggleInfo.exists} text="${liveToggleInfo.text}" _aaLiveApply=${liveToggleInfo.liveApply}`);
+        if (liveToggleInfo.exists)   pass('Live toggle button #aaLiveToggle present');
+        else fail('#aaLiveToggle not found in spacing panel');
+        if (liveToggleInfo.liveApply === false) pass('Live mode defaults to OFF (_aaLiveApply=false)');
+        else if (liveToggleInfo.liveApply === null) warn('_aaLiveApply variable not accessible in evaluate');
+        else fail(`Expected _aaLiveApply=false, got ${liveToggleInfo.liveApply}`);
+        if (liveToggleInfo.text && liveToggleInfo.text.includes('OFF')) pass('Live toggle shows "Live: OFF" by default');
+        else warn(`Live toggle text unexpected: "${liveToggleInfo.text}" (expected to include "OFF")`);
+
+        // 9b: Fine step Node+ → label updates to 110%
         await page.evaluate(() => _aaAdjust('node', +0.1));
         await page.waitForTimeout(200);
         const nodeLabel = await page.evaluate(() => document.getElementById('aaNodePct') ? document.getElementById('aaNodePct').textContent : '');
-        info(`After Node+: aaNodePct = ${nodeLabel}`);
-        if (nodeLabel === '110%') pass('Node+ button updates label to 110%');
+        info(`After Node+0.1: aaNodePct = ${nodeLabel}`);
+        if (nodeLabel === '110%') pass('Node fine+ (10%) updates label to 110%');
         else fail(`Expected 110%, got ${nodeLabel}`);
 
-        // 9c: Click City− → label updates to 90%
+        // 9c: Fine step City− → label updates to 90%
         await page.evaluate(() => _aaAdjust('city', -0.1));
         await page.waitForTimeout(200);
         const cityLabel = await page.evaluate(() => document.getElementById('aaCityPct') ? document.getElementById('aaCityPct').textContent : '');
-        info(`After City-: aaCityPct = ${cityLabel}`);
-        if (cityLabel === '90%') pass('City− button updates label to 90%');
+        info(`After City-0.1: aaCityPct = ${cityLabel}`);
+        if (cityLabel === '90%') pass('City fine− (10%) updates label to 90%');
         else fail(`Expected 90%, got ${cityLabel}`);
+
+        // 9b2: Coarse step Country++ → label updates to 200%
+        await page.evaluate(() => { _aaCountryMultiplier = 1.0; _updateAaControls(); });
+        await page.evaluate(() => _aaAdjust('country', +1.0));
+        await page.waitForTimeout(200);
+        const countryCoarse = await page.evaluate(() => document.getElementById('aaCountryPct') ? document.getElementById('aaCountryPct').textContent : '');
+        info(`After Country+1.0 (coarse): aaCountryPct = ${countryCoarse}`);
+        if (countryCoarse === '200%') pass('Country coarse++ (100%) updates label to 200%');
+        else fail(`Expected 200%, got ${countryCoarse}`);
+
+        // 9b3: Clamp at MAX 1000% — try adding large delta
+        await page.evaluate(() => { _aaNodeMultiplier = 9.9; _updateAaControls(); });
+        await page.evaluate(() => _aaAdjust('node', +1.0));
+        await page.waitForTimeout(100);
+        const maxLabel = await page.evaluate(() => document.getElementById('aaNodePct') ? document.getElementById('aaNodePct').textContent : '');
+        info(`After Node at 9.9→+1.0: aaNodePct = ${maxLabel} (expect 1000%)`);
+        if (maxLabel === '1000%') pass('Node clamped at MAX 1000%');
+        else fail(`Expected clamp to 1000%, got ${maxLabel}`);
+
+        // 9b4: Clamp at MIN 10% — try subtracting large delta
+        await page.evaluate(() => { _aaNodeMultiplier = 0.2; _updateAaControls(); });
+        await page.evaluate(() => _aaAdjust('node', -1.0));
+        await page.waitForTimeout(100);
+        const minLabel = await page.evaluate(() => document.getElementById('aaNodePct') ? document.getElementById('aaNodePct').textContent : '');
+        info(`After Node at 0.2→-1.0: aaNodePct = ${minLabel} (expect 10%)`);
+        if (minLabel === '10%') pass('Node clamped at MIN 10%');
+        else fail(`Expected clamp to 10%, got ${minLabel}`);
 
         // 9d: Verify node spacing scales with the multiplier.
         //     Use the largest A-type city (parsed hostname) to get a clean signal.

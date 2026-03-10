@@ -1892,13 +1892,27 @@ function do_stop_start_physics() {
 }
 
 function show_instant_notification(message, delay = 4500, warning = false) {
+  // Coerce message to a safe displayable string.
+  // Guard against accidental array or object pass (would otherwise render as
+  // "[object Object],[object Object],..." in the notification button).
+  var msg;
+  if (typeof message === 'string') {
+    msg = message;
+  } else if (Array.isArray(message)) {
+    msg = '(' + message.length + ' items)';
+  } else if (message !== null && typeof message === 'object') {
+    msg = message.msg || message.message || message.error_code || JSON.stringify(message).slice(0, 120);
+  } else {
+    msg = String(message || '');
+  }
+
   if (warning) {
     document.getElementById('btnStopStartPhysics').style.background = "#ff8c1a";
   }
   else {
     document.getElementById('btnStopStartPhysics').style.background = 'rgba(93, 230, 150, 0.871)';
   }
-  $('#btnStopStartPhysics').text(message);
+  $('#btnStopStartPhysics').text(msg);
   $('#btnStopStartPhysics').show().delay(delay).fadeOut(2000);
 }
 
@@ -6138,31 +6152,53 @@ var _vmInteract   = 'none';     // 'none' | 'collapse'
 
 // ── Auto-arrange spacing multipliers (PRD-06 v2) ─────────────────────────────
 // Each multiplier scales the corresponding ring radius.  1.0 = 100% (default).
-// Range: 0.3 – 5.0.  Step: 0.1 (10 % per click).
+// Range: 0.1 – 10.0 (10 % – 1000 %).  Fine step: ±0.1 (10 %).  Coarse: ±1.0 (100 %).
 var _aaNodeMultiplier    = 1.0;  // ρ  — node ring within city
 var _aaCityMultiplier    = 1.0;  // r  — city ring within country
 var _aaCountryMultiplier = 1.0;  // R  — country ring
 
 /**
- * Adjust one auto-arrange spacing multiplier by `delta` and re-apply layout.
+ * Live mode: when true, every +/− click immediately re-runs autoArrangeByCountryCity().
+ * Default: false — user must click ⟳ Auto-Arrange manually after adjusting sliders.
+ */
+var _aaLiveApply = false;
+
+/** Toggle live-apply mode and update the button label. */
+function _aaToggleLive() {
+  _aaLiveApply = !_aaLiveApply;
+  var btn = document.getElementById('aaLiveToggle');
+  if (btn) {
+    btn.textContent = 'Live: ' + (_aaLiveApply ? 'ON' : 'OFF');
+    btn.style.background  = _aaLiveApply ? '#d1e7dd' : '';
+    btn.style.borderColor = _aaLiveApply ? '#0f5132' : '';
+    btn.style.color       = _aaLiveApply ? '#0f5132' : '';
+  }
+}
+
+/**
+ * Adjust one auto-arrange spacing multiplier by `delta`.
+ * Re-arranges immediately only when live mode is ON.
  * param: 'node' | 'city' | 'country'
- * delta: positive = expand, negative = contract (typically ±0.1)
+ * delta: positive = expand, negative = contract.
+ *   Fine   step = ±0.1  (10 %  per click)
+ *   Coarse step = ±1.0  (100 % per click)
+ * Range: 0.1 (10 %) → 10.0 (1000 %).
  */
 function _aaAdjust(param, delta) {
-  var MIN = 0.3, MAX = 5.0;
+  var MIN = 0.1, MAX = 10.0;
   function clamp(v) { return Math.round(Math.max(MIN, Math.min(MAX, v)) * 10) / 10; }
   if (param === 'node')    { _aaNodeMultiplier    = clamp(_aaNodeMultiplier    + delta); }
   if (param === 'city')    { _aaCityMultiplier    = clamp(_aaCityMultiplier    + delta); }
   if (param === 'country') { _aaCountryMultiplier = clamp(_aaCountryMultiplier + delta); }
   _updateAaControls();
-  autoArrangeByCountryCity();
+  if (_aaLiveApply) autoArrangeByCountryCity();
 }
 
-/** Reset all three multipliers to 100 % and re-apply. */
+/** Reset all three multipliers to 100 % and always re-apply layout. */
 function _aaReset() {
   _aaNodeMultiplier = _aaCityMultiplier = _aaCountryMultiplier = 1.0;
   _updateAaControls();
-  autoArrangeByCountryCity();
+  autoArrangeByCountryCity();  // always re-apply on explicit reset
 }
 
 /** Sync the % labels in the spacing control panel. */
@@ -6941,12 +6977,18 @@ function buildViewModeButtons() {
     '  margin-left:4px;vertical-align:middle;border-left:1px solid #dee2e6;',
     '  padding-left:6px;}',
     '.aaRow{display:flex;align-items:center;gap:2px;font-size:10px;line-height:1;}',
-    '.aaRowLabel{width:58px;color:#6c757d;font-size:10px;}',
-    '.aaBtn{width:18px;height:18px;padding:0;border:1px solid #adb5bd;border-radius:3px;',
-    '  background:#f8f9fa;color:#495057;cursor:pointer;font-size:12px;line-height:1;',
+    '.aaRowLabel{width:44px;color:#6c757d;font-size:10px;}',
+    /* Fine-step buttons (±10 %) */
+    '.aaBtn{width:16px;height:18px;padding:0;border:1px solid #adb5bd;border-radius:3px;',
+    '  background:#f8f9fa;color:#495057;cursor:pointer;font-size:11px;line-height:1;',
     '  display:flex;align-items:center;justify-content:center;}',
     '.aaBtn:hover{background:#e9ecef;border-color:#6c757d;}',
-    '.aaPct{width:34px;text-align:center;font-size:10px;font-weight:600;color:#212529;}',
+    /* Coarse-step buttons (±100 %) — slightly wider, distinct colour */
+    '.aaBtnCoarse{width:22px;height:18px;padding:0;border:1px solid #9ec5fe;border-radius:3px;',
+    '  background:#cfe2ff;color:#084298;cursor:pointer;font-size:10px;font-weight:700;line-height:1;',
+    '  display:flex;align-items:center;justify-content:center;}',
+    '.aaBtnCoarse:hover{background:#9ec5fe;border-color:#084298;}',
+    '.aaPct{width:44px;text-align:center;font-size:10px;font-weight:600;color:#212529;}',
     '.aaResetBtn{padding:1px 5px;border:1px solid #adb5bd;border-radius:3px;',
     '  background:#f8f9fa;color:#6c757d;cursor:pointer;font-size:9px;}',
     '.aaResetBtn:hover{background:#e9ecef;}',
@@ -6996,27 +7038,40 @@ function buildViewModeButtons() {
     '<button class="vmToolBtn" id="btnAtypeGroups"  title="A-Type Groups panel — filter/collapse by country→city→node tree" onclick="toggleAtypeGroupsPanel()">🗂 A-Groups</button>' +
     '<button class="vmToolBtn" id="btnAutoArrange" title="Auto-arrange nodes by country→city spatial clustering" onclick="autoArrangeByCountryCity()">⟳ Auto-Arrange</button>' +
     /* ── Auto-arrange spacing controls ─────────────────────────────── */
-    '<div id="aaSpacingPanel" title="Adjust auto-arrange spacing (10% steps). Changes apply immediately.">' +
+    /* Fine (±10%) = aaBtn  |  Coarse (±100%) = aaBtnCoarse           */
+    '<div id="aaSpacingPanel" title="Adjust auto-arrange spacing. Range: 10%–1000%. Fine ±10% / Coarse ±100%. Live mode re-arranges on every click.">' +
+      /* Node row */
       '<div class="aaRow">' +
         '<span class="aaRowLabel">Node:</span>' +
-        '<button class="aaBtn" onclick="_aaAdjust(\'node\',-0.1)" title="Node spacing −10%">−</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'node\',-1.0)" title="Node spacing −100%">−−</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'node\',-0.1)" title="Node spacing −10%">−</button>' +
         '<span class="aaPct" id="aaNodePct">100%</span>' +
-        '<button class="aaBtn" onclick="_aaAdjust(\'node\',+0.1)" title="Node spacing +10%">+</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'node\',+0.1)" title="Node spacing +10%">+</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'node\',+1.0)" title="Node spacing +100%">++</button>' +
       '</div>' +
+      /* City row */
       '<div class="aaRow">' +
         '<span class="aaRowLabel">City:</span>' +
-        '<button class="aaBtn" onclick="_aaAdjust(\'city\',-0.1)" title="City spacing −10%">−</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'city\',-1.0)" title="City spacing −100%">−−</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'city\',-0.1)" title="City spacing −10%">−</button>' +
         '<span class="aaPct" id="aaCityPct">100%</span>' +
-        '<button class="aaBtn" onclick="_aaAdjust(\'city\',+0.1)" title="City spacing +10%">+</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'city\',+0.1)" title="City spacing +10%">+</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'city\',+1.0)" title="City spacing +100%">++</button>' +
       '</div>' +
+      /* Country row */
       '<div class="aaRow">' +
         '<span class="aaRowLabel">Country:</span>' +
-        '<button class="aaBtn" onclick="_aaAdjust(\'country\',-0.1)" title="Country spacing −10%">−</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'country\',-1.0)" title="Country spacing −100%">−−</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'country\',-0.1)" title="Country spacing −10%">−</button>' +
         '<span class="aaPct" id="aaCountryPct">100%</span>' +
-        '<button class="aaBtn" onclick="_aaAdjust(\'country\',+0.1)" title="Country spacing +10%">+</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'country\',+0.1)" title="Country spacing +10%">+</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'country\',+1.0)" title="Country spacing +100%">++</button>' +
       '</div>' +
-      '<div class="aaRow" style="justify-content:flex-end;">' +
-        '<button class="aaResetBtn" onclick="_aaReset()" title="Reset all spacing to 100%">↺ Reset</button>' +
+      /* Action row: Live toggle + Reset */
+      '<div class="aaRow" style="justify-content:flex-end;gap:4px;">' +
+        '<button id="aaLiveToggle" class="aaResetBtn" onclick="_aaToggleLive()" ' +
+          'title="Live mode: re-arrange immediately on every +/− click. Off by default.">Live: OFF</button>' +
+        '<button class="aaResetBtn" onclick="_aaReset()" title="Reset all spacing to 100% and re-arrange">↺ Reset</button>' +
       '</div>' +
     '</div>';
 
