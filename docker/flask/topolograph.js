@@ -6937,7 +6937,8 @@ function buildViewModeButtons() {
     '<button class="vmToolBtn" id="btnCountryFilter" title="Filter by country, IP range, and hostname format (A/B/C-type)" onclick="toggleCountryFilterPanel()">🌍 Countries</button>' +
     '<button class="vmToolBtn" id="btnUnkFilter"     title="Show only UNK (unclassified) nodes — quick filter by IP range" onclick="toggleUnkFilterPanel()">⚠ UNK Filter</button>' +
     '<button class="vmToolBtn" id="btnTypeFilter"   title="Filter by Network Type — A-type (country-airport-city-role), B-type (city-role-vendor), C-type (IP-only)" onclick="toggleNetworkTypePanel()">🔤 Net Type</button>' +
-    '<button class="vmToolBtn" id="btnAtypeGroups" title="A-Type Groups panel — filter/collapse by country→city→node tree" onclick="toggleAtypeGroupsPanel()">🗂 A-Groups</button>';
+    '<button class="vmToolBtn" id="btnAtypeGroups"  title="A-Type Groups panel — filter/collapse by country→city→node tree" onclick="toggleAtypeGroupsPanel()">🗂 A-Groups</button>' +
+    '<button class="vmToolBtn" id="btnAutoArrange" title="Auto-arrange nodes by country→city spatial clustering + physics stabilization" onclick="autoArrangeByCountryCity()">⟳ Auto-Arrange</button>';
 
   // Wire click handlers — legacy mode buttons
   bar.querySelectorAll('.vmBtn').forEach(function (btn) {
@@ -6992,6 +6993,116 @@ function buildViewModeButtons() {
   // Reset composable state to match default enriched mode
   _vmVisibility = 'all'; _vmStyle = 'colors'; _vmInteract = 'none';
   _updateCompositeButtons();
+}
+
+// ── PRD-06: Auto-Arrange Layout (country centroid circles) ───────────────────
+
+/**
+ * Auto-arrange nodes spatially by country cluster then city sub-cluster.
+ * Algorithm:
+ *   1. Build country→city→node map using _parseAtypeHostname + country property
+ *   2. Assign country centroids in a circle of radius R
+ *   3. Assign city centroids in sub-circle of radius r around each country centroid
+ *   4. Set node x,y = city centroid + small random jitter
+ *   5. Run vis.js physics stabilization
+ *   6. On stabilized: pin all nodes (physics=false, fixed=true), save positions
+ */
+function autoArrangeByCountryCity() {
+  if (typeof nodes === 'undefined' || !nodes || typeof network === 'undefined' || !network) {
+    console.warn('[AUTO-ARRANGE] nodes or network not available');
+    return;
+  }
+
+  // 1. Build spatial map: country → city → [nodeId, ...]
+  var tree = {};
+  nodes.get().forEach(function (n) {
+    var host = String(n.hostname || n.label || '').split('\n')[0].trim();
+    var parsed = _parseAtypeHostname(host);
+    // Use parsed country from hostname; fallback to node.country property; then 'UNK'
+    var country = parsed ? parsed.country : ((n.country || '').toUpperCase() || 'UNK');
+    var city    = parsed ? parsed.city    : 'UNK';
+    if (!tree[country]) tree[country] = {};
+    if (!tree[country][city]) tree[country][city] = [];
+    tree[country][city].push(n.id);
+  });
+
+  // 2. Country centroids in a large circle
+  var countries = Object.keys(tree);
+  var R = Math.max(900, countries.length * 150);
+  var positions = {};
+
+  countries.forEach(function (country, ci) {
+    var cAngle = (2 * Math.PI * ci) / countries.length;
+    var cx = R * Math.cos(cAngle);
+    var cy = R * Math.sin(cAngle);
+
+    // 3. City sub-circle within country
+    var cities = Object.keys(tree[country]);
+    var r = Math.max(220, cities.length * 90);
+    cities.forEach(function (city, cityI) {
+      var cityAngle = cities.length > 1
+        ? (2 * Math.PI * cityI) / cities.length
+        : 0;
+      var cityX = cx + r * Math.cos(cityAngle);
+      var cityY = cy + r * Math.sin(cityAngle);
+
+      // 4. Nodes in tight cluster around city centroid
+      var jitter = 70;
+      tree[country][city].forEach(function (id) {
+        positions[id] = {
+          x: cityX + (Math.random() - 0.5) * jitter,
+          y: cityY + (Math.random() - 0.5) * jitter
+        };
+      });
+    });
+  });
+
+  // 5. Apply positions and enable physics for stabilization
+  network.setOptions({ physics: { enabled: true } });
+  var nodeUpdates = Object.keys(positions).map(function (id) {
+    return { id: id, x: positions[id].x, y: positions[id].y, physics: true, fixed: false };
+  });
+  nodes.update(nodeUpdates);
+
+  // 6. After stabilize: pin nodes and save
+  var _arranged = false;
+  network.once('stabilized', function () {
+    if (_arranged) return;
+    _arranged = true;
+    network.setOptions({ physics: { enabled: false } });
+    var finalPos = network.getPositions();
+    var pinUpdates = Object.keys(finalPos).map(function (id) {
+      return { id: id, physics: false, fixed: { x: true, y: true },
+               x: finalPos[id].x, y: finalPos[id].y };
+    });
+    nodes.update(pinUpdates);
+    if (typeof show_instant_notification === 'function') {
+      show_instant_notification('Auto-arranged by country & city', 2000);
+    }
+    if (typeof save_nodes_position === 'function') {
+      setTimeout(save_nodes_position, 800);
+    }
+    var btn = document.getElementById('btnAutoArrange');
+    if (btn) { btn.textContent = '✓ Arranged'; setTimeout(function () { btn.textContent = '⟳ Auto-Arrange'; }, 2500); }
+  });
+
+  // Fallback: if stabilized doesn't fire within 15s, pin manually
+  setTimeout(function () {
+    if (!_arranged) {
+      _arranged = true;
+      network.stopSimulation();
+      network.setOptions({ physics: { enabled: false } });
+      var finalPos = network.getPositions();
+      var pinUpdates = Object.keys(finalPos).map(function (id) {
+        return { id: id, physics: false, fixed: { x: true, y: true } };
+      });
+      nodes.update(pinUpdates);
+      if (typeof save_nodes_position === 'function') setTimeout(save_nodes_position, 500);
+    }
+  }, 15000);
+
+  network.startSimulation();
+  console.log('[AUTO-ARRANGE] Started — ' + Object.keys(positions).length + ' nodes positioned across ' + countries.length + ' countries');
 }
 
 // ── SP4: Country Filter Panel toggle (toolbar button handler) ────────────────
