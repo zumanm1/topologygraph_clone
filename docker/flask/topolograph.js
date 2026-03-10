@@ -137,13 +137,17 @@ function do_show_diagram_button_btn() {
       //console.log(`${response.graph_time} with comparance ${loaded_diagram_graph_time}`);
       // delete old temp diagrams, when we pressed Show button
       delete_old_yaml_graph();
-      if (response.error_code != '') {
-        show_instant_notification(response.error_code, delay = 10000, warning = true);
+      var ec = response.error_code;
+      if (ec && typeof ec === 'string' && ec.trim()) {
+        show_instant_notification(ec, delay = 10000, warning = true);
+      } else if (ec && typeof ec !== 'string') {
+        show_instant_notification(String(ec), delay = 10000, warning = true);
       }
     },
     error: function callbackFunc(response) {
       let err_response = response.responseJSON;
-      show_instant_notification(err_response.error_code, delay = 12500, warning = true);
+      var ec2 = err_response && err_response.error_code;
+      show_instant_notification(ec2 ? String(ec2) : 'Request failed', delay = 12500, warning = true);
     }
   })
 }
@@ -7140,12 +7144,13 @@ function buildViewModeButtons() {
     '.vmVisBtn.active{background:#198754;border-color:#157347;color:#fff;}',
     '.vmStyleBtn.active{background:#6c757d;border-color:#565e64;color:#fff;}',
     '.vmInteractBtn.active{background:#0d6efd;border-color:#0a58ca;color:#fff;}',
-    /* Auto-arrange spacing controls */
+    /* Spacing controls panel */
     '#aaSpacingPanel{display:inline-flex;flex-direction:column;gap:2px;',
     '  margin-left:4px;vertical-align:middle;border-left:1px solid #dee2e6;',
     '  padding-left:6px;}',
     '.aaRow{display:flex;align-items:center;gap:2px;font-size:10px;line-height:1;}',
-    '.aaRowLabel{width:44px;color:#6c757d;font-size:10px;}',
+    '.aaRowLabel{width:44px;color:#6c757d;font-size:10px;font-weight:600;}',
+    '.aaRowSub{font-size:8px;color:#adb5bd;line-height:1;margin-top:1px;}',
     /* Fine-step buttons (±10 %) */
     '.aaBtn{width:16px;height:18px;padding:0;border:1px solid #adb5bd;border-radius:3px;',
     '  background:#f8f9fa;color:#495057;cursor:pointer;font-size:11px;line-height:1;',
@@ -7204,40 +7209,48 @@ function buildViewModeButtons() {
     '<button class="vmToolBtn" id="btnUnkFilter"     title="Show only UNK (unclassified) nodes — quick filter by IP range" onclick="toggleUnkFilterPanel()">⚠ UNK Filter</button>' +
     '<button class="vmToolBtn" id="btnTypeFilter"   title="Filter by Network Type — A-type (country-airport-city-role), B-type (city-role-vendor), C-type (IP-only)" onclick="toggleNetworkTypePanel()">🔤 Net Type</button>' +
     '<button class="vmToolBtn" id="btnAtypeGroups"  title="A-Type Groups panel — filter/collapse by country→city→node tree" onclick="toggleAtypeGroupsPanel()">🗂 A-Groups</button>' +
-    '<button class="vmToolBtn" id="btnAutoArrange" title="Auto-arrange nodes by country→city spatial clustering" onclick="autoArrangeByCountryCity()">⟳ Auto-Arrange</button>' +
-    /* ── Auto-arrange spacing controls ─────────────────────────────── */
-    /* Fine (±10%) = aaBtn  |  Coarse (±100%) = aaBtnCoarse           */
-    '<div id="aaSpacingPanel" title="Adjust spacing relative to current positions. Fine ±10% / Coarse ±100%. Works without running Auto-Arrange first.">' +
-      /* Node row */
+    /* ── Spacing controls: Fine (±10%) = aaBtn  |  Coarse (±100%) = aaBtnCoarse ── */
+    /* ⟳ Auto-Arrange button removed — use ↺ Reset inside the panel for fresh ring layout */
+    '<div id="aaSpacingPanel" title="Layout Spacing — Node: gaps between nodes in same city · City: gaps between city clusters in same country · Country: gaps between countries. Fine ±10% (−/+), Coarse ±100% (−−/++). ↺ Reset re-runs the full ring layout.">' +
+      /* Node row — distance between nodes within the same city cluster */
       '<div class="aaRow">' +
-        '<span class="aaRowLabel">Node:</span>' +
-        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'node\',-1.0)" title="Node spacing −100%">−−</button>' +
-        '<button class="aaBtn"       onclick="_aaAdjust(\'node\',-0.1)" title="Node spacing −10%">−</button>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-start;min-width:46px;">' +
+          '<span class="aaRowLabel" title="Controls spacing between nodes that share the same city — moves them closer or further apart within their city cluster">Node</span>' +
+          '<span class="aaRowSub">within city</span>' +
+        '</div>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'node\',-1.0)" title="Compress nodes within same city (−100%)">−−</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'node\',-0.1)" title="Compress nodes within same city (−10%)">−</button>' +
         '<span class="aaPct" id="aaNodePct">100%</span>' +
-        '<button class="aaBtn"       onclick="_aaAdjust(\'node\',+0.1)" title="Node spacing +10%">+</button>' +
-        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'node\',+1.0)" title="Node spacing +100%">++</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'node\',+0.1)" title="Spread nodes within same city (+10%)">+</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'node\',+1.0)" title="Spread nodes within same city (+100%)">++</button>' +
       '</div>' +
-      /* City row */
+      /* City row — distance between city clusters within the same country */
       '<div class="aaRow">' +
-        '<span class="aaRowLabel">City:</span>' +
-        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'city\',-1.0)" title="City spacing −100%">−−</button>' +
-        '<button class="aaBtn"       onclick="_aaAdjust(\'city\',-0.1)" title="City spacing −10%">−</button>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-start;min-width:46px;">' +
+          '<span class="aaRowLabel" title="Controls spacing between city clusters within the same country — moves entire city groups closer or further apart">City</span>' +
+          '<span class="aaRowSub">within country</span>' +
+        '</div>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'city\',-1.0)" title="Compress city clusters within same country (−100%)">−−</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'city\',-0.1)" title="Compress city clusters within same country (−10%)">−</button>' +
         '<span class="aaPct" id="aaCityPct">100%</span>' +
-        '<button class="aaBtn"       onclick="_aaAdjust(\'city\',+0.1)" title="City spacing +10%">+</button>' +
-        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'city\',+1.0)" title="City spacing +100%">++</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'city\',+0.1)" title="Spread city clusters within same country (+10%)">+</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'city\',+1.0)" title="Spread city clusters within same country (+100%)">++</button>' +
       '</div>' +
-      /* Country row */
+      /* Country row — distance between country clusters across the whole topology */
       '<div class="aaRow">' +
-        '<span class="aaRowLabel">Country:</span>' +
-        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'country\',-1.0)" title="Country spacing −100%">−−</button>' +
-        '<button class="aaBtn"       onclick="_aaAdjust(\'country\',-0.1)" title="Country spacing −10%">−</button>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-start;min-width:46px;">' +
+          '<span class="aaRowLabel" title="Controls spacing between country clusters across the entire topology — moves country groups closer or further apart globally">Country</span>' +
+          '<span class="aaRowSub">across all</span>' +
+        '</div>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'country\',-1.0)" title="Compress country clusters globally (−100%)">−−</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'country\',-0.1)" title="Compress country clusters globally (−10%)">−</button>' +
         '<span class="aaPct" id="aaCountryPct">100%</span>' +
-        '<button class="aaBtn"       onclick="_aaAdjust(\'country\',+0.1)" title="Country spacing +10%">+</button>' +
-        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'country\',+1.0)" title="Country spacing +100%">++</button>' +
+        '<button class="aaBtn"       onclick="_aaAdjust(\'country\',+0.1)" title="Spread country clusters globally (+10%)">+</button>' +
+        '<button class="aaBtnCoarse" onclick="_aaAdjust(\'country\',+1.0)" title="Spread country clusters globally (+100%)">++</button>' +
       '</div>' +
-      /* Action row: Reset only (Live toggle removed — knobs always apply relative scaling) */
+      /* Action row: ↺ Reset = reset multipliers to 100% AND re-run full ring layout */
       '<div class="aaRow" style="justify-content:flex-end;gap:4px;">' +
-        '<button class="aaResetBtn" onclick="_aaReset()" title="Reset spacing to 100% and run a fresh Auto-Arrange ring layout">↺ Reset</button>' +
+        '<button class="aaResetBtn" onclick="_aaReset()" title="Reset all spacing to 100% and re-run the ring layout from scratch (re-arranges by country → city → node)">↺ Reset</button>' +
       '</div>' +
     '</div>';
 
@@ -7444,11 +7457,7 @@ function autoArrangeByCountryCity() {
   if (typeof show_instant_notification === 'function') {
     show_instant_notification('Auto-arranged: country \u2192 city \u2192 nodes', 2000);
   }
-  var btn = document.getElementById('btnAutoArrange');
-  if (btn) {
-    btn.textContent = '\u2713 Arranged';
-    setTimeout(function () { btn.textContent = '\u27f3 Auto-Arrange'; }, 2500);
-  }
+  // btnAutoArrange removed from toolbar; ↺ Reset button inside panel is the only trigger
   console.log('[AUTO-ARRANGE] Placed ' + Object.keys(positions).length +
     ' nodes: ' + namedCountries.length + ' named countries in main ring' +
     (hasUnk ? ' + UNK cluster below' : '') + ' (deterministic, no physics)');

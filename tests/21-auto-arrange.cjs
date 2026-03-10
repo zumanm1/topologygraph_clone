@@ -105,8 +105,8 @@ async function loadGraph84(page) {
         else { fail('autoArrangeByCountryCity() not found'); throw new Error('skip'); }
 
         const btnExists = await page.$('#btnAutoArrange');
-        if (btnExists) pass('⟳ Auto-Arrange toolbar button exists (#btnAutoArrange)');
-        else warn('#btnAutoArrange not found in DOM');
+        if (!btnExists) pass('⟳ Auto-Arrange toolbar button correctly absent (#btnAutoArrange removed)');
+        else fail('#btnAutoArrange still present — should have been removed from toolbar');
     } catch (err) {
         if (err.message !== 'skip') fail('Phase 2 failed', err.message);
         else { await browser.close(); process.exit(1); }
@@ -129,14 +129,9 @@ async function loadGraph84(page) {
     // ── Phase 4: Trigger auto-arrange (deterministic — no physics wait) ───────
     console.log('\n── Phase 4 : Trigger Auto-Arrange ──────────────────────────────────────');
     try {
-        const arrangeBtn = await page.$('#btnAutoArrange');
-        if (arrangeBtn) {
-            await arrangeBtn.click();
-            pass('Clicked ⟳ Auto-Arrange button');
-        } else {
-            await page.evaluate(() => autoArrangeByCountryCity());
-            pass('Called autoArrangeByCountryCity() directly (button not found)');
-        }
+        // btnAutoArrange removed — trigger via JS directly (↺ Reset button is the UI entry point)
+        await page.evaluate(() => autoArrangeByCountryCity());
+        pass('Called autoArrangeByCountryCity() directly (btnAutoArrange intentionally removed)');
         // Deterministic placement — positions applied synchronously in the JS call,
         // no physics stabilization event to wait for.
         await page.waitForTimeout(1500);
@@ -401,6 +396,19 @@ async function loadGraph84(page) {
         info(`Initial labels — Node:${labels.node} City:${labels.city} Country:${labels.country}`);
         if (labels.node && labels.city && labels.country) pass('All three % labels present (aaNodePct, aaCityPct, aaCountryPct)');
         else fail('One or more % labels missing');
+
+        // 9a1b: .aaRowSub subtitle elements present (3 total — one per row)
+        const subCount = await page.evaluate(() => document.querySelectorAll('#aaSpacingPanel .aaRowSub').length);
+        if (subCount === 3) pass('.aaRowSub subtitle elements present (3 total — within city / within country / across all)');
+        else fail(`.aaRowSub count = ${subCount}, expected 3`);
+
+        const subTexts = await page.evaluate(() =>
+            Array.from(document.querySelectorAll('#aaSpacingPanel .aaRowSub')).map(el => el.textContent.trim())
+        );
+        const expectedSubs = ['within city', 'within country', 'across all'];
+        const subsMatch = expectedSubs.every((t, i) => subTexts[i] === t);
+        if (subsMatch) pass('Row subtitles correct: "within city", "within country", "across all"');
+        else fail(`Row subtitles mismatch: expected ${JSON.stringify(expectedSubs)}, got ${JSON.stringify(subTexts)}`);
 
         // 9a2: Live toggle removed — verify #aaLiveToggle does NOT exist
         const liveToggleGone = await page.evaluate(() => document.getElementById('aaLiveToggle') === null);

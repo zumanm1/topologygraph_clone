@@ -6,9 +6,18 @@
   }
 
   function notify(message, warning) {
-    if (typeof show_instant_notification === 'function') {
-      show_instant_notification(message, 3500, !!warning);
+    if (typeof show_instant_notification !== 'function') return;
+    var msg;
+    if (typeof message === 'string') {
+      msg = message;
+    } else if (Array.isArray(message)) {
+      msg = '(' + message.length + ' items)';
+    } else if (message !== null && typeof message === 'object') {
+      msg = message.msg || message.message || message.detail || JSON.stringify(message).slice(0, 120);
+    } else {
+      msg = String(message || '');
     }
+    show_instant_notification(msg, 3500, !!warning);
   }
 
   function currentGraphTime() {
@@ -57,7 +66,18 @@
       graph_time: currentGraphTime(),
       view_mode: currentViewMode()
     });
-    return apiRequest('/layouts?' + query.toString(), { method: 'GET' });
+    let data = await apiRequest('/layouts?' + query.toString(), { method: 'GET' });
+    // Fallback: if not found and current viewMode isn't 'enriched', retry with 'enriched'
+    if (!data.found && currentViewMode() !== 'enriched') {
+      const q2 = new URLSearchParams({
+        graph_id: currentGraphId(),
+        graph_time: currentGraphTime(),
+        view_mode: 'enriched'
+      });
+      const d2 = await apiRequest('/layouts?' + q2.toString(), { method: 'GET' });
+      if (d2.found) data = d2;
+    }
+    return data;
   }
 
   async function apiRequest(path, options) {
@@ -158,7 +178,7 @@
       return false;
     }
     if (!data.found) {
-      if (showNotification) notify('No saved layout for this topology mode', true);
+      if (showNotification) notify('No saved layout found — drag a node to auto-save, or use 💾 Save Layout', true);
       return false;
     }
     if (!sameContext(requestedContext, {
