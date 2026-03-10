@@ -590,6 +590,117 @@ async function loadGraph84(page) {
                 fail(`Node spacing did not scale (200%: ${distAt200}px vs 100%: ${distAt100}px, need ≥1.5×)`);
         }
 
+        // 9f: City knob moves city clusters — WITHOUT prior Auto-Arrange
+        //     Reset multipliers, find a country with 2+ cities, record inter-city distance,
+        //     click City++ and verify cities spread apart.
+        await page.evaluate(() => { _aaNodeMultiplier=1; _aaCityMultiplier=1; _aaCountryMultiplier=1; _updateAaControls(); });
+        await page.waitForTimeout(300);
+        const multiCityCountry = await page.evaluate(() => {
+            // Build country→city→nodeIds tree
+            var tree = {};
+            nodes.get().forEach(function(n) {
+                var host   = String(n.hostname||n.label||'').split('\n')[0].trim();
+                var parsed = (typeof _parseAtypeHostname === 'function') ? _parseAtypeHostname(host) : null;
+                var country = parsed ? parsed.country : ((n.country||'').toUpperCase()||'UNK');
+                var city    = parsed ? parsed.city    : ((n.city   ||'').toUpperCase()||'UNK');
+                if (country==='UNK') return;
+                if (!tree[country]) tree[country]={};
+                if (!tree[country][city]) tree[country][city]=[];
+                tree[country][city].push(n.id);
+            });
+            // Pick first country with ≥2 cities each having ≥1 node
+            var chosen = null, city1Ids = [], city2Ids = [];
+            Object.keys(tree).sort().some(function(c) {
+                var cityNames = Object.keys(tree[c]).sort();
+                if (cityNames.length >= 2) {
+                    chosen = c;
+                    city1Ids = tree[c][cityNames[0]];
+                    city2Ids = tree[c][cityNames[1]];
+                    return true;
+                }
+                return false;
+            });
+            if (!chosen) return { skip: true };
+            // Centroid distance between city1 and city2
+            var pos = network.getPositions();
+            function centroid(ids) {
+                var sx=0, sy=0, n=0;
+                ids.forEach(function(id){ var p=pos[id]; if(p){sx+=p.x;sy+=p.y;n++;} });
+                return n ? {x:sx/n, y:sy/n} : null;
+            }
+            var c1 = centroid(city1Ids), c2 = centroid(city2Ids);
+            var distBefore = (c1&&c2) ? Math.round(Math.sqrt(Math.pow(c1.x-c2.x,2)+Math.pow(c1.y-c2.y,2))) : 0;
+            return { chosen, city1Ids, city2Ids, distBefore };
+        });
+        if (multiCityCountry.skip) {
+            warn('No country with ≥2 A-type cities found — city knob movement test skipped');
+        } else {
+            info(`City knob test — country with 2+ cities; inter-city dist before: ${multiCityCountry.distBefore}px`);
+            // Click City++ (×2) without auto-arrange — ring-geometry approach should move cities
+            await page.evaluate(() => _aaAdjust('city', +1.0));   // 1.0 → 2.0
+            await page.waitForTimeout(500);
+            const cityDistAfter = await page.evaluate(({c1ids, c2ids}) => {
+                var pos = network.getPositions();
+                function centroid(ids) {
+                    var sx=0,sy=0,n=0;
+                    ids.forEach(function(id){var p=pos[id];if(p){sx+=p.x;sy+=p.y;n++;}});
+                    return n?{x:sx/n,y:sy/n}:null;
+                }
+                var c1=centroid(c1ids), c2=centroid(c2ids);
+                return (c1&&c2) ? Math.round(Math.sqrt(Math.pow(c1.x-c2.x,2)+Math.pow(c1.y-c2.y,2))) : 0;
+            }, { c1ids: multiCityCountry.city1Ids, c2ids: multiCityCountry.city2Ids });
+            info(`City knob test — inter-city dist after City++ (ring ×2): ${cityDistAfter}px`);
+            if (cityDistAfter > 100) {
+                pass(`City++ moves city clusters apart: ${multiCityCountry.distBefore}px → ${cityDistAfter}px (ring-geometry, no prior Auto-Arrange)`);
+            } else {
+                fail(`City knob did NOT move city clusters: ${multiCityCountry.distBefore}px → ${cityDistAfter}px`);
+            }
+        }
+
+        // 9g: Country knob moves country clusters — ring-geometry approach
+        await page.evaluate(() => { _aaNodeMultiplier=1; _aaCityMultiplier=1; _aaCountryMultiplier=1; _updateAaControls(); });
+        await page.evaluate(() => autoArrangeByCountryCity());
+        await page.waitForTimeout(1200);
+        const countryDist = await page.evaluate(() => {
+            // Pick two named countries and record centroid distance
+            var tree = {};
+            nodes.get().forEach(function(n) {
+                var host   = String(n.hostname||n.label||'').split('\n')[0].trim();
+                var parsed = (typeof _parseAtypeHostname === 'function') ? _parseAtypeHostname(host) : null;
+                var country = parsed ? parsed.country : ((n.country||'').toUpperCase()||'UNK');
+                if (country==='UNK') return;
+                if (!tree[country]) tree[country]=[];
+                tree[country].push(n.id);
+            });
+            var countries = Object.keys(tree).sort();
+            if (countries.length < 2) return { skip: true };
+            var pos = network.getPositions();
+            function centroid(ids){ var sx=0,sy=0,n=0; ids.forEach(function(id){var p=pos[id];if(p){sx+=p.x;sy+=p.y;n++;}}); return n?{x:sx/n,y:sy/n}:null; }
+            var c1=centroid(tree[countries[0]]), c2=centroid(tree[countries[1]]);
+            var dist = (c1&&c2)?Math.round(Math.sqrt(Math.pow(c1.x-c2.x,2)+Math.pow(c1.y-c2.y,2))):0;
+            return { dist, c1ids: tree[countries[0]], c2ids: tree[countries[1]], c1: countries[0], c2: countries[1] };
+        });
+        if (countryDist.skip) {
+            warn('Fewer than 2 named countries — country knob test skipped');
+        } else {
+            info(`Country knob test — ${countryDist.c1} vs ${countryDist.c2}: dist before Country++: ${countryDist.dist}px`);
+            // Country++ (×2) — ring-geometry doubles ring radius → countries should be much further apart
+            await page.evaluate(() => _aaAdjust('country', +1.0));  // 1.0 → 2.0
+            await page.waitForTimeout(500);
+            const cDistAfter = await page.evaluate(({c1ids, c2ids}) => {
+                var pos = network.getPositions();
+                function centroid(ids){ var sx=0,sy=0,n=0; ids.forEach(function(id){var p=pos[id];if(p){sx+=p.x;sy+=p.y;n++;}}); return n?{x:sx/n,y:sy/n}:null; }
+                var c1=centroid(c1ids), c2=centroid(c2ids);
+                return (c1&&c2)?Math.round(Math.sqrt(Math.pow(c1.x-c2.x,2)+Math.pow(c1.y-c2.y,2))):0;
+            }, { c1ids: countryDist.c1ids, c2ids: countryDist.c2ids });
+            info(`Country knob test — dist after Country++ (ring ×2): ${cDistAfter}px`);
+            if (cDistAfter >= countryDist.dist * 1.5) {
+                pass(`Country++ spreads countries: ${countryDist.dist}px → ${cDistAfter}px (×${(cDistAfter/countryDist.dist).toFixed(1)}) ring-geometry`);
+            } else {
+                fail(`Country knob did not spread countries: ${countryDist.dist}px → ${cDistAfter}px (need ≥1.5×)`);
+            }
+        }
+
         // 9e: Reset → all back to 100%
         await page.evaluate(() => _aaReset());
         await page.waitForTimeout(1200);

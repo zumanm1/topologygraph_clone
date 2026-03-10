@@ -6252,12 +6252,16 @@ function _aaScaleCurrentPositions(param, scaleFactor) {
     });
 
   } else if (param === 'city') {
-    // ── Scale city centroids relative to country centroid; move each city rigid ──
+    // ── Place city centroids at ring-geometry positions relative to CURRENT country centroid ──
+    // Uses _aaCityMultiplier (absolute) so this works with or without prior Auto-Arrange.
+    // Each city cluster moves as a rigid body; internal node arrangement is preserved.
     Object.keys(tree).forEach(function (country) {
+      var cityNames = Object.keys(tree[country]).sort();  // sorted = same order as autoArrangeByCountryCity
+      if (cityNames.length === 1) return;  // single-city country — no inter-city spacing to adjust
+
+      // Current country centroid (average of all nodes in this country)
       var countryIds = [];
-      Object.keys(tree[country]).forEach(function (c) {
-        countryIds = countryIds.concat(tree[country][c]);
-      });
+      cityNames.forEach(function (c) { countryIds = countryIds.concat(tree[country][c]); });
       var ccx = 0, ccy = 0, ccnt = 0;
       countryIds.forEach(function (id) {
         var p = pos[id]; if (p) { ccx += p.x; ccy += p.y; ccnt++; }
@@ -6265,7 +6269,10 @@ function _aaScaleCurrentPositions(param, scaleFactor) {
       if (!ccnt) return;
       ccx /= ccnt; ccy /= ccnt;
 
-      Object.keys(tree[country]).forEach(function (city) {
+      // Ideal city sub-ring radius — same formula as autoArrangeByCountryCity
+      var r = Math.max(250, cityNames.length * 150) * _aaCityMultiplier;
+
+      cityNames.forEach(function (city, cityI) {
         var ids = tree[country][city];
         var cx = 0, cy = 0, cnt = 0;
         ids.forEach(function (id) {
@@ -6273,9 +6280,14 @@ function _aaScaleCurrentPositions(param, scaleFactor) {
         });
         if (!cnt) return;
         cx /= cnt; cy /= cnt;
-        // New city centroid = scale from country centroid → compute translation
-        var dx = (ccx + (cx - ccx) * scaleFactor) - cx;
-        var dy = (ccy + (cy - ccy) * scaleFactor) - cy;
+
+        // Target city centroid = ring-geometry position around CURRENT country centroid
+        var cityAngle = (2 * Math.PI * cityI) / cityNames.length - Math.PI / 2;
+        var targetCx = ccx + r * Math.cos(cityAngle);
+        var targetCy = ccy + r * Math.sin(cityAngle);
+        var dx = targetCx - cx;
+        var dy = targetCy - cy;
+
         ids.forEach(function (id) {
           var p = pos[id]; if (!p) return;
           updates.push({ id: id, x: p.x + dx, y: p.y + dy,
@@ -6285,16 +6297,34 @@ function _aaScaleCurrentPositions(param, scaleFactor) {
     });
 
   } else if (param === 'country') {
-    // ── Scale country centroids relative to global centroid; move each country rigid ──
-    var allIds = nodes.get().map(function (n) { return n.id; });
+    // ── Place country centroids at ring-geometry positions relative to CURRENT global centroid ──
+    // Uses _aaCountryMultiplier (absolute) so this works with or without prior Auto-Arrange.
+    // UNK cluster is left at its current position (excluded from ring).
+    var allCountries    = Object.keys(tree).sort();
+    var namedCountries  = allCountries.filter(function (c) { return c !== 'UNK'; });
+    var countriesInRing = namedCountries.length > 0 ? namedCountries : allCountries;
+
+    // Current global centroid — computed from named-country nodes only (excludes UNK)
+    var ringIds = [];
+    countriesInRing.forEach(function (country) {
+      Object.keys(tree[country]).forEach(function (c) {
+        ringIds = ringIds.concat(tree[country][c]);
+      });
+    });
     var gcx = 0, gcy = 0, gcnt = 0;
-    allIds.forEach(function (id) {
+    ringIds.forEach(function (id) {
       var p = pos[id]; if (p) { gcx += p.x; gcy += p.y; gcnt++; }
     });
     if (!gcnt) return;
     gcx /= gcnt; gcy /= gcnt;
 
-    Object.keys(tree).forEach(function (country) {
+    // Ring radius — same formula as autoArrangeByCountryCity
+    var R = Math.max(1200, namedCountries.length * 500) * _aaCountryMultiplier;
+
+    countriesInRing.forEach(function (country, ci) {
+      var cAngle = (2 * Math.PI * ci) / countriesInRing.length - Math.PI / 2;
+
+      // Current country centroid
       var countryIds = [];
       Object.keys(tree[country]).forEach(function (c) {
         countryIds = countryIds.concat(tree[country][c]);
@@ -6305,8 +6335,13 @@ function _aaScaleCurrentPositions(param, scaleFactor) {
       });
       if (!ccnt) return;
       ccx /= ccnt; ccy /= ccnt;
-      var dx = (gcx + (ccx - gcx) * scaleFactor) - ccx;
-      var dy = (gcy + (ccy - gcy) * scaleFactor) - ccy;
+
+      // Target country centroid = ring-geometry position around CURRENT global centroid
+      var targetCcx = gcx + R * Math.cos(cAngle);
+      var targetCcy = gcy + R * Math.sin(cAngle);
+      var dx = targetCcx - ccx;
+      var dy = targetCcy - ccy;
+
       countryIds.forEach(function (id) {
         var p = pos[id]; if (!p) return;
         updates.push({ id: id, x: p.x + dx, y: p.y + dy,
@@ -6317,8 +6352,12 @@ function _aaScaleCurrentPositions(param, scaleFactor) {
 
   if (updates.length) {
     nodes.update(updates);
-    console.log('[AA-SCALE] param=' + param + ' factor=' + scaleFactor.toFixed(3) +
-      ' moved ' + updates.length + ' nodes (relative, no re-layout)');
+    var logDetail = (param === 'node')
+      ? 'factor=' + scaleFactor.toFixed(3) + ' (relative)'
+      : (param === 'city'    ? 'mult=' + _aaCityMultiplier    + ' (ring-geometry)'
+                              : 'mult=' + _aaCountryMultiplier + ' (ring-geometry)');
+    console.log('[AA-SCALE] param=' + param + ' ' + logDetail +
+      ' moved ' + updates.length + ' nodes');
   }
   if (typeof save_nodes_position === 'function') setTimeout(save_nodes_position, 800);
 }
