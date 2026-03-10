@@ -5117,8 +5117,9 @@ function filterNodesByCountry(mode, selected) {
 
 function _nodeHiddenByRules(node) {
   return !!(node && (node._modeHidden || node._filterHidden || node._collapseHidden ||
+    node._cityCollapseHidden ||   // PRD-05: city-level collapse
     node._ipFilterHidden || node._hostnameFilterHidden || node._fmtFilterHidden ||
-    node._atypeGroupHidden));  // PRD-04: A-type group filter
+    node._atypeGroupHidden));     // PRD-04: A-type group filter
 }
 
 // ── PRD-04: A-type Groups Panel ──────────────────────────────────────────────
@@ -6521,6 +6522,173 @@ function toggleCollapseCountry(code) {
   if (typeof _persistCollapseState === 'function') { _persistCollapseState(); }
 }
 
+// ── PRD-05: City-level Collapse ──────────────────────────────────────────────
+var _cityCollapseState  = {};  // { 'FRA:PAR': true/false }
+var _cityCollapseHidden = {};  // { 'FRA:PAR': {nodeIds:Set, edgeIds:Set, metaEdges:[]} }
+
+/**
+ * Get all A-type nodes that belong to country+city.
+ */
+function _getCityNodes(country, city) {
+  if (typeof nodes === 'undefined' || !nodes) return [];
+  return nodes.get().filter(function (n) {
+    var host = String(n.hostname || n.label || '').split('\n')[0].trim();
+    var p = _parseAtypeHostname(host);
+    return p && p.country === country && p.city === city;
+  });
+}
+
+/**
+ * A node is a city gateway if it has edges to nodes OUTSIDE this city
+ * (different city, different country, or non-A-type).
+ */
+function _isCityGateway(node, country, city) {
+  if (typeof edges === 'undefined' || !edges) return false;
+  var nodeId = node.id;
+  return edges.get().some(function (e) {
+    var otherId = (e.from === nodeId) ? e.to : (e.to === nodeId ? e.from : null);
+    if (!otherId) return false;
+    var other = nodes.get(otherId);
+    if (!other) return false;
+    var otherHost = String(other.hostname || other.label || '').split('\n')[0].trim();
+    var p = _parseAtypeHostname(otherHost);
+    return !p || p.country !== country || p.city !== city;
+  });
+}
+
+/**
+ * Collapse all non-gateway nodes within a city (A-type country:city pair).
+ * Hides core nodes and intra-city edges; leaves inter-city edges visible.
+ */
+function collapseCity(country, city) {
+  var key = country + ':' + city;
+  if (typeof nodes === 'undefined' || !nodes) return;
+
+  var allCityNodes = _getCityNodes(country, city);
+  if (allCityNodes.length === 0) { _cityCollapseState[key] = true; return; }
+
+  var gateways = allCityNodes.filter(function (n) { return _isCityGateway(n, country, city); });
+  var cores    = allCityNodes.filter(function (n) { return !_isCityGateway(n, country, city); });
+
+  // If no gateways, all nodes are isolated — skip (can't show badge)
+  if (gateways.length === 0) {
+    _cityCollapseState[key] = true;
+    _cityCollapseHidden[key] = { nodeIds: new Set(), edgeIds: new Set(), metaEdges: [] };
+    _updateCityCollapsePanel();
+    return;
+  }
+
+  if (cores.length === 0) {
+    _cityCollapseState[key] = true;
+    _cityCollapseHidden[key] = { nodeIds: new Set(), edgeIds: new Set(), metaEdges: [] };
+    _updateCityCollapsePanel();
+    return;
+  }
+
+  var coreIds = new Set(cores.map(function (n) { return n.id; }));
+
+  // Hide intra-city edges (both endpoints are city core nodes)
+  var edgesToHide = [];
+  edges.get().forEach(function (e) {
+    if (coreIds.has(e.from) && coreIds.has(e.to)) edgesToHide.push(e.id);
+  });
+
+  if (typeof network !== 'undefined' && network) network.setOptions({ physics: { enabled: false } });
+
+  // Hide core nodes
+  nodes.update(cores.map(function (n) { return { id: n.id, _cityCollapseHidden: true }; }));
+
+  // Hide intra-city edges
+  if (edgesToHide.length) edges.update(edgesToHide.map(function (id) { return { id: id, _cityCollapseHidden: true }; }));
+
+  // Badge on gateway nodes: show city + core count
+  gateways.forEach(function (gw) {
+    var lbl = String(gw.label || gw.hostname || gw.id);
+    if (!lbl.includes('[' + city + ']')) {
+      nodes.update([{ id: gw.id, label: lbl + '\n[' + city + ':' + cores.length + ']' }]);
+    }
+  });
+
+  _cityCollapseState[key] = true;
+  _cityCollapseHidden[key] = {
+    nodeIds: coreIds,
+    edgeIds: new Set(edgesToHide),
+    metaEdges: [],
+    gateways: gateways.map(function (g) { return { id: g.id, origLabel: String(g.label || g.hostname || g.id) }; })
+  };
+
+  _syncEdgeVisibility();
+  _updateCityCollapsePanel();
+}
+
+/**
+ * Expand a previously collapsed city.
+ */
+function expandCity(country, city) {
+  var key = country + ':' + city;
+  if (typeof nodes === 'undefined' || !nodes) return;
+
+  var state = _cityCollapseHidden[key];
+  if (!state) { _cityCollapseState[key] = false; _updateCityCollapsePanel(); return; }
+
+  if (typeof network !== 'undefined' && network) network.setOptions({ physics: { enabled: false } });
+
+  // Restore nodes
+  if (state.nodeIds.size) {
+    var nodeUpd = [];
+    state.nodeIds.forEach(function (id) { nodeUpd.push({ id: id, _cityCollapseHidden: false }); });
+    nodes.update(nodeUpd);
+  }
+
+  // Restore edges
+  if (state.edgeIds.size) {
+    var edgeUpd = [];
+    state.edgeIds.forEach(function (id) { edgeUpd.push({ id: id, _cityCollapseHidden: false }); });
+    edges.update(edgeUpd);
+  }
+
+  // Remove gateway badge
+  if (state.gateways) {
+    state.gateways.forEach(function (gw) {
+      var n = nodes.get(gw.id);
+      if (n) nodes.update([{ id: gw.id, label: gw.origLabel }]);
+    });
+  }
+
+  _cityCollapseState[key] = false;
+  delete _cityCollapseHidden[key];
+
+  _syncEdgeVisibility();
+  _updateCityCollapsePanel();
+}
+
+/** Toggle city collapse/expand. */
+function toggleCollapseCity(country, city) {
+  var key = country + ':' + city;
+  if (_cityCollapseState[key]) expandCity(country, city);
+  else collapseCity(country, city);
+}
+
+/**
+ * Update the city collapse rows in the Country Groups panel.
+ * Called after each collapseCity/expandCity.
+ */
+function _updateCityCollapsePanel() {
+  // Update city row visual states if they exist
+  document.querySelectorAll('.cpCityRow').forEach(function (row) {
+    var key = row.dataset.citykey;
+    if (key && _cityCollapseState[key]) {
+      row.classList.add('collapsed');
+      var btn = row.querySelector('.cpCityToggleBtn');
+      if (btn) btn.textContent = '▶';
+    } else {
+      row.classList.remove('collapsed');
+      var btn2 = row.querySelector('.cpCityToggleBtn');
+      if (btn2) btn2.textContent = '−';
+    }
+  });
+}
+
 /** Collapse every country that has core routers. */
 function collapseAllCountries() {
   var countries = _getCountriesInGraph();
@@ -6531,6 +6699,12 @@ function collapseAllCountries() {
 function expandAllCountries() {
   var toExpand = Object.keys(_collapseState).filter(function (c) { return _collapseState[c]; });
   toExpand.forEach(function (code) { expandCountry(code); });
+  // Also expand all city collapses
+  var citiesToExpand = Object.keys(_cityCollapseState).filter(function (k) { return _cityCollapseState[k]; });
+  citiesToExpand.forEach(function (key) {
+    var parts = key.split(':');
+    if (parts.length >= 2) expandCity(parts[0], parts[1]);
+  });
 }
 
 // ── C. View Mode (4-button bar) ───────────────────────────────────────────────
@@ -6927,6 +7101,21 @@ function buildCollapsePanel() {
       '  border-radius:4px;color:#88ccff;cursor:pointer;padding:1px 5px;',
       '  margin-left:auto;flex-shrink:0;transition:.15s;}',
       '.cpSelectBtn:hover{background:#2a5580;}',
+      '.cpCitiesBtn{font-size:10px;background:#1e3028;border:1px solid #2a5040;',
+      '  border-radius:4px;color:#88ffcc;cursor:pointer;padding:1px 5px;',
+      '  flex-shrink:0;transition:.15s;margin-left:2px;}',
+      '.cpCitiesBtn:hover{background:#2a5040;}',
+      '.cpCityBlock{padding:2px 2px 4px 12px;display:none;}',
+      '.cpCityBlock.open{display:block;}',
+      '.cpCityRow{display:flex;align-items:center;gap:6px;padding:3px 2px;',
+      '  border-radius:4px;transition:.12s;}',
+      '.cpCityRow:hover{background:rgba(255,255,255,.05);}',
+      '.cpCityLabel{font-size:11px;color:#aac;flex:1;}',
+      '.cpCityStats{font-size:10px;color:#778;}',
+      '.cpCityToggleBtn{font-size:11px;flex-shrink:0;background:none;border:none;',
+      '  color:#88ffcc;cursor:pointer;padding:0 2px;line-height:1;}',
+      '.cpCityRow.collapsed .cpCityToggleBtn{color:#ffaa44;}',
+      '.cpCityRow.collapsed .cpCityLabel{color:#ffaa44;}',
       /* CL-F4 / CL-F1 footer action buttons */
       '.cpFooterRow{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid #2a3248;}',
       '.cpFooterBtn{flex:1;padding:4px 6px;border:1px solid #3a4560;border-radius:5px;',
@@ -6973,6 +7162,12 @@ function buildCollapsePanel() {
     var bg = col.background || '#888';
     var stats = countryStats[code];
     var hasCores = stats.cores > 0;
+
+    // Build city sub-rows for A-type cities within this country
+    var atypeTree = _buildAtypeTree();
+    var citiesInCountry = (atypeTree[code] && Object.keys(atypeTree[code]).sort()) || [];
+    var hasCities = citiesInCountry.length >= 2; // only show Cities button if ≥2 cities
+
     listHTML +=
       '<div class="cpRow" id="cpRow_' + code + '" data-country="' + code + '">' +
       '<span class="cpSwatch" style="background:' + bg + '"></span>' +
@@ -6981,8 +7176,25 @@ function buildCollapsePanel() {
       (hasCores ? ' · ' + stats.gateways + 'gw · ' + stats.cores + 'core' : ' · all gw') +
       '</span>' +
       '<button class="cpSelectBtn" data-country="' + code + '" title="Select all ' + code + ' nodes for group drag">⊡</button>' +
+      (hasCities ? '<button class="cpCitiesBtn" data-country="' + code + '" title="Toggle city collapse panel">🏙</button>' : '') +
       '<button class="cpToggleBtn" title="Toggle collapse/expand">▶</button>' +
       '</div>';
+
+    // City sub-block (hidden by default, toggled by 🏙 button)
+    if (hasCities) {
+      listHTML += '<div class="cpCityBlock" id="cpCityBlock_' + code + '">';
+      citiesInCountry.forEach(function (city) {
+        var cityKey = code + ':' + city;
+        var cityNodeCount = (atypeTree[code][city] || []).length;
+        listHTML +=
+          '<div class="cpCityRow" id="cpCityRow_' + cityKey + '" data-citykey="' + cityKey + '">' +
+          '<span class="cpCityLabel">' + city + '</span>' +
+          '<span class="cpCityStats">(' + cityNodeCount + ')</span>' +
+          '<button class="cpCityToggleBtn" title="Collapse/expand city ' + city + '">−</button>' +
+          '</div>';
+      });
+      listHTML += '</div>';
+    }
   });
 
   // UNK / unmapped countries (no gateway — cannot be collapsed to a boundary node)
@@ -7049,6 +7261,29 @@ function buildCollapsePanel() {
       if (e.target.classList.contains('cpSelectBtn') || e.target.classList.contains('cpToggleBtn')) return;
       var code = row.dataset.country;
       toggleCollapseCountry(code);
+    });
+  });
+
+  // ── Cities button — toggle city block visibility ─────────────────────────────
+  document.querySelectorAll('.cpCitiesBtn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var code = btn.dataset.country;
+      var block = document.getElementById('cpCityBlock_' + code);
+      if (block) {
+        var open = block.classList.toggle('open');
+        btn.textContent = open ? '🏙−' : '🏙';
+      }
+    });
+  });
+
+  // ── City row click → toggle city collapse ─────────────────────────────────────
+  document.querySelectorAll('.cpCityRow').forEach(function (row) {
+    row.addEventListener('click', function () {
+      var cityKey = row.dataset.citykey;
+      if (!cityKey) return;
+      var parts = cityKey.split(':');
+      if (parts.length >= 2) toggleCollapseCity(parts[0], parts[1]);
     });
   });
 
