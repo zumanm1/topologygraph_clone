@@ -6136,6 +6136,48 @@ var _vmVisibility = 'all';      // 'all' | 'gateway' | 'nongateway'
 var _vmStyle      = 'colors';   // 'colors' | 'grey'
 var _vmInteract   = 'none';     // 'none' | 'collapse'
 
+// ── Auto-arrange spacing multipliers (PRD-06 v2) ─────────────────────────────
+// Each multiplier scales the corresponding ring radius.  1.0 = 100% (default).
+// Range: 0.3 – 5.0.  Step: 0.1 (10 % per click).
+var _aaNodeMultiplier    = 1.0;  // ρ  — node ring within city
+var _aaCityMultiplier    = 1.0;  // r  — city ring within country
+var _aaCountryMultiplier = 1.0;  // R  — country ring
+
+/**
+ * Adjust one auto-arrange spacing multiplier by `delta` and re-apply layout.
+ * param: 'node' | 'city' | 'country'
+ * delta: positive = expand, negative = contract (typically ±0.1)
+ */
+function _aaAdjust(param, delta) {
+  var MIN = 0.3, MAX = 5.0;
+  function clamp(v) { return Math.round(Math.max(MIN, Math.min(MAX, v)) * 10) / 10; }
+  if (param === 'node')    { _aaNodeMultiplier    = clamp(_aaNodeMultiplier    + delta); }
+  if (param === 'city')    { _aaCityMultiplier    = clamp(_aaCityMultiplier    + delta); }
+  if (param === 'country') { _aaCountryMultiplier = clamp(_aaCountryMultiplier + delta); }
+  _updateAaControls();
+  autoArrangeByCountryCity();
+}
+
+/** Reset all three multipliers to 100 % and re-apply. */
+function _aaReset() {
+  _aaNodeMultiplier = _aaCityMultiplier = _aaCountryMultiplier = 1.0;
+  _updateAaControls();
+  autoArrangeByCountryCity();
+}
+
+/** Sync the % labels in the spacing control panel. */
+function _updateAaControls() {
+  var els = {
+    aaNodePct:    _aaNodeMultiplier,
+    aaCityPct:    _aaCityMultiplier,
+    aaCountryPct: _aaCountryMultiplier
+  };
+  Object.keys(els).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = Math.round(els[id] * 100) + '%';
+  });
+}
+
 // ── A. Helper utilities ───────────────────────────────────────────────────────
 
 /**
@@ -6894,6 +6936,20 @@ function buildViewModeButtons() {
     '.vmVisBtn.active{background:#198754;border-color:#157347;color:#fff;}',
     '.vmStyleBtn.active{background:#6c757d;border-color:#565e64;color:#fff;}',
     '.vmInteractBtn.active{background:#0d6efd;border-color:#0a58ca;color:#fff;}',
+    /* Auto-arrange spacing controls */
+    '#aaSpacingPanel{display:inline-flex;flex-direction:column;gap:2px;',
+    '  margin-left:4px;vertical-align:middle;border-left:1px solid #dee2e6;',
+    '  padding-left:6px;}',
+    '.aaRow{display:flex;align-items:center;gap:2px;font-size:10px;line-height:1;}',
+    '.aaRowLabel{width:58px;color:#6c757d;font-size:10px;}',
+    '.aaBtn{width:18px;height:18px;padding:0;border:1px solid #adb5bd;border-radius:3px;',
+    '  background:#f8f9fa;color:#495057;cursor:pointer;font-size:12px;line-height:1;',
+    '  display:flex;align-items:center;justify-content:center;}',
+    '.aaBtn:hover{background:#e9ecef;border-color:#6c757d;}',
+    '.aaPct{width:34px;text-align:center;font-size:10px;font-weight:600;color:#212529;}',
+    '.aaResetBtn{padding:1px 5px;border:1px solid #adb5bd;border-radius:3px;',
+    '  background:#f8f9fa;color:#6c757d;cursor:pointer;font-size:9px;}',
+    '.aaResetBtn:hover{background:#e9ecef;}',
     ].join('');
     document.head.appendChild(style);
   }
@@ -6938,7 +6994,31 @@ function buildViewModeButtons() {
     '<button class="vmToolBtn" id="btnUnkFilter"     title="Show only UNK (unclassified) nodes — quick filter by IP range" onclick="toggleUnkFilterPanel()">⚠ UNK Filter</button>' +
     '<button class="vmToolBtn" id="btnTypeFilter"   title="Filter by Network Type — A-type (country-airport-city-role), B-type (city-role-vendor), C-type (IP-only)" onclick="toggleNetworkTypePanel()">🔤 Net Type</button>' +
     '<button class="vmToolBtn" id="btnAtypeGroups"  title="A-Type Groups panel — filter/collapse by country→city→node tree" onclick="toggleAtypeGroupsPanel()">🗂 A-Groups</button>' +
-    '<button class="vmToolBtn" id="btnAutoArrange" title="Auto-arrange nodes by country→city spatial clustering + physics stabilization" onclick="autoArrangeByCountryCity()">⟳ Auto-Arrange</button>';
+    '<button class="vmToolBtn" id="btnAutoArrange" title="Auto-arrange nodes by country→city spatial clustering" onclick="autoArrangeByCountryCity()">⟳ Auto-Arrange</button>' +
+    /* ── Auto-arrange spacing controls ─────────────────────────────── */
+    '<div id="aaSpacingPanel" title="Adjust auto-arrange spacing (10% steps). Changes apply immediately.">' +
+      '<div class="aaRow">' +
+        '<span class="aaRowLabel">Node:</span>' +
+        '<button class="aaBtn" onclick="_aaAdjust(\'node\',-0.1)" title="Node spacing −10%">−</button>' +
+        '<span class="aaPct" id="aaNodePct">100%</span>' +
+        '<button class="aaBtn" onclick="_aaAdjust(\'node\',+0.1)" title="Node spacing +10%">+</button>' +
+      '</div>' +
+      '<div class="aaRow">' +
+        '<span class="aaRowLabel">City:</span>' +
+        '<button class="aaBtn" onclick="_aaAdjust(\'city\',-0.1)" title="City spacing −10%">−</button>' +
+        '<span class="aaPct" id="aaCityPct">100%</span>' +
+        '<button class="aaBtn" onclick="_aaAdjust(\'city\',+0.1)" title="City spacing +10%">+</button>' +
+      '</div>' +
+      '<div class="aaRow">' +
+        '<span class="aaRowLabel">Country:</span>' +
+        '<button class="aaBtn" onclick="_aaAdjust(\'country\',-0.1)" title="Country spacing −10%">−</button>' +
+        '<span class="aaPct" id="aaCountryPct">100%</span>' +
+        '<button class="aaBtn" onclick="_aaAdjust(\'country\',+0.1)" title="Country spacing +10%">+</button>' +
+      '</div>' +
+      '<div class="aaRow" style="justify-content:flex-end;">' +
+        '<button class="aaResetBtn" onclick="_aaReset()" title="Reset all spacing to 100%">↺ Reset</button>' +
+      '</div>' +
+    '</div>';
 
   // Wire click handlers — legacy mode buttons
   bar.querySelectorAll('.vmBtn').forEach(function (btn) {
@@ -7030,10 +7110,9 @@ function autoArrangeByCountryCity() {
 
   var countries = Object.keys(tree).sort();
 
-  // 2. Country centroid ring — large enough to keep country clusters visibly separated.
-  //    R = max(1200, countries * 500) gives ~3000px gap between adjacent centroids
-  //    for 12 countries (R=6000), so clusters never bleed into neighbours.
-  var R = Math.max(1200, countries.length * 500);
+  // 2. Country centroid ring — scaled by _aaCountryMultiplier (default 1.0 = 100%).
+  //    Base: max(1200, countries * 500).  Multiplier allows live +/- adjustment.
+  var R = Math.max(1200, countries.length * 500) * _aaCountryMultiplier;
   var positions = {};
 
   countries.forEach(function (country, ci) {
@@ -7044,12 +7123,11 @@ function autoArrangeByCountryCity() {
 
     var cities = Object.keys(tree[country]).sort();
 
-    // 3. City centroid sub-ring within country.
-    //    Single city → place directly on the country centroid (r = 0).
-    //    Multiple cities → sub-ring large enough to separate city clusters.
+    // 3. City centroid sub-ring within country — scaled by _aaCityMultiplier.
+    //    Single city → r = 0 (stays on country centroid, multiplier has no effect).
     var r = cities.length === 1
       ? 0
-      : Math.max(250, cities.length * 150);
+      : Math.max(250, cities.length * 150) * _aaCityMultiplier;
 
     cities.forEach(function (city, cityI) {
       var cityAngle = cities.length > 1
@@ -7061,13 +7139,13 @@ function autoArrangeByCountryCity() {
       var cityNodes = tree[country][city];
       var n = cityNodes.length;
 
-      // 4. Node ring radius ρ — guarantee arc between adjacent nodes ≥ 130px so links
-      //    are clearly visible.  Formula: arc = 2ρ·sin(π/n) ≥ 130  →  ρ ≥ 130/(2·sin(π/n))
+      // 4. Node ring radius ρ — scaled by _aaNodeMultiplier.
+      //    Base: arc = 2ρ·sin(π/n) ≥ 130px.  Multiplier allows live +/- adjustment.
       var rho;
       if      (n === 1) { rho = 0; }
-      else if (n === 2) { rho = 80; }                              // separation = 160px
+      else if (n === 2) { rho = 80 * _aaNodeMultiplier; }
       else              { rho = Math.max(80,
-                            Math.ceil(130 / (2 * Math.sin(Math.PI / n)))); }
+                            Math.ceil(130 / (2 * Math.sin(Math.PI / n)))) * _aaNodeMultiplier; }
 
       cityNodes.forEach(function (id, ni) {
         var nodeAngle = n > 1

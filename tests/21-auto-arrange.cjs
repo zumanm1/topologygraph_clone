@@ -385,6 +385,122 @@ async function loadGraph84(page) {
         fail('Phase 7 failed', err.message);
     }
 
+    // ── Phase 9: Spacing controls exist + +/- buttons work ──────────────────
+    console.log('\n── Phase 9 : Spacing Controls (+/- % buttons) ───────────────────────────');
+    try {
+        // 9a: Panel and all % labels present
+        const panelExists = await page.$('#aaSpacingPanel') !== null;
+        if (panelExists) pass('Spacing control panel #aaSpacingPanel present');
+        else fail('#aaSpacingPanel not found — check buildViewModeButtons()');
+
+        const labels = await page.evaluate(() => ({
+            node:    document.getElementById('aaNodePct')    ? document.getElementById('aaNodePct').textContent    : null,
+            city:    document.getElementById('aaCityPct')    ? document.getElementById('aaCityPct').textContent    : null,
+            country: document.getElementById('aaCountryPct') ? document.getElementById('aaCountryPct').textContent : null
+        }));
+        info(`Initial labels — Node:${labels.node} City:${labels.city} Country:${labels.country}`);
+        if (labels.node && labels.city && labels.country) pass('All three % labels present (aaNodePct, aaCityPct, aaCountryPct)');
+        else fail('One or more % labels missing');
+
+        // 9b: Click Node+ → label updates to 110%
+        await page.evaluate(() => _aaAdjust('node', +0.1));
+        await page.waitForTimeout(200);
+        const nodeLabel = await page.evaluate(() => document.getElementById('aaNodePct') ? document.getElementById('aaNodePct').textContent : '');
+        info(`After Node+: aaNodePct = ${nodeLabel}`);
+        if (nodeLabel === '110%') pass('Node+ button updates label to 110%');
+        else fail(`Expected 110%, got ${nodeLabel}`);
+
+        // 9c: Click City− → label updates to 90%
+        await page.evaluate(() => _aaAdjust('city', -0.1));
+        await page.waitForTimeout(200);
+        const cityLabel = await page.evaluate(() => document.getElementById('aaCityPct') ? document.getElementById('aaCityPct').textContent : '');
+        info(`After City-: aaCityPct = ${cityLabel}`);
+        if (cityLabel === '90%') pass('City− button updates label to 90%');
+        else fail(`Expected 90%, got ${cityLabel}`);
+
+        // 9d: Verify node spacing scales with the multiplier.
+        //     Use the largest A-type city (parsed hostname) to get a clean signal.
+        //     Reset to 100%, arrange, record avg pairwise distance for that city.
+        //     Set node×2.0, re-arrange, check distance roughly doubled.
+        await page.evaluate(() => { _aaNodeMultiplier=1; _aaCityMultiplier=1; _aaCountryMultiplier=1; });
+        await page.evaluate(() => autoArrangeByCountryCity());
+        await page.waitForTimeout(1200);
+
+        // Find largest A-type city with ≥2 nodes
+        const largestCity = await page.evaluate(() => {
+            var cityMap = {};
+            nodes.get().forEach(function(n) {
+                if (typeof _classifyNodeFmt !== 'function') return;
+                if (_classifyNodeFmt(n) !== 'A') return;
+                var host = String(n.hostname||n.label||'').split('\n')[0].trim();
+                var parsed = (typeof _parseAtypeHostname === 'function') ? _parseAtypeHostname(host) : null;
+                if (!parsed) return;
+                var key = parsed.country+':'+parsed.city;
+                if (!cityMap[key]) cityMap[key] = [];
+                cityMap[key].push(n.id);
+            });
+            var best = null, bestCount = 0;
+            Object.keys(cityMap).forEach(function(k) {
+                if (cityMap[k].length > bestCount) { bestCount = cityMap[k].length; best = k; }
+            });
+            return { key: best, count: bestCount, ids: best ? cityMap[best] : [] };
+        });
+        info(`Largest A-type city: ${largestCity.key} (${largestCity.count} nodes)`);
+
+        if (!largestCity.key || largestCity.count < 2) {
+            warn('No A-type city with ≥2 nodes found — node scaling test skipped');
+        } else {
+            // Measure avg pairwise distance for this city at 100%
+            const distAt100 = await page.evaluate((ids) => {
+                var pos = network.getPositions();
+                var pts = ids.map(function(id){ return pos[id]; }).filter(Boolean);
+                var dists = [];
+                for (var i=0;i<pts.length;i++) for (var j=i+1;j<pts.length;j++) {
+                    var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+                    dists.push(Math.sqrt(dx*dx+dy*dy));
+                }
+                return dists.length ? Math.round(dists.reduce(function(s,d){return s+d;},0)/dists.length) : 0;
+            }, largestCity.ids);
+            info(`Avg intra-city node distance at 100%: ${distAt100}px`);
+
+            // Set node multiplier to 2.0 and re-arrange
+            await page.evaluate(() => { _aaNodeMultiplier = 2.0; _updateAaControls(); autoArrangeByCountryCity(); });
+            await page.waitForTimeout(1200);
+
+            const distAt200 = await page.evaluate((ids) => {
+                var pos = network.getPositions();
+                var pts = ids.map(function(id){ return pos[id]; }).filter(Boolean);
+                var dists = [];
+                for (var i=0;i<pts.length;i++) for (var j=i+1;j<pts.length;j++) {
+                    var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+                    dists.push(Math.sqrt(dx*dx+dy*dy));
+                }
+                return dists.length ? Math.round(dists.reduce(function(s,d){return s+d;},0)/dists.length) : 0;
+            }, largestCity.ids);
+            info(`Avg intra-city node distance at 200%: ${distAt200}px`);
+
+            if (distAt200 >= distAt100 * 1.5)
+                pass(`Node spacing scales correctly: 200% → ${distAt200}px vs 100% → ${distAt100}px`);
+            else
+                fail(`Node spacing did not scale (200%: ${distAt200}px vs 100%: ${distAt100}px, need ≥1.5×)`);
+        }
+
+        // 9e: Reset → all back to 100%
+        await page.evaluate(() => _aaReset());
+        await page.waitForTimeout(1200);
+        const resetLabels = await page.evaluate(() => ({
+            node:    document.getElementById('aaNodePct')?.textContent,
+            city:    document.getElementById('aaCityPct')?.textContent,
+            country: document.getElementById('aaCountryPct')?.textContent
+        }));
+        if (resetLabels.node==='100%' && resetLabels.city==='100%' && resetLabels.country==='100%')
+            pass('↺ Reset restores all labels to 100%');
+        else fail(`Reset failed: Node=${resetLabels.node} City=${resetLabels.city} Country=${resetLabels.country}`);
+
+    } catch (err) {
+        fail('Phase 9 failed', err.message);
+    }
+
     // ── Phase 8: Regression ───────────────────────────────────────────────────
     console.log('\n── Phase 8 : Regression ─────────────────────────────────────────────────');
     try {
