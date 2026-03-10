@@ -385,8 +385,8 @@ async function loadGraph84(page) {
         fail('Phase 7 failed', err.message);
     }
 
-    // ── Phase 9: Spacing controls exist + +/- buttons work ──────────────────
-    console.log('\n── Phase 9 : Spacing Controls (+/- % buttons, Live toggle, Coarse steps) ─');
+    // ── Phase 9: Spacing controls — relative positioning (always active) ────────
+    console.log('\n── Phase 9 : Spacing Controls (relative positioning, no Auto-Arrange needed) ─');
     try {
         // 9a: Panel and all % labels present
         const panelExists = await page.$('#aaSpacingPanel') !== null;
@@ -402,21 +402,18 @@ async function loadGraph84(page) {
         if (labels.node && labels.city && labels.country) pass('All three % labels present (aaNodePct, aaCityPct, aaCountryPct)');
         else fail('One or more % labels missing');
 
-        // 9a2: Live toggle button exists and defaults to OFF
-        const liveToggleInfo = await page.evaluate(() => {
-            var btn = document.getElementById('aaLiveToggle');
-            return btn ? { exists: true, text: btn.textContent, liveApply: typeof _aaLiveApply !== 'undefined' ? _aaLiveApply : null } : { exists: false };
-        });
-        info(`Live toggle: exists=${liveToggleInfo.exists} text="${liveToggleInfo.text}" _aaLiveApply=${liveToggleInfo.liveApply}`);
-        if (liveToggleInfo.exists)   pass('Live toggle button #aaLiveToggle present');
-        else fail('#aaLiveToggle not found in spacing panel');
-        if (liveToggleInfo.liveApply === false) pass('Live mode defaults to OFF (_aaLiveApply=false)');
-        else if (liveToggleInfo.liveApply === null) warn('_aaLiveApply variable not accessible in evaluate');
-        else fail(`Expected _aaLiveApply=false, got ${liveToggleInfo.liveApply}`);
-        if (liveToggleInfo.text && liveToggleInfo.text.includes('OFF')) pass('Live toggle shows "Live: OFF" by default');
-        else warn(`Live toggle text unexpected: "${liveToggleInfo.text}" (expected to include "OFF")`);
+        // 9a2: Live toggle removed — verify #aaLiveToggle does NOT exist
+        const liveToggleGone = await page.evaluate(() => document.getElementById('aaLiveToggle') === null);
+        if (liveToggleGone) pass('Live toggle removed (#aaLiveToggle absent — knobs always apply relative scaling)');
+        else warn('#aaLiveToggle still present — should have been removed');
+
+        // 9a3: _aaScaleCurrentPositions function exists
+        const scaleFnExists = await page.evaluate(() => typeof _aaScaleCurrentPositions === 'function');
+        if (scaleFnExists) pass('_aaScaleCurrentPositions() function exists');
+        else fail('_aaScaleCurrentPositions() not found — add to topolograph.js');
 
         // 9b: Fine step Node+ → label updates to 110%
+        await page.evaluate(() => { _aaNodeMultiplier = 1.0; _updateAaControls(); });
         await page.evaluate(() => _aaAdjust('node', +0.1));
         await page.waitForTimeout(200);
         const nodeLabel = await page.evaluate(() => document.getElementById('aaNodePct') ? document.getElementById('aaNodePct').textContent : '');
@@ -425,6 +422,7 @@ async function loadGraph84(page) {
         else fail(`Expected 110%, got ${nodeLabel}`);
 
         // 9c: Fine step City− → label updates to 90%
+        await page.evaluate(() => { _aaCityMultiplier = 1.0; _updateAaControls(); });
         await page.evaluate(() => _aaAdjust('city', -0.1));
         await page.waitForTimeout(200);
         const cityLabel = await page.evaluate(() => document.getElementById('aaCityPct') ? document.getElementById('aaCityPct').textContent : '');
@@ -458,6 +456,72 @@ async function loadGraph84(page) {
         info(`After Node at 0.2→-1.0: aaNodePct = ${minLabel} (expect 10%)`);
         if (minLabel === '10%') pass('Node clamped at MIN 10%');
         else fail(`Expected clamp to 10%, got ${minLabel}`);
+
+        // 9-rel: Verify knobs apply relative movement WITHOUT prior Auto-Arrange
+        //   Reset multipliers to 1.0 (no auto-arrange) → record city node positions
+        //   Apply Node ++ (×2) via _aaAdjust → verify nodes spread apart
+        //   The test uses the largest A-type city found in the current layout
+        await page.evaluate(() => { _aaNodeMultiplier = 1.0; _aaCityMultiplier = 1.0; _aaCountryMultiplier = 1.0; _updateAaControls(); });
+        // Find largest A-type city with ≥2 nodes (no auto-arrange needed)
+        const relCity = await page.evaluate(() => {
+            var cityMap = {};
+            nodes.get().forEach(function(n) {
+                if (typeof _classifyNodeFmt !== 'function' || _classifyNodeFmt(n) !== 'A') return;
+                var host = String(n.hostname||n.label||'').split('\n')[0].trim();
+                var parsed = (typeof _parseAtypeHostname === 'function') ? _parseAtypeHostname(host) : null;
+                if (!parsed) return;
+                var key = parsed.country+':'+parsed.city;
+                if (!cityMap[key]) cityMap[key] = [];
+                cityMap[key].push(n.id);
+            });
+            var best = null, bestCount = 0;
+            Object.keys(cityMap).forEach(function(k) {
+                if (cityMap[k].length > bestCount) { bestCount = cityMap[k].length; best = k; }
+            });
+            return { key: best, count: bestCount, ids: best ? cityMap[best] : [] };
+        });
+        info(`Relative test uses city: ${relCity.key} (${relCity.count} nodes)`);
+
+        if (!relCity.key || relCity.count < 2) {
+            warn('No A-type city with ≥2 nodes — relative-move test skipped');
+        } else {
+            // Record current avg pairwise distance BEFORE knob press
+            const distBefore = await page.evaluate((ids) => {
+                var pos = network.getPositions();
+                var pts = ids.map(function(id){ return pos[id]; }).filter(Boolean);
+                var dists = [];
+                for (var i=0;i<pts.length;i++) for (var j=i+1;j<pts.length;j++) {
+                    var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+                    dists.push(Math.sqrt(dx*dx+dy*dy));
+                }
+                return dists.length ? Math.round(dists.reduce(function(s,d){return s+d;},0)/dists.length) : 0;
+            }, relCity.ids);
+            info(`Before Node++ (relative): avg city pair dist = ${distBefore}px`);
+
+            // Apply Node ×2 (coarse +100%) WITHOUT running autoArrangeByCountryCity
+            await page.evaluate(() => _aaAdjust('node', +1.0));  // 1.0 → 2.0
+            await page.waitForTimeout(500);
+
+            const distAfter = await page.evaluate((ids) => {
+                var pos = network.getPositions();
+                var pts = ids.map(function(id){ return pos[id]; }).filter(Boolean);
+                var dists = [];
+                for (var i=0;i<pts.length;i++) for (var j=i+1;j<pts.length;j++) {
+                    var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+                    dists.push(Math.sqrt(dx*dx+dy*dy));
+                }
+                return dists.length ? Math.round(dists.reduce(function(s,d){return s+d;},0)/dists.length) : 0;
+            }, relCity.ids);
+            info(`After Node++ (relative, no auto-arrange): avg city pair dist = ${distAfter}px`);
+
+            if (distBefore === 0) {
+                warn('All nodes at same position (centroid spread = 0) — relative test inconclusive');
+            } else if (distAfter > distBefore * 1.5) {
+                pass(`Relative Node++ spreads nodes: ${distBefore}px → ${distAfter}px (×${(distAfter/distBefore).toFixed(1)}) WITHOUT prior Auto-Arrange`);
+            } else {
+                fail(`Relative Node++ did not spread nodes: ${distBefore}px → ${distAfter}px (need >1.5×)`);
+            }
+        }
 
         // 9d: Verify node spacing scales with the multiplier.
         //     Use the largest A-type city (parsed hostname) to get a clean signal.

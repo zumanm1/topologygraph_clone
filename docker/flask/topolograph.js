@@ -3656,18 +3656,24 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
   var _dragSaveTimer = null;
   network.on("dragEnd", function (params) {
     if (params.nodes && params.nodes.length > 0) {
+      // Pin every dragged node so physics won't move it back
       var updates = params.nodes.map(function (nodeId) {
         return { id: nodeId, physics: false, fixed: { x: true, y: true } };
       });
       nodes.update(updates);
-      console.log("[LAYOUT] Pinned " + updates.length + " nodes via dragEnd");
-      // Auto-save positions after drag (debounced 600ms to avoid rapid saves)
+      console.log("[LAYOUT] Pinned " + updates.length + " node(s) via dragEnd");
+      // Auto-save all positions after drag (debounced 700ms to coalesce rapid moves)
       if (typeof save_nodes_position === 'function') {
         if (_dragSaveTimer) clearTimeout(_dragSaveTimer);
         _dragSaveTimer = setTimeout(function () {
-          save_nodes_position();
           _dragSaveTimer = null;
-        }, 600);
+          // Show saving indicator on the button before AJAX
+          var cnt = params.nodes.length;
+          if (typeof show_instant_notification === 'function') {
+            show_instant_notification('Saving ' + cnt + ' node position' + (cnt > 1 ? 's' : '') + '…', 3000);
+          }
+          save_nodes_position();  // will overwrite the toast with the server response
+        }, 700);
       }
     }
   });
@@ -6158,26 +6164,9 @@ var _aaCityMultiplier    = 1.0;  // r  — city ring within country
 var _aaCountryMultiplier = 1.0;  // R  — country ring
 
 /**
- * Live mode: when true, every +/− click immediately re-runs autoArrangeByCountryCity().
- * Default: false — user must click ⟳ Auto-Arrange manually after adjusting sliders.
- */
-var _aaLiveApply = false;
-
-/** Toggle live-apply mode and update the button label. */
-function _aaToggleLive() {
-  _aaLiveApply = !_aaLiveApply;
-  var btn = document.getElementById('aaLiveToggle');
-  if (btn) {
-    btn.textContent = 'Live: ' + (_aaLiveApply ? 'ON' : 'OFF');
-    btn.style.background  = _aaLiveApply ? '#d1e7dd' : '';
-    btn.style.borderColor = _aaLiveApply ? '#0f5132' : '';
-    btn.style.color       = _aaLiveApply ? '#0f5132' : '';
-  }
-}
-
-/**
- * Adjust one auto-arrange spacing multiplier by `delta`.
- * Re-arranges immediately only when live mode is ON.
+ * Adjust one auto-arrange spacing multiplier by `delta` and IMMEDIATELY scale
+ * the current canvas positions relative to each group's centroid.
+ * Works whether or not ⟳ Auto-Arrange has ever been clicked.
  * param: 'node' | 'city' | 'country'
  * delta: positive = expand, negative = contract.
  *   Fine   step = ±0.1  (10 %  per click)
@@ -6187,11 +6176,151 @@ function _aaToggleLive() {
 function _aaAdjust(param, delta) {
   var MIN = 0.1, MAX = 10.0;
   function clamp(v) { return Math.round(Math.max(MIN, Math.min(MAX, v)) * 10) / 10; }
-  if (param === 'node')    { _aaNodeMultiplier    = clamp(_aaNodeMultiplier    + delta); }
-  if (param === 'city')    { _aaCityMultiplier    = clamp(_aaCityMultiplier    + delta); }
-  if (param === 'country') { _aaCountryMultiplier = clamp(_aaCountryMultiplier + delta); }
+  var oldVal, newVal;
+  if (param === 'node') {
+    oldVal = _aaNodeMultiplier;
+    _aaNodeMultiplier = clamp(_aaNodeMultiplier + delta);
+    newVal = _aaNodeMultiplier;
+  } else if (param === 'city') {
+    oldVal = _aaCityMultiplier;
+    _aaCityMultiplier = clamp(_aaCityMultiplier + delta);
+    newVal = _aaCityMultiplier;
+  } else if (param === 'country') {
+    oldVal = _aaCountryMultiplier;
+    _aaCountryMultiplier = clamp(_aaCountryMultiplier + delta);
+    newVal = _aaCountryMultiplier;
+  }
   _updateAaControls();
-  if (_aaLiveApply) autoArrangeByCountryCity();
+  // Scale nodes relative to their current positions (oldVal → newVal = factor newVal/oldVal)
+  if (typeof oldVal !== 'undefined' && oldVal !== newVal) {
+    _aaScaleCurrentPositions(param, newVal / oldVal);
+  }
+}
+
+/**
+ * Scale node positions relative to their current group centroids — no full re-layout.
+ * param:       'node' | 'city' | 'country'
+ * scaleFactor: >1 = expand, <1 = compress  (e.g. 2.0 = double the spread)
+ *
+ * node    → each city's nodes scale from the city centroid
+ * city    → each country's city centroids scale from the country centroid;
+ *           all nodes in the city move as a rigid body
+ * country → all country centroids scale from the global centroid;
+ *           all country's nodes move as a rigid body
+ */
+function _aaScaleCurrentPositions(param, scaleFactor) {
+  if (typeof nodes === 'undefined' || !nodes ||
+      typeof network === 'undefined' || !network) return;
+  if (Math.abs(scaleFactor - 1.0) < 0.001) return;  // clamped — nothing to do
+
+  var pos = network.getPositions();  // current {id: {x,y}} snapshot
+
+  // ── Build country → city → [nodeIds] tree (same logic as autoArrangeByCountryCity) ──
+  var tree = {};
+  nodes.get().forEach(function (n) {
+    var host    = String(n.hostname || n.label || '').split('\n')[0].trim();
+    var parsed  = _parseAtypeHostname(host);
+    var country = parsed ? parsed.country : ((n.country || '').toUpperCase() || 'UNK');
+    var city    = parsed ? parsed.city    : ((n.city    || '').toUpperCase() || 'UNK');
+    if (!tree[country]) tree[country] = {};
+    if (!tree[country][city]) tree[country][city] = [];
+    tree[country][city].push(n.id);
+  });
+
+  var updates = [];
+
+  if (param === 'node') {
+    // ── Scale each node relative to its city centroid ────────────────────────
+    Object.keys(tree).forEach(function (country) {
+      Object.keys(tree[country]).forEach(function (city) {
+        var ids = tree[country][city];
+        if (ids.length < 2) return;  // single-node city — nothing to spread
+        var cx = 0, cy = 0, cnt = 0;
+        ids.forEach(function (id) {
+          var p = pos[id]; if (p) { cx += p.x; cy += p.y; cnt++; }
+        });
+        if (!cnt) return;
+        cx /= cnt; cy /= cnt;
+        ids.forEach(function (id) {
+          var p = pos[id]; if (!p) return;
+          updates.push({ id: id,
+            x: cx + (p.x - cx) * scaleFactor,
+            y: cy + (p.y - cy) * scaleFactor,
+            physics: false, fixed: { x: true, y: true } });
+        });
+      });
+    });
+
+  } else if (param === 'city') {
+    // ── Scale city centroids relative to country centroid; move each city rigid ──
+    Object.keys(tree).forEach(function (country) {
+      var countryIds = [];
+      Object.keys(tree[country]).forEach(function (c) {
+        countryIds = countryIds.concat(tree[country][c]);
+      });
+      var ccx = 0, ccy = 0, ccnt = 0;
+      countryIds.forEach(function (id) {
+        var p = pos[id]; if (p) { ccx += p.x; ccy += p.y; ccnt++; }
+      });
+      if (!ccnt) return;
+      ccx /= ccnt; ccy /= ccnt;
+
+      Object.keys(tree[country]).forEach(function (city) {
+        var ids = tree[country][city];
+        var cx = 0, cy = 0, cnt = 0;
+        ids.forEach(function (id) {
+          var p = pos[id]; if (p) { cx += p.x; cy += p.y; cnt++; }
+        });
+        if (!cnt) return;
+        cx /= cnt; cy /= cnt;
+        // New city centroid = scale from country centroid → compute translation
+        var dx = (ccx + (cx - ccx) * scaleFactor) - cx;
+        var dy = (ccy + (cy - ccy) * scaleFactor) - cy;
+        ids.forEach(function (id) {
+          var p = pos[id]; if (!p) return;
+          updates.push({ id: id, x: p.x + dx, y: p.y + dy,
+            physics: false, fixed: { x: true, y: true } });
+        });
+      });
+    });
+
+  } else if (param === 'country') {
+    // ── Scale country centroids relative to global centroid; move each country rigid ──
+    var allIds = nodes.get().map(function (n) { return n.id; });
+    var gcx = 0, gcy = 0, gcnt = 0;
+    allIds.forEach(function (id) {
+      var p = pos[id]; if (p) { gcx += p.x; gcy += p.y; gcnt++; }
+    });
+    if (!gcnt) return;
+    gcx /= gcnt; gcy /= gcnt;
+
+    Object.keys(tree).forEach(function (country) {
+      var countryIds = [];
+      Object.keys(tree[country]).forEach(function (c) {
+        countryIds = countryIds.concat(tree[country][c]);
+      });
+      var ccx = 0, ccy = 0, ccnt = 0;
+      countryIds.forEach(function (id) {
+        var p = pos[id]; if (p) { ccx += p.x; ccy += p.y; ccnt++; }
+      });
+      if (!ccnt) return;
+      ccx /= ccnt; ccy /= ccnt;
+      var dx = (gcx + (ccx - gcx) * scaleFactor) - ccx;
+      var dy = (gcy + (ccy - gcy) * scaleFactor) - ccy;
+      countryIds.forEach(function (id) {
+        var p = pos[id]; if (!p) return;
+        updates.push({ id: id, x: p.x + dx, y: p.y + dy,
+          physics: false, fixed: { x: true, y: true } });
+      });
+    });
+  }
+
+  if (updates.length) {
+    nodes.update(updates);
+    console.log('[AA-SCALE] param=' + param + ' factor=' + scaleFactor.toFixed(3) +
+      ' moved ' + updates.length + ' nodes (relative, no re-layout)');
+  }
+  if (typeof save_nodes_position === 'function') setTimeout(save_nodes_position, 800);
 }
 
 /** Reset all three multipliers to 100 % and always re-apply layout. */
@@ -7039,7 +7168,7 @@ function buildViewModeButtons() {
     '<button class="vmToolBtn" id="btnAutoArrange" title="Auto-arrange nodes by country→city spatial clustering" onclick="autoArrangeByCountryCity()">⟳ Auto-Arrange</button>' +
     /* ── Auto-arrange spacing controls ─────────────────────────────── */
     /* Fine (±10%) = aaBtn  |  Coarse (±100%) = aaBtnCoarse           */
-    '<div id="aaSpacingPanel" title="Adjust auto-arrange spacing. Range: 10%–1000%. Fine ±10% / Coarse ±100%. Live mode re-arranges on every click.">' +
+    '<div id="aaSpacingPanel" title="Adjust spacing relative to current positions. Fine ±10% / Coarse ±100%. Works without running Auto-Arrange first.">' +
       /* Node row */
       '<div class="aaRow">' +
         '<span class="aaRowLabel">Node:</span>' +
@@ -7067,11 +7196,9 @@ function buildViewModeButtons() {
         '<button class="aaBtn"       onclick="_aaAdjust(\'country\',+0.1)" title="Country spacing +10%">+</button>' +
         '<button class="aaBtnCoarse" onclick="_aaAdjust(\'country\',+1.0)" title="Country spacing +100%">++</button>' +
       '</div>' +
-      /* Action row: Live toggle + Reset */
+      /* Action row: Reset only (Live toggle removed — knobs always apply relative scaling) */
       '<div class="aaRow" style="justify-content:flex-end;gap:4px;">' +
-        '<button id="aaLiveToggle" class="aaResetBtn" onclick="_aaToggleLive()" ' +
-          'title="Live mode: re-arrange immediately on every +/− click. Off by default.">Live: OFF</button>' +
-        '<button class="aaResetBtn" onclick="_aaReset()" title="Reset all spacing to 100% and re-arrange">↺ Reset</button>' +
+        '<button class="aaResetBtn" onclick="_aaReset()" title="Reset spacing to 100% and run a fresh Auto-Arrange ring layout">↺ Reset</button>' +
       '</div>' +
     '</div>';
 
