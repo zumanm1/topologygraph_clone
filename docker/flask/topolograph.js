@@ -3639,6 +3639,7 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
   });
   // progress bar end
 
+  var _dragSaveTimer = null;
   network.on("dragEnd", function (params) {
     if (params.nodes && params.nodes.length > 0) {
       var updates = params.nodes.map(function (nodeId) {
@@ -3646,6 +3647,14 @@ function init_visjs_graph(nodes_attr_dd_in_ll, edges_attr_dd_in_ll, graph_physic
       });
       nodes.update(updates);
       console.log("[LAYOUT] Pinned " + updates.length + " nodes via dragEnd");
+      // Auto-save positions after drag (debounced 600ms to avoid rapid saves)
+      if (typeof save_nodes_position === 'function') {
+        if (_dragSaveTimer) clearTimeout(_dragSaveTimer);
+        _dragSaveTimer = setTimeout(function () {
+          save_nodes_position();
+          _dragSaveTimer = null;
+        }, 600);
+      }
     }
   });
 
@@ -6583,6 +6592,10 @@ function buildCollapsePanel() {
       '.cpRow.collapsed .cpToggleBtn{color:#ffaa44;}',
       '.cpRow.collapsed .cpCode{color:#ffaa44;}',
       '.cpInfo{font-size:11px;color:#667;margin-top:4px;text-align:center;}',
+      '.cpSelectBtn{font-size:10px;background:#1a3a5c;border:1px solid #2a5580;',
+      '  border-radius:4px;color:#88ccff;cursor:pointer;padding:1px 5px;',
+      '  margin-left:auto;flex-shrink:0;transition:.15s;}',
+      '.cpSelectBtn:hover{background:#2a5580;}',
       /* CL-F4 / CL-F1 footer action buttons */
       '.cpFooterRow{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid #2a3248;}',
       '.cpFooterBtn{flex:1;padding:4px 6px;border:1px solid #3a4560;border-radius:5px;',
@@ -6636,6 +6649,7 @@ function buildCollapsePanel() {
       '<span class="cpStats">' + stats.total + ' total' +
       (hasCores ? ' · ' + stats.gateways + 'gw · ' + stats.cores + 'core' : ' · all gw') +
       '</span>' +
+      '<button class="cpSelectBtn" data-country="' + code + '" title="Select all ' + code + ' nodes for group drag">⊡</button>' +
       '<button class="cpToggleBtn" title="Toggle collapse/expand">▶</button>' +
       '</div>';
   });
@@ -6699,9 +6713,28 @@ function buildCollapsePanel() {
 
   // ── Country row click → toggle ────────────────────────────────────────────────
   document.querySelectorAll('.cpRow').forEach(function (row) {
-    row.addEventListener('click', function () {
+    row.addEventListener('click', function (e) {
+      // Don't toggle collapse when Select button or Toggle button was clicked
+      if (e.target.classList.contains('cpSelectBtn') || e.target.classList.contains('cpToggleBtn')) return;
       var code = row.dataset.country;
       toggleCollapseCountry(code);
+    });
+  });
+
+  // ── Select Group button — selects all nodes in a country for group drag ───────
+  document.querySelectorAll('.cpSelectBtn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var country = btn.dataset.country;
+      if (typeof network === 'undefined' || !network) return;
+      var countryNodeIds = nodes.get()
+        .filter(function (n) { return (n.country || '').toUpperCase() === country && !_nodeHiddenByRules(n); })
+        .map(function (n) { return n.id; });
+      network.selectNodes(countryNodeIds);
+      var infoEl = document.getElementById('cpInfo');
+      if (infoEl) infoEl.textContent = '⊡ ' + countryNodeIds.length + ' ' + country + ' nodes selected — drag any to move group';
+      btn.textContent = '✓';
+      setTimeout(function () { btn.textContent = '⊡'; }, 1500);
     });
   });
 
