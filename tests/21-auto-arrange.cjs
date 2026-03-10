@@ -501,6 +501,51 @@ async function loadGraph84(page) {
         fail('Phase 9 failed', err.message);
     }
 
+    // ── Phase 10: UNK cluster is separated from named-country clusters ───────
+    console.log('\n── Phase 10 : UNK Cluster Separated from A-type Countries ──────────────');
+    try {
+        // Reset multipliers to 100% and re-arrange cleanly
+        await page.evaluate(() => { _aaNodeMultiplier=1; _aaCityMultiplier=1; _aaCountryMultiplier=1; autoArrangeByCountryCity(); });
+        await page.waitForTimeout(1200);
+
+        const unkSep = await page.evaluate(() => {
+            var pos = network.getPositions();
+            var unkYs = [], namedYs = [];
+            nodes.get().forEach(function(n) {
+                var c = (n.country || 'UNK').toUpperCase();
+                if (!pos[n.id]) return;
+                if (c === 'UNK') unkYs.push(pos[n.id].y);
+                else             namedYs.push(pos[n.id].y);
+            });
+            if (!unkYs.length || !namedYs.length) return { unkCount:unkYs.length, skip:true };
+
+            var maxNamedY = Math.max.apply(null, namedYs);
+            var minUnkY   = Math.min.apply(null, unkYs);
+            var unkCentY  = Math.round(unkYs.reduce(function(s,v){return s+v;},0) / unkYs.length);
+            var gap       = minUnkY - maxNamedY;
+
+            return {
+                unkCount: unkYs.length, namedCount: namedYs.length,
+                maxNamedY: Math.round(maxNamedY), minUnkY: Math.round(minUnkY),
+                unkCentY, gap: Math.round(gap)
+            };
+        });
+
+        if (unkSep.skip) {
+            warn(`UNK separation skipped — unkCount=${unkSep.unkCount}`);
+        } else {
+            info(`Max named-node Y: ${unkSep.maxNamedY}px, Min UNK-node Y: ${unkSep.minUnkY}px, gap: ${unkSep.gap}px`);
+            if (unkSep.gap >= 200)
+                pass(`UNK cluster is below all named nodes with ${unkSep.gap}px clearance (≥200px required)`);
+            else if (unkSep.gap > 0)
+                warn(`UNK cluster is below named nodes but gap is only ${unkSep.gap}px (want ≥200px)`);
+            else
+                fail(`UNK cluster overlaps named countries — gap is ${unkSep.gap}px (should be positive)`);
+        }
+    } catch (err) {
+        fail('Phase 10 failed', err.message);
+    }
+
     // ── Phase 8: Regression ───────────────────────────────────────────────────
     console.log('\n── Phase 8 : Regression ─────────────────────────────────────────────────');
     try {

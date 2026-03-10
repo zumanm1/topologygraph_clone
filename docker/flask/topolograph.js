@@ -7108,16 +7108,24 @@ function autoArrangeByCountryCity() {
     tree[country][city].push(n.id);
   });
 
-  var countries = Object.keys(tree).sort();
+  // Separate UNK (unclassified / non-A-type nodes) from named countries so that
+  // B-type / C-type / unresolved nodes are placed well clear of the A-type clusters.
+  var allCountries  = Object.keys(tree).sort();
+  var namedCountries = allCountries.filter(function (c) { return c !== 'UNK'; });
+  var hasUnk         = !!tree['UNK'];
 
   // 2. Country centroid ring — scaled by _aaCountryMultiplier (default 1.0 = 100%).
-  //    Base: max(1200, countries * 500).  Multiplier allows live +/- adjustment.
-  var R = Math.max(1200, countries.length * 500) * _aaCountryMultiplier;
+  //    Base: max(1200, namedCountries * 500).  Multiplier allows live +/- adjustment.
+  //    UNK is placed at a fixed offset BELOW the main ring, clearly separated.
+  var R = Math.max(1200, namedCountries.length * 500) * _aaCountryMultiplier;
   var positions = {};
 
-  countries.forEach(function (country, ci) {
+  // Named countries occupy the main ring
+  var countriesInRing = namedCountries.length > 0 ? namedCountries : allCountries;
+
+  countriesInRing.forEach(function (country, ci) {
     // Start at -π/2 so first country appears at the top of the ring
-    var cAngle = (2 * Math.PI * ci) / countries.length - Math.PI / 2;
+    var cAngle = (2 * Math.PI * ci) / countriesInRing.length - Math.PI / 2;
     var cx = R * Math.cos(cAngle);
     var cy = R * Math.sin(cAngle);
 
@@ -7159,6 +7167,44 @@ function autoArrangeByCountryCity() {
     });
   });
 
+  // UNK country — place BELOW the named ring, clearly separated.
+  // R×2.5 guarantees the UNK centroid is always beyond the furthest named node
+  // regardless of how large the city/node sub-rings are.
+  if (hasUnk && namedCountries.length > 0) {
+    var unkCities    = Object.keys(tree['UNK']).sort();
+    var unkNodeCount = unkCities.reduce(function (s, c) { return s + tree['UNK'][c].length; }, 0);
+    var unkCx = 0;
+    var unkCy = R * 2.5 * _aaCountryMultiplier;
+
+    var unkR = unkCities.length === 1
+      ? 0
+      : Math.max(250, unkCities.length * 150) * _aaCityMultiplier;
+
+    unkCities.forEach(function (city, cityI) {
+      var cityAngle = unkCities.length > 1
+        ? (2 * Math.PI * cityI) / unkCities.length - Math.PI / 2
+        : 0;
+      var cityCx = unkCx + unkR * Math.cos(cityAngle);
+      var cityCy = unkCy + unkR * Math.sin(cityAngle);
+
+      var cityNodes = tree['UNK'][city];
+      var nn = cityNodes.length;
+      var rho;
+      if      (nn === 1) { rho = 0; }
+      else if (nn === 2) { rho = 80 * _aaNodeMultiplier; }
+      else               { rho = Math.max(80,
+                             Math.ceil(130 / (2 * Math.sin(Math.PI / nn)))) * _aaNodeMultiplier; }
+
+      cityNodes.forEach(function (id, ni) {
+        var nodeAngle = nn > 1 ? (2 * Math.PI * ni) / nn - Math.PI / 2 : 0;
+        positions[id] = {
+          x: cityCx + rho * Math.cos(nodeAngle),
+          y: cityCy + rho * Math.sin(nodeAngle)
+        };
+      });
+    });
+  }
+
   // 5. Disable physics, apply exact deterministic positions, pin immediately.
   //    NO stabilization — physics would scatter nodes and destroy the hierarchy.
   network.setOptions({ physics: { enabled: false } });
@@ -7183,8 +7229,8 @@ function autoArrangeByCountryCity() {
     setTimeout(function () { btn.textContent = '\u27f3 Auto-Arrange'; }, 2500);
   }
   console.log('[AUTO-ARRANGE] Placed ' + Object.keys(positions).length +
-    ' nodes across ' + countries.length +
-    ' countries (deterministic geometry, no physics)');
+    ' nodes: ' + namedCountries.length + ' named countries in main ring' +
+    (hasUnk ? ' + UNK cluster below' : '') + ' (deterministic, no physics)');
 }
 
 // ── SP4: Country Filter Panel toggle (toolbar button handler) ────────────────
