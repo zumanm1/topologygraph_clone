@@ -5889,6 +5889,12 @@ var _viewMode = 'enriched'; // 'asis' | 'gateway' | 'enriched' | 'collapsing'
 var _cpPanelBuilt = false;      // Country Groups panel built flag
 var _vmBarBuilt = false;      // View Mode button bar built flag
 
+// ── Composable 3-layer view state (PRD-03) ──────────────────────────────────
+// Each dimension is independent; _applyCompositeView() combines them.
+var _vmVisibility = 'all';      // 'all' | 'gateway' | 'nongateway'
+var _vmStyle      = 'colors';   // 'colors' | 'grey'
+var _vmInteract   = 'none';     // 'none' | 'collapse'
+
 // ── A. Helper utilities ───────────────────────────────────────────────────────
 
 /**
@@ -6316,8 +6322,109 @@ function _hideCpPanel() {
  *   'enriched'   → all nodes + country colours  (default)
  *   'collapsing' → hybrid per-country expand/collapse
  */
+/**
+ * Apply the composable 3-layer view.
+ * Called by setViewMode() and also directly from the composable buttons.
+ * Reads: _vmVisibility, _vmStyle, _vmInteract
+ */
+function _applyCompositeView() {
+  if (typeof nodes === 'undefined' || !nodes) return;
+  _normalizeCountryNodeLabels();
+
+  // Layer 1: Node Visibility
+  nodes.update(nodes.get().map(function (n) {
+    var hide = false;
+    if (_vmVisibility === 'gateway') {
+      var isUnk = (n.country || '').toUpperCase() === 'UNK';
+      hide = n.is_gateway !== true && !isUnk;
+    } else if (_vmVisibility === 'nongateway') {
+      hide = n.is_gateway === true;
+    }
+    return { id: n.id, _modeHidden: hide };
+  }));
+
+  // Layer 2: Styling
+  if (_vmStyle === 'grey') {
+    nodes.update(nodes.get().map(function (n) {
+      return {
+        id: n.id, color: {
+          background: '#cccccc', border: '#999999',
+          highlight: { background: '#dddddd', border: '#aaaaaa' },
+          hover: { background: '#dddddd', border: '#aaaaaa' }
+        }
+      };
+    }));
+  } else {
+    applyCountryColors();
+  }
+
+  // Layer 3: Interaction panels
+  if (_vmInteract === 'collapse') {
+    _showCfPanel();
+    if (!_cpPanelBuilt) {
+      buildCollapsePanel();
+      if (typeof _restoreCollapseState === 'function') _restoreCollapseState();
+    } else {
+      _showCpPanel();
+      _updateCollapsePanel();
+      if (typeof _restoreCollapseState === 'function') _restoreCollapseState();
+    }
+  } else {
+    _hideCpPanel();
+    _showCfPanel();
+  }
+
+  _syncEdgeVisibility();
+  _updateCompositeButtons();
+  if (typeof _buildUnkPanel === 'function') _buildUnkPanel();
+  if (_vmVisibility === 'gateway' && typeof _applyGatewayCostStyle === 'function') _applyGatewayCostStyle();
+}
+
+/**
+ * Update the visual state of composable view buttons to reflect current _vm* state.
+ */
+function _updateCompositeButtons() {
+  // Visibility buttons
+  document.querySelectorAll('.vmVisBtn').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.vis === _vmVisibility);
+  });
+  // Style buttons
+  document.querySelectorAll('.vmStyleBtn').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.style === _vmStyle);
+  });
+  // Interact buttons
+  document.querySelectorAll('.vmInteractBtn').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.interact === _vmInteract);
+  });
+  // Legacy vmBtn (keep synced with closest equivalent)
+  var legacyMode = _getLegacyMode();
+  document.querySelectorAll('.vmBtn').forEach(function (b) { b.classList.remove('active'); });
+  var activeBtn = document.querySelector('.vmBtn[data-mode="' + legacyMode + '"]');
+  if (activeBtn) activeBtn.classList.add('active');
+}
+
+/**
+ * Map current composable state to the closest legacy mode name.
+ */
+function _getLegacyMode() {
+  if (_vmStyle === 'grey') return 'asis';
+  if (_vmVisibility === 'gateway') return 'gateway';
+  if (_vmInteract === 'collapse') return 'collapsing';
+  return 'enriched';
+}
+
 function setViewMode(mode) {
   _viewMode = mode;
+
+  // Map legacy mode → composable dimensions
+  if (mode === 'asis')       { _vmVisibility = 'all';     _vmStyle = 'grey';   _vmInteract = 'none'; }
+  if (mode === 'gateway')    { _vmVisibility = 'gateway'; _vmStyle = 'colors'; _vmInteract = 'none'; }
+  if (mode === 'enriched')   { _vmVisibility = 'all';     _vmStyle = 'colors'; _vmInteract = 'none'; }
+  if (mode === 'collapsing') { _vmVisibility = 'all';     _vmStyle = 'colors'; _vmInteract = 'collapse'; }
+
+  // Reset country filter state so mode switch starts clean
+  expandAllCountries();
+  resetCountryFilter();
 
   // Update button active state
   document.querySelectorAll('.vmBtn').forEach(function (b) {
@@ -6326,74 +6433,8 @@ function setViewMode(mode) {
   var activeBtn = document.querySelector('.vmBtn[data-mode="' + mode + '"]');
   if (activeBtn) activeBtn.classList.add('active');
 
-  if (typeof nodes === 'undefined' || !nodes) return;
-  _normalizeCountryNodeLabels();
-  var setModeHidden = function (predicate) {
-    nodes.update(nodes.get().map(function (n) {
-      return { id: n.id, _modeHidden: !!predicate(n) };
-    }));
-    _syncEdgeVisibility();
-  };
-
-  if (mode === 'asis') {
-    expandAllCountries();
-    resetCountryFilter();
-    // Grey all nodes (remove country colours)
-    var greyUpd = nodes.get().map(function (n) {
-      return {
-        id: n.id, color: {
-          background: '#cccccc', border: '#999999',
-          highlight: { background: '#dddddd', border: '#aaaaaa' },
-          hover: { background: '#dddddd', border: '#aaaaaa' }
-        }
-      };
-    });
-    nodes.update(greyUpd);
-    setModeHidden(function () { return false; });
-    _showCfPanel();
-    _hideCpPanel();
-
-  } else if (mode === 'gateway') {
-    expandAllCountries();
-    resetCountryFilter();
-    applyCountryColors();
-    // Hide non-gateway nodes, but KEEP UNK nodes visible so operators can classify them
-    setModeHidden(function (n) {
-      var isUnk = (n.country || '').toUpperCase() === 'UNK';
-      return n.is_gateway !== true && !isUnk;
-    });
-    _showCfPanel();
-    _hideCpPanel();
-    // GW-F2: always apply cost-based edge colouring in GATEWAY mode
-    if (typeof _applyGatewayCostStyle === 'function') { _applyGatewayCostStyle(); }
-
-  } else if (mode === 'enriched') {
-    expandAllCountries();
-    resetCountryFilter();
-    applyCountryColors();
-    setModeHidden(function () { return false; });
-    _hideCpPanel();
-    _showCfPanel();
-
-  } else if (mode === 'collapsing') {
-    expandAllCountries();
-    resetCountryFilter();
-    applyCountryColors();
-    setModeHidden(function () { return false; });
-    _showCfPanel();
-    // Build or show the Country Groups panel
-    if (!_cpPanelBuilt) {
-      buildCollapsePanel();
-      // CL-F1: after panel builds, restore persisted collapse state
-      if (typeof _restoreCollapseState === 'function') { _restoreCollapseState(); }
-    } else {
-      _showCpPanel();
-      _updateCollapsePanel();
-      // CL-F1: restore persisted state on each mode re-entry
-      if (typeof _restoreCollapseState === 'function') { _restoreCollapseState(); }
-    }
-  }
-  if (typeof _buildUnkPanel === 'function') { _buildUnkPanel(); }
+  // Delegate all visual logic to _applyCompositeView()
+  _applyCompositeView();
 }
 
 /**
@@ -6431,6 +6472,14 @@ function buildViewModeButtons() {
       '.vmCostLabel{font-size:11px;cursor:pointer;display:inline-flex;align-items:center;',
       '  gap:3px;padding:3px 8px;border:1px solid #adb5bd;border-radius:4px;',
       '  background:#f8f9fa;color:#495057;white-space:nowrap;}',
+    /* Composable view toggle buttons */
+    '.vmVisBtn,.vmStyleBtn,.vmInteractBtn{padding:3px 9px;border:1px solid #adb5bd;',
+    '  border-radius:4px;background:#f8f9fa;color:#495057;cursor:pointer;font-size:11px;',
+    '  transition:.15s;white-space:nowrap;}',
+    '.vmVisBtn:hover,.vmStyleBtn:hover,.vmInteractBtn:hover{background:#e9ecef;}',
+    '.vmVisBtn.active{background:#198754;border-color:#157347;color:#fff;}',
+    '.vmStyleBtn.active{background:#6c757d;border-color:#565e64;color:#fff;}',
+    '.vmInteractBtn.active{background:#0d6efd;border-color:#0a58ca;color:#fff;}',
     ].join('');
     document.head.appendChild(style);
   }
@@ -6443,6 +6492,18 @@ function buildViewModeButtons() {
     '<button class="vmBtn" data-mode="gateway"    title="Show only gateway routers (inter-country view)">GATEWAY</button>' +
     '<button class="vmBtn active" data-mode="enriched"   title="All routers with country colours (default)">ENRICHED</button>' +
     '<button class="vmBtn" data-mode="collapsing" title="Hybrid: collapse/expand core routers per country (double-click gateway to toggle)">COLLAPSING ▼</button>' +
+    /* ── Composable view: Visibility + Style + Interaction ───────────── */
+    '<span class="vmSep">│</span>' +
+    '<span id="vmBarLabel2" style="font-size:11px;color:#6c757d;padding-right:2px;">Vis:</span>' +
+    '<button class="vmVisBtn active" data-vis="all"        title="Show all nodes">All</button>' +
+    '<button class="vmVisBtn"        data-vis="gateway"    title="Show only gateway nodes">GW</button>' +
+    '<button class="vmVisBtn"        data-vis="nongateway" title="Show only non-gateway nodes">Non-GW</button>' +
+    '<span class="vmSep">│</span>' +
+    '<button class="vmStyleBtn active" data-style="colors" title="Country colour coding">◑ Colors</button>' +
+    '<button class="vmStyleBtn"        data-style="grey"   title="Grey / AS-IS style">□ Grey</button>' +
+    '<span class="vmSep">│</span>' +
+    '<button class="vmInteractBtn active" data-interact="none"     title="No interaction panel">—</button>' +
+    '<button class="vmInteractBtn"        data-interact="collapse" title="Open Country Groups collapse panel">⊞ Groups</button>' +
     /* ── Tool buttons (Sprint 0–2 features) ─────────────────────────── */
     '<span class="vmSep">│</span>' +
     '<label class="vmCostLabel" id="lblCostLabels" title="Toggle OSPF cost labels on every edge (AS-F1)">' +
@@ -6463,10 +6524,36 @@ function buildViewModeButtons() {
     '<button class="vmToolBtn" id="btnUnkFilter"     title="Show only UNK (unclassified) nodes — quick filter by IP range" onclick="toggleUnkFilterPanel()">⚠ UNK Filter</button>' +
     '<button class="vmToolBtn" id="btnTypeFilter"   title="Filter by Network Type — A-type (country-airport-city-role), B-type (city-role-vendor), C-type (IP-only)" onclick="toggleNetworkTypePanel()">🔤 Net Type</button>';
 
-  // Wire click handlers
+  // Wire click handlers — legacy mode buttons
   bar.querySelectorAll('.vmBtn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       setViewMode(btn.dataset.mode);
+    });
+  });
+
+  // Wire composable visibility buttons
+  bar.querySelectorAll('.vmVisBtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      _vmVisibility = btn.dataset.vis;
+      _applyCompositeView();
+    });
+  });
+
+  // Wire composable style buttons
+  bar.querySelectorAll('.vmStyleBtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      _vmStyle = btn.dataset.style;
+      _applyCompositeView();
+    });
+  });
+
+  // Wire composable interact buttons
+  bar.querySelectorAll('.vmInteractBtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      // Toggle: clicking active interact turns it off
+      _vmInteract = (_vmInteract === btn.dataset.interact && btn.dataset.interact !== 'none')
+        ? 'none' : btn.dataset.interact;
+      _applyCompositeView();
     });
   });
 
@@ -6487,6 +6574,9 @@ function buildViewModeButtons() {
 
   _vmBarBuilt = true;
   _viewMode = 'enriched'; // reset to default on each graph load
+  // Reset composable state to match default enriched mode
+  _vmVisibility = 'all'; _vmStyle = 'colors'; _vmInteract = 'none';
+  _updateCompositeButtons();
 }
 
 // ── SP4: Country Filter Panel toggle (toolbar button handler) ────────────────
