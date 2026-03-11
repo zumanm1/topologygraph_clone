@@ -102,13 +102,13 @@ async function shot(page, name) {
     await kp.selectOption('#peDst', srcOpts[srcOpts.length > 1 ? 1 : 0]);
     await kp.click('#peBtnGo');
     await kp.waitForTimeout(5000);
-    const fwdCount = await kp.evaluate(() => document.querySelectorAll('#peFwdList .pe-path-row').length);
-    const revCount = await kp.evaluate(() => document.querySelectorAll('#peRevList .pe-path-row').length);
+    const fwdCount = await kp.evaluate(() => document.querySelectorAll('#peListFwd .pe-path-row').length);
+    const revCount = await kp.evaluate(() => document.querySelectorAll('#peListRev .pe-path-row').length);
     console.log('  FWD paths:', fwdCount, '| REV paths:', revCount);
     fwdCount > 0 ? ok('K-SP FWD: ' + fwdCount + ' paths') : ko('K-SP FWD', 'no paths');
     revCount > 0 ? ok('K-SP REV: ' + revCount + ' paths') : ko('K-SP REV', 'no paths');
     if (fwdCount > 0) {
-      await kp.click('#peFwdList .pe-path-row').catch(() => {});
+      await kp.click('#peListFwd .pe-path-row').catch(() => {});
       await kp.waitForTimeout(800);
       ok('Clicked first FWD path row');
     }
