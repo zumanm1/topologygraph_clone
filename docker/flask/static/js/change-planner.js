@@ -36,13 +36,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /* ── Graph time dropdown ─────────────────────────────────────────── */
 function cpLoadGraphTimes() {
-  return fetch('/api/diagram/list')
-    .then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
+  return fetch('/api/graph-times')
+    .then(function (r) { return r.ok ? r.json() : { graph_time_list: [] }; }).catch(function () { return { graph_time_list: [] }; })
     .then(function (data) {
       var sel = document.getElementById('cpGraphTime');
-      var list = data.graph_time_list || data.timestamps || data || [];
+      var list = data.graph_time_list || data.timestamps || (Array.isArray(data) ? data : []);
       if (!Array.isArray(list)) list = [];
+      if (_cpGraphTime && list.indexOf(_cpGraphTime) === -1) list = [_cpGraphTime].concat(list);
       sel.innerHTML = '';
+      if (list.length === 0) {
+        sel.innerHTML = '<option value="">No graphs — load one on the main page</option>';
+        return;
+      }
       list.forEach(function (t) {
         var opt = document.createElement('option');
         opt.value = t; opt.textContent = t;
@@ -58,29 +63,24 @@ function cpOnGraphTimeChange(t) {
   cpLoadTopology(t);
 }
 
-/* ── Load topology ───────────────────────────────────────────────── */
+/* ── Load topology via POST /upload-ospf-lsdb-from-js ───────────── */
 function cpLoadTopology(gt) {
   if (!gt) return;
   cpSetStatus('<span class="cp-spinner"></span> Loading topology…');
   document.getElementById('cpBtnAnalyse').disabled = true;
 
-  Promise.all([
-    fetch('/api/diagram/' + encodeURIComponent(gt) + '/nodes').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
-    fetch('/api/diagram/' + encodeURIComponent(gt) + '/edges').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; })
-  ]).then(function (res) {
-    _cpNodes = res[0] || [];
-    _cpEdges = res[1] || [];
-    if (_cpNodes.nodes) _cpNodes = _cpNodes.nodes;
-    if (_cpEdges.edges) _cpEdges = _cpEdges.edges;
-    if (!Array.isArray(_cpNodes)) _cpNodes = [];
-    if (!Array.isArray(_cpEdges)) _cpEdges = [];
-    _cpAdjBefore = KSP_buildDirAdjList(_cpNodes, _cpEdges, {});
-    _cpBuildVis();
-    cpSetStatus('Loaded ' + _cpNodes.length + ' nodes, ' + _cpEdges.length + ' edges. Add changes and click Analyse.');
-    document.getElementById('cpBtnAnalyse').disabled = false;
-  }).catch(function (err) {
-    cpSetStatus('⚠ Load error: ' + err.message);
-  });
+  KSP_loadTopology(gt)
+    .then(function (result) {
+      _cpNodes = result.nodes;
+      _cpEdges = result.edges;
+      _cpAdjBefore = KSP_buildDirAdjList(_cpNodes, _cpEdges, {});
+      _cpBuildVis();
+      cpSetStatus('Loaded ' + _cpNodes.length + ' nodes, ' + _cpEdges.length + ' edges. Add changes and click Analyse.');
+      document.getElementById('cpBtnAnalyse').disabled = false;
+    })
+    .catch(function (err) {
+      cpSetStatus('⚠ Load error: ' + err.message);
+    });
 }
 
 /* ── Vis.js topology ─────────────────────────────────────────────── */

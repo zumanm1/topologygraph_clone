@@ -2,10 +2,12 @@
  * ospf-ksp.js  — OSPF K-Shortest Paths Library
  * ==============================================
  * Standalone, self-contained — NO vis.js globals, NO jQuery.
- * Accepts raw nodesList/edgesList arrays from the REST API.
+ * Accepts raw nodesList/edgesList arrays from upload-ospf-lsdb-from-js response.
  *
  * PUBLIC API
  * ----------
+ *   KSP_expandEcmpEdges(edgesList)           — expand parent ECMP edges to directed sub-edges
+ *   KSP_normaliseGraphData(data)             — normalise upload-ospf-lsdb-from-js response
  *   KSP_buildDirAdjList(nodesList, edgesList, overrides)
  *   KSP_dijkstra(srcId, adjList, excludedNodeSet, excludedEdgeSet)
  *   KSP_reconstructPath(srcId, dstId, prev, dist)
@@ -18,6 +20,11 @@
  * Algorithm complexity (Yen's K-SP):
  *   ~K * avgPathLen * Dijkstra_cost = K * L * O((E + V) log V)
  *   For K=10, L=8, 50k edges ≈ 400ms in JS.
+ *
+ * Edge data format (from upload-ospf-lsdb-from-js):
+ *   Parent edges aggregate ECMP groups.  Each parent has inside_ecmp_edges_ll
+ *   containing the actual directed OSPF edges with individual costs.
+ *   Use KSP_expandEcmpEdges() to flatten before calling KSP_buildDirAdjList.
  */
 
 /* ============================================================
@@ -752,4 +759,89 @@ function KSP_countryPairDiff(nodesA, edgesA, nodesB, edgesB) {
 
   results.sort(function(a, b){ return Math.abs(b.delta) - Math.abs(a.delta); });
   return results;
+}
+
+/* ============================================================
+ * Section 8 — Data normalisation helpers
+ *   KSP_expandEcmpEdges(edgesList)
+ *   KSP_normaliseGraphData(data)
+ *   KSP_loadTopology(graphTime)  — async, calls upload-ospf-lsdb-from-js
+ * ============================================================ */
+
+/**
+ * Expand parent ECMP edges from upload-ospf-lsdb-from-js response.
+ *
+ * The response returns parent edges that aggregate multiple directed ECMP
+ * sub-edges into one vis.js object. The parent's `weight` is an aggregate
+ * (sum) that is NOT usable for Dijkstra. The actual directed OSPF costs live
+ * in each entry of `inside_ecmp_edges_ll`.
+ *
+ * This function flattens parent edges → directed sub-edges so Dijkstra gets
+ * correct per-hop costs. If a parent has no sub-edges it is kept as-is.
+ *
+ * @param {Array} edgesList  Raw edges_attr_dd_in_ll from upload response.
+ * @returns {Array}          Flat list of directed edge objects.
+ */
+function KSP_expandEcmpEdges(edgesList) {
+  if (!Array.isArray(edgesList)) return [];
+  var result = [];
+  edgesList.forEach(function (e) {
+    var subs = e.inside_ecmp_edges_ll;
+    if (Array.isArray(subs) && subs.length > 0) {
+      subs.forEach(function (s) {
+        // sub-edges use `labelFrom` (string) as cost — normalise to number
+        var cost = Number(s.weight || s.labelFrom || s.cost || s.value || 1);
+        result.push(Object.assign({}, s, { weight: cost, cost: cost }));
+      });
+    } else {
+      result.push(e);
+    }
+  });
+  return result;
+}
+
+/**
+ * Normalise the JSON blob returned by POST /upload-ospf-lsdb-from-js into
+ * a plain { nodes, edges } object usable by KSP_buildDirAdjList.
+ *
+ * Handles both the standard response shape and any legacy/wrapped shapes.
+ *
+ * @param {Object} data  Response JSON from upload-ospf-lsdb-from-js.
+ * @returns {{ nodes: Array, edges: Array, graphId: string, graphTime: string }}
+ */
+function KSP_normaliseGraphData(data) {
+  if (!data || typeof data !== 'object') return { nodes: [], edges: [] };
+  var nodes = data.nodes_attr_dd_in_ll || data.nodes || [];
+  var rawEdges = data.edges_attr_dd_in_ll || data.edges || [];
+  if (!Array.isArray(nodes))    nodes    = [];
+  if (!Array.isArray(rawEdges)) rawEdges = [];
+  return {
+    nodes:     nodes,
+    edges:     KSP_expandEcmpEdges(rawEdges),
+    graphId:   data.graph_id   || '',
+    graphTime: data.start_time_iso || ''
+  };
+}
+
+/**
+ * Async helper: load topology for a given graph_time via the existing
+ * POST /upload-ospf-lsdb-from-js endpoint (session-auth, no IP restriction).
+ *
+ * Returns a normalised { nodes, edges, graphId, graphTime } object,
+ * or throws on HTTP error.
+ *
+ * @param {string} graphTime
+ * @returns {Promise<{nodes:Array, edges:Array, graphId:string, graphTime:string}>}
+ */
+function KSP_loadTopology(graphTime) {
+  var fd = new FormData();
+  fd.append('dynamic_graph_time', graphTime);
+  return fetch('/upload-ospf-lsdb-from-js', { method: 'POST', body: fd })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' loading topology for ' + graphTime);
+      return r.json();
+    })
+    .then(function (data) {
+      return KSP_normaliseGraphData(data);
+    });
 }

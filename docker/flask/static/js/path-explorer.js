@@ -43,16 +43,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /* ── Graph-time dropdown ─────────────────────────────────────────── */
 function peLoadGraphTimeOptions() {
-  return fetch('/api/diagram/list')
+  return fetch('/api/graph-times')
     .then(function (r) { return r.ok ? r.json() : { graph_time_list: [] }; })
     .catch(function () { return { graph_time_list: [] }; })
     .then(function (data) {
       var sel = document.getElementById('peGraphTime');
-      var list = (data.graph_time_list || data.timestamps || data || []);
+      var list = (data.graph_time_list || data.timestamps || (Array.isArray(data) ? data : []));
       if (!Array.isArray(list)) list = [];
+
+      // Always ensure the current graph_time from URL/localStorage is in the list
+      if (_peGraphTime && list.indexOf(_peGraphTime) === -1) list = [_peGraphTime].concat(list);
+
       sel.innerHTML = '';
       if (list.length === 0) {
-        sel.innerHTML = '<option value="">No graphs found</option>';
+        sel.innerHTML = '<option value="">No graphs found — load one on the main page</option>';
         return;
       }
       list.forEach(function (t) {
@@ -69,39 +73,29 @@ function peLoadGraphTimeOptions() {
     });
 }
 
-/* ── Load topology from API ──────────────────────────────────────── */
+/* ── Load topology via POST /upload-ospf-lsdb-from-js ───────────── */
 function peLoadTopologyData(graphTime) {
   if (!graphTime) return;
   peSetStatus('<span class="pe-spinner"></span> Loading topology…');
   document.getElementById('peBtnGo').disabled = true;
 
-  var urlNodes = '/api/diagram/' + encodeURIComponent(graphTime) + '/nodes';
-  var urlEdges = '/api/diagram/' + encodeURIComponent(graphTime) + '/edges';
+  KSP_loadTopology(graphTime)
+    .then(function (result) {
+      _peNodes = result.nodes;
+      _peEdges = result.edges;
 
-  Promise.all([
-    fetch(urlNodes).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
-    fetch(urlEdges).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
-  ]).then(function (results) {
-    _peNodes = results[0] || [];
-    _peEdges = results[1] || [];
+      _peRebuildAdjLists();
+      _pePopulateCountryDropdowns();
+      _peBuildTopoView();
 
-    // Normalise: some API versions wrap in { nodes: [...] }
-    if (_peNodes.nodes) _peNodes = _peNodes.nodes;
-    if (_peEdges.edges) _peEdges = _peEdges.edges;
-    if (!Array.isArray(_peNodes)) _peNodes = [];
-    if (!Array.isArray(_peEdges)) _peEdges = [];
-
-    _peRebuildAdjLists();
-    _pePopulateCountryDropdowns();
-    _peBuildTopoView();
-
-    var n = _peNodes.length, e = _peEdges.length;
-    peSetStatus('Loaded: ' + n + ' nodes, ' + e + ' edges. Select countries and click ▶ Go.');
-    document.getElementById('peBtnGo').disabled = false;
-  }).catch(function (err) {
-    peSetStatus('⚠ Failed to load topology: ' + err.message);
-    document.getElementById('peBtnGo').disabled = false;
-  });
+      var n = _peNodes.length, e = _peEdges.length;
+      peSetStatus('Loaded: ' + n + ' nodes, ' + e + ' edges. Select countries and click ▶ Go.');
+      document.getElementById('peBtnGo').disabled = false;
+    })
+    .catch(function (err) {
+      peSetStatus('⚠ Failed to load topology: ' + err.message);
+      document.getElementById('peBtnGo').disabled = false;
+    });
 }
 
 /* ── Build adjacency lists (normal + reversed) ──────────────────── */

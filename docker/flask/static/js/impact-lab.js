@@ -31,13 +31,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /* ── Graph time dropdown ─────────────────────────────────────────── */
 function ilLoadGraphTimes() {
-  return fetch('/api/diagram/list')
-    .then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
+  return fetch('/api/graph-times')
+    .then(function (r) { return r.ok ? r.json() : { graph_time_list: [] }; }).catch(function () { return { graph_time_list: [] }; })
     .then(function (data) {
       var sel = document.getElementById('ilGraphTime');
-      var list = data.graph_time_list || data.timestamps || data || [];
+      var list = data.graph_time_list || data.timestamps || (Array.isArray(data) ? data : []);
       if (!Array.isArray(list)) list = [];
+      if (_ilGraphTime && list.indexOf(_ilGraphTime) === -1) list = [_ilGraphTime].concat(list);
       sel.innerHTML = '';
+      if (list.length === 0) {
+        sel.innerHTML = '<option value="">No graphs — load one on the main page</option>';
+        return;
+      }
       list.forEach(function (t) {
         var opt = document.createElement('option');
         opt.value = t; opt.textContent = t;
@@ -53,28 +58,24 @@ function ilOnGraphTimeChange(t) {
   ilLoadTopology(t);
 }
 
-/* ── Load topology ───────────────────────────────────────────────── */
+/* ── Load topology via POST /upload-ospf-lsdb-from-js ───────────── */
 function ilLoadTopology(gt) {
   if (!gt) return;
   ilSetStatus('<span class="il-spinner"></span> Loading topology…');
   document.getElementById('ilBtnAnalyse').disabled = true;
 
-  Promise.all([
-    fetch('/api/diagram/' + encodeURIComponent(gt) + '/nodes').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
-    fetch('/api/diagram/' + encodeURIComponent(gt) + '/edges').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; })
-  ]).then(function (res) {
-    _ilNodes = res[0] || []; _ilEdges = res[1] || [];
-    if (_ilNodes.nodes) _ilNodes = _ilNodes.nodes;
-    if (_ilEdges.edges) _ilEdges = _ilEdges.edges;
-    if (!Array.isArray(_ilNodes)) _ilNodes = [];
-    if (!Array.isArray(_ilEdges)) _ilEdges = [];
-    _ilAdj = KSP_buildDirAdjList(_ilNodes, _ilEdges, {});
-    _ilBuildVis();
-    ilSetStatus('Loaded ' + _ilNodes.length + ' nodes, ' + _ilEdges.length + ' edges. Select a failure and click Compute.');
-    document.getElementById('ilBtnAnalyse').disabled = false;
-  }).catch(function (err) {
-    ilSetStatus('⚠ Load error: ' + err.message);
-  });
+  KSP_loadTopology(gt)
+    .then(function (result) {
+      _ilNodes = result.nodes;
+      _ilEdges = result.edges;
+      _ilAdj = KSP_buildDirAdjList(_ilNodes, _ilEdges, {});
+      _ilBuildVis();
+      ilSetStatus('Loaded ' + _ilNodes.length + ' nodes, ' + _ilEdges.length + ' edges. Select a failure and click Compute.');
+      document.getElementById('ilBtnAnalyse').disabled = false;
+    })
+    .catch(function (err) {
+      ilSetStatus('⚠ Load error: ' + err.message);
+    });
 }
 
 /* ── Failure type toggle ─────────────────────────────────────────── */

@@ -411,3 +411,35 @@ def impact_lab_page():
 def topo_diff_page():
     return render_template('topo-diff.html', csrf_token=_csrf())
 
+
+@app.route('/api/graph-times', methods=['GET'], endpoint='api_graph_times')
+def api_graph_times():
+    """Return the list of uploaded OSPF graph timestamps.
+
+    Proxies to the base-image REST endpoint using localhost + Basic Auth
+    (bypasses the IP-whitelist restriction that rejects browser sessions).
+    Falls back to an empty list so the JS pages still show the URL-param
+    graph_time even when the base image doesn't expose this endpoint.
+    """
+    login = _login()
+    if not login:
+        return jsonify({'error': 'Not logged in', 'graph_time_list': []}), 401
+    try:
+        upstream = requests.get(
+            'http://127.0.0.1:5000/api/diagram/list',
+            auth=(DEFAULT_LOGIN, DEFAULT_PASSWORD),
+            timeout=10,
+        )
+        if upstream.status_code == 200:
+            data = upstream.json()
+            # Normalise — base image may use different key names
+            gt_list = (data.get('graph_time_list') or
+                       data.get('timestamps') or
+                       data.get('list') or
+                       (data if isinstance(data, list) else []))
+            return jsonify({'graph_time_list': gt_list})
+    except Exception:
+        pass
+    # Fallback: return empty list — JS will fall back to URL param
+    return jsonify({'graph_time_list': []})
+

@@ -28,11 +28,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /* ── Graph time dropdowns ────────────────────────────────────────── */
 function tdLoadGraphTimes(defaultGt) {
-  fetch('/api/diagram/list')
-    .then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
+  fetch('/api/graph-times')
+    .then(function (r) { return r.ok ? r.json() : { graph_time_list: [] }; }).catch(function () { return { graph_time_list: [] }; })
     .then(function (data) {
-      var list = data.graph_time_list || data.timestamps || data || [];
+      var list = data.graph_time_list || data.timestamps || (Array.isArray(data) ? data : []);
       if (!Array.isArray(list)) list = [];
+      // Ensure the default graph_time is always in the list
+      if (defaultGt && list.indexOf(defaultGt) === -1) list = [defaultGt].concat(list);
       var selA = document.getElementById('tdSnapA');
       var selB = document.getElementById('tdSnapB');
       selA.innerHTML = '<option value="">— select —</option>';
@@ -43,8 +45,7 @@ function tdLoadGraphTimes(defaultGt) {
         if (idx === list.length - 1) oB.selected = true;
         selA.appendChild(oA); selB.appendChild(oB);
       });
-      if (list.length >= 2) document.getElementById('tdBtnCompare').disabled = false;
-      else if (list.length === 1) { document.getElementById('tdBtnCompare').disabled = false; }
+      document.getElementById('tdBtnCompare').disabled = list.length === 0;
     });
 }
 
@@ -58,15 +59,7 @@ function tdCompare() {
   document.getElementById('tdBtnCompare').disabled = true;
 
   var load = function (gt) {
-    return Promise.all([
-      fetch('/api/diagram/' + encodeURIComponent(gt) + '/nodes').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
-      fetch('/api/diagram/' + encodeURIComponent(gt) + '/edges').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; })
-    ]).then(function (res) {
-      var n = res[0] || []; var e = res[1] || [];
-      if (n.nodes) n = n.nodes; if (e.edges) e = e.edges;
-      if (!Array.isArray(n)) n = []; if (!Array.isArray(e)) e = [];
-      return { nodes: n, edges: e };
-    });
+    return KSP_loadTopology(gt);
   };
 
   Promise.all([load(gtA), load(gtB)]).then(function (snaps) {
