@@ -389,3 +389,25 @@ def security_countries_get(graph_time):
     doc = col.find_one({'graph_time': graph_time})
     return jsonify({'overrides': doc.get('overrides', {}) if doc else {}})
 
+
+# ── PRD-13: Path Analysis Suite routes ────────────────────────────
+
+@app.route('/path-explorer', methods=['GET'], endpoint='path_explorer_page')
+def path_explorer_page():
+    return render_template('path-explorer.html', csrf_token=_csrf())
+
+
+@app.route('/change-planner', methods=['GET'], endpoint='change_planner_page')
+def change_planner_page():
+    return render_template('change-planner.html', csrf_token=_csrf())
+
+
+@app.route('/impact-lab', methods=['GET'], endpoint='impact_lab_page')
+def impact_lab_page():
+    return render_template('impact-lab.html', csrf_token=_csrf())
+
+
+@app.route('/topo-diff', methods=['GET'], endpoint='topo_diff_page')
+def topo_diff_page():
+    return render_template('topo-diff.html', csrf_token=_csrf())
+

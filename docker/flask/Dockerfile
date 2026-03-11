@@ -42,5 +42,15 @@ COPY 06-STEP-BY-STEP/docker-patches/base.html /home/flask/flask/templates/base.h
 COPY docker/flask/host_to_dns_name_mapping.html /home/flask/flask/templates/host_to_dns_name_mapping.html
 COPY docker/flask/security-token-create.html /home/flask/flask/templates/security-token-create.html
 COPY docker/flask/security-token-list.html /home/flask/flask/templates/security-token-list.html
+# ── PRD-13: Path Analysis Suite ─────────────────────────────────────
+COPY docker/flask/static/js/ospf-ksp.js        /home/flask/flask/static/js/ospf-ksp.js
+COPY docker/flask/static/js/path-explorer.js   /home/flask/flask/static/js/path-explorer.js
+COPY docker/flask/static/js/change-planner.js  /home/flask/flask/static/js/change-planner.js
+COPY docker/flask/static/js/impact-lab.js      /home/flask/flask/static/js/impact-lab.js
+COPY docker/flask/static/js/topo-diff.js       /home/flask/flask/static/js/topo-diff.js
+COPY docker/flask/path-explorer.html           /home/flask/flask/templates/path-explorer.html
+COPY docker/flask/change-planner.html          /home/flask/flask/templates/change-planner.html
+COPY docker/flask/impact-lab.html              /home/flask/flask/templates/impact-lab.html
+COPY docker/flask/topo-diff.html               /home/flask/flask/templates/topo-diff.html
 
 CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5000", "--timeout", "90", "security_overlay:app"]

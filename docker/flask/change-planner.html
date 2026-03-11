@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block metadata %}
+<meta name="description" content="OSPF Change Planner — multi-router cost change planning with animated before/after visualisation">
+{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
+<script src="/static/js/ospf-ksp.js"></script>
+<script src="/static/js/change-planner.js"></script>
+
+<style>
+  /* ── Layout ─────────────────────────────────────────────────────── */
+  #cpRoot { display:flex; gap:10px; height:calc(100vh - 120px); min-height:500px; }
+  #cpLeft  { width:440px; min-width:320px; flex-shrink:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
+  #cpRight { flex:1; min-width:300px; display:flex; flex-direction:column; gap:8px; }
+
+  /* ── Dark panel ──────────────────────────────────────────────────── */
+  .cp-panel { background:#1a2535; border-radius:8px; padding:12px; }
+  .cp-panel h4 { margin:0 0 8px; color:#7cb4ff; font-size:13px; font-weight:700; }
+
+  /* ── Change-plan table ───────────────────────────────────────────── */
+  .cp-plan-table { width:100%; border-collapse:collapse; font-size:12px; color:#c8d8e8; }
+  .cp-plan-table th { color:#7cb4ff; font-weight:600; padding:3px 6px; border-bottom:1px solid #2d3f54; text-align:left; }
+  .cp-plan-table td { padding:3px 4px; }
+  .cp-plan-table input[type=text], .cp-plan-table input[type=number] {
+    background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:3px;
+    padding:2px 5px; font-size:11px; width:100%;
+  }
+  .cp-plan-table select { background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:3px; font-size:11px; padding:2px; width:100%; }
+  .cp-del-btn { background:none; border:none; color:#f87171; cursor:pointer; font-size:14px; }
+
+  /* ── Buttons ─────────────────────────────────────────────────────── */
+  .cp-btn {
+    background:#2563eb; color:#fff; border:none; border-radius:5px; padding:6px 14px;
+    font-size:13px; cursor:pointer; transition:background 0.15s; white-space:nowrap;
+  }
+  .cp-btn:hover { background:#1d4ed8; }
+  .cp-btn.secondary { background:#374151; } .cp-btn.secondary:hover { background:#4b5563; }
+  .cp-btn.success { background:#059669; } .cp-btn.success:hover { background:#047857; }
+  .cp-btn.danger  { background:#dc2626; } .cp-btn.danger:hover  { background:#b91c1c; }
+  .cp-btn.amber   { background:#d97706; } .cp-btn.amber:hover   { background:#b45309; }
+  .cp-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  /* ── Impact summary ──────────────────────────────────────────────── */
+  .cp-impact-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
+  .cp-stat { background:#1e2a38; border-radius:6px; padding:8px; text-align:center; }
+  .cp-stat-val { font-size:22px; font-weight:700; color:#f59e0b; }
+  .cp-stat-lbl { font-size:10px; color:#9ca3af; margin-top:2px; }
+  .cp-stat.improved .cp-stat-val { color:#22c55e; }
+  .cp-stat.degraded .cp-stat-val { color:#ef4444; }
+
+  /* ── Affected pairs table ────────────────────────────────────────── */
+  .cp-diff-table { width:100%; border-collapse:collapse; font-size:11px; color:#c8d8e8; max-height:200px; overflow-y:auto; display:block; }
+  .cp-diff-table th { color:#7cb4ff; font-weight:600; padding:3px 6px; border-bottom:1px solid #2d3f54; text-align:left; position:sticky; top:0; background:#1a2535; }
+  .cp-diff-table td { padding:3px 6px; border-bottom:1px solid #1e2a38; }
+  .cp-diff-table tr.improved td:last-child { color:#22c55e; }
+  .cp-diff-table tr.degraded td:last-child { color:#ef4444; }
+
+  /* ── Risk badge ──────────────────────────────────────────────────── */
+  .risk-badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; }
+  .risk-low    { background:#064e3b; color:#34d399; }
+  .risk-medium { background:#451a03; color:#fb923c; }
+  .risk-high   { background:#450a0a; color:#f87171; }
+
+  /* ── Topology ────────────────────────────────────────────────────── */
+  #cpTopoContainer { flex:1; background:#111827; border-radius:8px; border:1px solid #2d3f54; min-height:300px; }
+  #cpAnimStatus { color:#f59e0b; font-size:12px; min-height:18px; text-align:center; padding:3px; }
+  #cpTopoLegend { display:flex; gap:16px; font-size:11px; color:#9ca3af; padding:4px 8px; }
+  #cpTopoLegend span { display:flex; align-items:center; gap:4px; }
+  .cp-leg { width:20px; height:3px; border-radius:2px; }
+
+  /* ── Status ──────────────────────────────────────────────────────── */
+  #cpStatus { color:#9ca3af; font-size:12px; padding:2px 0; min-height:18px; }
+  .cp-spinner { display:inline-block; width:10px; height:10px; border:2px solid #3d5066; border-top-color:#4a9eff; border-radius:50%; animation:cp-spin 0.6s linear infinite; margin-right:4px; }
+  @keyframes cp-spin { to { transform:rotate(360deg); } }
+
+  /* ── Count-up animation ──────────────────────────────────────────── */
+  @keyframes cp-count-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+  .cp-count-anim { animation:cp-count-pulse 0.3s ease 3; }
+
+  /* ── Node pulse (affected countries) ────────────────────────────── */
+  @keyframes cp-node-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .cp-pulsing { animation:cp-node-pulse 0.4s ease 3; }
+</style>
+
+<div id="cpRoot">
+
+  <!-- ── Left Column ────────────────────────────────────────────── -->
+  <div id="cpLeft">
+
+    <!-- Graph selector -->
+    <div class="cp-panel">
+      <h4>📅 Graph Snapshot</h4>
+      <select id="cpGraphTime" onchange="cpOnGraphTimeChange(this.value)" style="width:100%;background:#2b3a4d;color:#e0e8f0;border:1px solid #3d5066;border-radius:4px;padding:5px;">
+        <option value="">— loading —</option>
+      </select>
+      <div id="cpStatus" style="margin-top:6px;">Loading…</div>
+    </div>
+
+    <!-- Change Plan table -->
+    <div class="cp-panel">
+      <h4>📋 Change Plan</h4>
+      <table class="cp-plan-table">
+        <thead><tr>
+          <th>Edge ID</th><th>Mode</th><th>FWD</th><th>REV</th><th></th>
+        </tr></thead>
+        <tbody id="cpPlanRows"></tbody>
+      </table>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+        <button class="cp-btn secondary" onclick="cpAddRow()">+ Add Row</button>
+        <button class="cp-btn" id="cpBtnAnalyse" onclick="cpAnalyse()" disabled>▶ Analyse Impact</button>
+        <button class="cp-btn amber" id="cpBtnAnimate" onclick="cpAnimate()" disabled>🎬 Animate</button>
+        <button class="cp-btn secondary" onclick="cpExportCSV()">📥 CSV</button>
+        <button class="cp-btn danger" onclick="cpClearPlan()">🗑 Clear</button>
+      </div>
+    </div>
+
+    <!-- Impact Summary -->
+    <div class="cp-panel" id="cpImpactSection" style="display:none;">
+      <h4>⚡ Impact Summary &nbsp;<span id="cpRiskBadge"></span></h4>
+      <div class="cp-impact-grid">
+        <div class="cp-stat"><div class="cp-stat-val" id="cpStatAffected">—</div><div class="cp-stat-lbl">Pairs Affected</div></div>
+        <div class="cp-stat improved"><div class="cp-stat-val" id="cpStatImproved">—</div><div class="cp-stat-lbl">Improved</div></div>
+        <div class="cp-stat degraded"><div class="cp-stat-val" id="cpStatDegraded">—</div><div class="cp-stat-lbl">Degraded</div></div>
+      </div>
+      <table class="cp-diff-table">
+        <thead><tr><th>Route</th><th>Before</th><th>After</th><th>Δ</th></tr></thead>
+        <tbody id="cpDiffRows"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /cpLeft -->
+
+  <!-- ── Right Column ───────────────────────────────────────────── -->
+  <div id="cpRight">
+    <div id="cpTopoLegend">
+      <span><span class="cp-leg" style="background:#374151;"></span>Unchanged</span>
+      <span><span class="cp-leg" style="background:#ef4444;"></span>Old path (fading)</span>
+      <span><span class="cp-leg" style="background:#22c55e;"></span>New path (growing)</span>
+    </div>
+    <div id="cpAnimStatus"></div>
+    <div id="cpTopoContainer"></div>
+  </div>
+
+</div><!-- /cpRoot -->
+{% endblock %}

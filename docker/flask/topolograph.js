@@ -588,6 +588,10 @@ function upload_ospf_lsdb(with_heatmap = false, for_ospfwatcher = false, dynamic
     success: function callbackFunc(response) {
 
       graph_id = response.graph_id;
+      // ── PRD-08-B: Persist graph context so new pages can pick it up ──────
+      try { localStorage.setItem('ospf_graph_time', dynamic_graph_time); } catch(e){}
+      try { localStorage.setItem('ospf_graph_id',   String(graph_id));   } catch(e){}
+      // ─────────────────────────────────────────────────────────────────────
       // set value to global variable
       nodes_attr_dd_in_ll = response.nodes_attr_dd_in_ll;
       edges_attr_dd_in_ll = response.edges_attr_dd_in_ll;
@@ -7203,6 +7207,9 @@ function buildViewModeButtons() {
     '<button class="vmToolBtn" id="btnHostnameUpload" title="Upload OSPF database + hostname mapping CSV to classify nodes" onclick="buildHostnameUploadPanel()">📂 Host File</button>' +
     '<button class="vmToolBtn" id="btnCostMatrix"    title="OSPF Cost Matrix — country-to-country Dijkstra shortest paths, heat-map, Excel export" onclick="buildOspfCostMatrix()">🗺 Cost Matrix</button>' +
     '<button class="vmToolBtn" id="btnWhatIf"        title="OSPF What-If analysis — change edge cost, see impact on all paths" onclick="buildOspfWhatIf()">🔬 What-If</button>' +
+    /* ── PRD-08-B: K-Path Suite launcher buttons ─────────────────────── */
+    '<button class="vmToolBtn" id="btnKspExplorer"  title="K-Path Explorer — find up to 10 shortest paths between A-type countries (Yen\'s algorithm)" onclick="window.open(\'/path-explorer?graph_time=\'+encodeURIComponent(currentGraphTime()),\'_blank\')">🛤 K-Paths</button>' +
+    '<button class="vmToolBtn" id="btnChangePlanner" title="Change Planner — multi-router OSPF cost changes with animated before/after visualisation" onclick="window.open(\'/change-planner?graph_time=\'+encodeURIComponent(currentGraphTime()),\'_blank\')">📋 Planner</button>' +
     /* ── Sprint 4: Multi-format hostname filter ──────────────────────── */
     '<span class="vmSep">│</span>' +
     '<button class="vmToolBtn" id="btnCountryFilter" title="Filter by country, IP range, and hostname format (A/B/C-type)" onclick="toggleCountryFilterPanel()">🌍 Countries</button>' +
@@ -7969,6 +7976,24 @@ function _lerpColor(c1, c2, t) {
 }
 
 // ── Helper: extract numeric OSPF cost from an edge object ─────────────────────
+/**
+ * PRD-08-B: Return the currently-loaded graph time (stored in localStorage by upload_ospf_lsdb).
+ * Used by K-Paths button and new analysis pages via URL param ?graph_time=...
+ */
+function currentGraphTime() {
+  try {
+    var fromLS = localStorage.getItem('ospf_graph_time');
+    if (fromLS) return fromLS;
+  } catch(e) {}
+  // fallback: read from dropdown
+  var sel = document.getElementById('dynamic_graph_time');
+  if (sel && sel.options && sel.selectedIndex >= 0) return sel.options[sel.selectedIndex].value || '';
+  return '';
+}
+function currentGraphId() {
+  try { return localStorage.getItem('ospf_graph_id') || ''; } catch(e) { return ''; }
+}
+
 function _edgeCost(e) {
   var cost = e.cost || e.weight || e.value || 0;
   if (!cost && e.title) {
@@ -9074,7 +9099,7 @@ function _buildAdjList(overrides) {
     var cost = overrides.hasOwnProperty(e.id) ? overrides[e.id] : _edgeCost(e);
     if (cost <= 0) cost = 1;
     if (!adj.has(e.from)) adj.set(e.from, []);
-    adj.get(e.from).push({ to: e.to, cost: cost });
+    adj.get(e.from).push({ to: e.to, cost: cost, edgeId: e.id });
     // OSPF edges are directional — vis.js may store both directions separately
     // If both directions exist they'll each be in the DataSet independently.
     // We don't add the reverse here to preserve directed OSPF semantics.
@@ -9311,7 +9336,7 @@ function _matrixCellClick(srcCountry, dstCountry) {
         var nd = u.dist + nb.cost;
         if (nd < (distMap.get(nb.to) !== undefined ? distMap.get(nb.to) : Infinity)) {
           distMap.set(nb.to, nd);
-          prev.set(nb.to, u.id);
+          prev.set(nb.to, { from: u.id, edgeId: nb.edgeId }); // PRD-08-B bug fix: store edgeId
           heap.push({ dist: nd, id: nb.to });
         }
       });
@@ -9325,20 +9350,25 @@ function _matrixCellClick(srcCountry, dstCountry) {
 
   if (!bestPrev) { console.log('[SP3-B] No path found ' + srcCountry + '→' + dstCountry); return; }
 
-  // Reconstruct path
+  // Reconstruct path (prev now stores {from, edgeId} objects — PRD-08-B fix)
   var path = [];
   var cur = bestPrev.endId;
   var prev2 = bestPrev.prev;
-  while (prev2.has(cur)) { path.unshift(cur); cur = prev2.get(cur); }
+  while (prev2.has(cur)) { path.unshift(cur); cur = prev2.get(cur).from; }
   path.unshift(cur);
 
-  // Find edges along path
+  // Find edges along path — PRD-08-B bug fix: iterate consecutive pairs only
+  // (old pathSet.has(from)&&pathSet.has(to) incorrectly included non-adjacent edges)
   var pathEdgeIds = [];
-  var pathSet = new Set(path);
   if (typeof edges !== 'undefined' && edges) {
-    edges.get().forEach(function (e) {
-      if (pathSet.has(e.from) && pathSet.has(e.to)) pathEdgeIds.push(e.id);
-    });
+    for (var pi = 0; pi < path.length - 1; pi++) {
+      var _pA = path[pi], _pB = path[pi + 1];
+      edges.get().forEach(function (e) {
+        if ((e.from === _pA && e.to === _pB) || (e.to === _pA && e.from === _pB)) {
+          pathEdgeIds.push(e.id);
+        }
+      });
+    }
   }
 
   _highlightEdges(pathEdgeIds);

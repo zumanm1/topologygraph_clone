@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block metadata %}
+<meta name="description" content="OSPF Topology Diff — compare two LSDB snapshots, visualise cost changes and adjacency diffs">
+{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
+<script src="/static/js/ospf-ksp.js"></script>
+<script src="/static/js/topo-diff.js"></script>
+
+<style>
+  /* ── Layout ─────────────────────────────────────────────────────── */
+  #tdRoot { display:flex; flex-direction:column; gap:10px; min-height:calc(100vh - 120px); }
+  #tdTopBar { background:#1a2535; border-radius:8px; padding:12px; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+  #tdTopBar label { color:#aab; font-size:12px; display:block; margin-bottom:2px; }
+  #tdTopBar select { background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:4px; padding:4px 8px; font-size:13px; }
+
+  /* ── Dual topology ───────────────────────────────────────────────── */
+  #tdTopos { display:flex; gap:8px; height:40vh; min-height:250px; }
+  .td-topo-panel { flex:1; position:relative; }
+  .td-topo-label { background:rgba(17,24,39,0.8); color:#7cb4ff; font-size:11px; font-weight:700;
+    padding:3px 8px; border-radius:0 0 0 6px; position:absolute; top:0; right:0; z-index:10; }
+  .td-topo-net { width:100%; height:100%; background:#111827; border-radius:8px; border:1px solid #2d3f54; }
+
+  /* ── Legend ──────────────────────────────────────────────────────── */
+  #tdLegend { display:flex; gap:16px; font-size:11px; color:#9ca3af; padding:4px 0; flex-wrap:wrap; }
+  #tdLegend span { display:flex; align-items:center; gap:4px; }
+  .td-leg { width:20px; height:3px; border-radius:2px; }
+
+  /* ── Results area ────────────────────────────────────────────────── */
+  #tdResults { display:flex; gap:10px; min-height:30vh; }
+  .td-panel { background:#1a2535; border-radius:8px; padding:12px; overflow-y:auto; }
+  #tdDiffPanel { flex:1; }
+  #tdPairPanel { width:320px; }
+  .td-panel h4 { margin:0 0 8px; color:#7cb4ff; font-size:13px; font-weight:700; }
+
+  /* ── Tables ──────────────────────────────────────────────────────── */
+  .td-tbl { width:100%; border-collapse:collapse; font-size:11px; color:#c8d8e8; }
+  .td-tbl th { color:#7cb4ff; font-weight:600; padding:3px 6px; border-bottom:1px solid #2d3f54; text-align:left; }
+  .td-tbl td { padding:3px 6px; border-bottom:1px solid #1e2a38; white-space:nowrap; }
+  .td-tbl tr.cost-up td:nth-child(5) { color:#ef4444; }
+  .td-tbl tr.cost-dn td:nth-child(5) { color:#22c55e; }
+  .td-tbl tr.new-edge td:first-child { color:#60a5fa; }
+  .td-tbl tr.lost-edge td:first-child { color:#9ca3af; text-decoration:line-through; }
+  .td-pair-tbl td:last-child { color:#9ca3af; }
+  .td-pair-tbl tr.improved td:last-child { color:#22c55e; }
+  .td-pair-tbl tr.degraded td:last-child { color:#ef4444; }
+
+  /* ── Buttons ─────────────────────────────────────────────────────── */
+  .td-btn { background:#2563eb; color:#fff; border:none; border-radius:5px; padding:6px 16px;
+    font-size:13px; cursor:pointer; transition:background 0.15s; }
+  .td-btn:hover { background:#1d4ed8; }
+  .td-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .td-btn.secondary { background:#374151; } .td-btn.secondary:hover { background:#4b5563; }
+
+  /* ── Status ──────────────────────────────────────────────────────── */
+  #tdStatus { color:#9ca3af; font-size:12px; min-height:18px; }
+  .td-spinner { display:inline-block; width:10px; height:10px; border:2px solid #3d5066; border-top-color:#4a9eff; border-radius:50%; animation:td-spin 0.6s linear infinite; margin-right:4px; }
+  @keyframes td-spin { to { transform:rotate(360deg); } }
+</style>
+
+<div id="tdRoot">
+
+  <!-- Top control bar -->
+  <div id="tdTopBar">
+    <div>
+      <label>📅 Snapshot A (Before)</label>
+      <select id="tdSnapA"><option value="">— select —</option></select>
+    </div>
+    <div>
+      <label>📅 Snapshot B (After)</label>
+      <select id="tdSnapB"><option value="">— select —</option></select>
+    </div>
+    <button class="td-btn" id="tdBtnCompare" onclick="tdCompare()" disabled>▶ Compare</button>
+    <button class="td-btn secondary" onclick="tdExportCSV()">📥 CSV</button>
+    <div id="tdStatus" style="flex:1;padding-bottom:2px;">Select two snapshots and click Compare.</div>
+  </div>
+
+  <!-- Legend -->
+  <div id="tdLegend">
+    <span><span class="td-leg" style="background:#374151;"></span>Unchanged</span>
+    <span><span class="td-leg" style="background:#ef4444;height:4px;"></span>Cost increased (worse)</span>
+    <span><span class="td-leg" style="background:#22c55e;height:4px;"></span>Cost decreased (better)</span>
+    <span><span class="td-leg" style="background:#3b82f6;height:4px;"></span>New adjacency</span>
+    <span><span class="td-leg" style="background:#6b7280;height:1px;"></span>Lost adjacency (gone)</span>
+  </div>
+
+  <!-- Dual topology -->
+  <div id="tdTopos">
+    <div class="td-topo-panel">
+      <div class="td-topo-label">Snapshot A</div>
+      <div class="td-topo-net" id="tdTopoA"></div>
+    </div>
+    <div class="td-topo-panel">
+      <div class="td-topo-label">Snapshot B</div>
+      <div class="td-topo-net" id="tdTopoB"></div>
+    </div>
+  </div>
+
+  <!-- Results tables -->
+  <div id="tdResults">
+    <div class="td-panel" id="tdDiffPanel">
+      <h4>🔀 Edge Diff</h4>
+      <table class="td-tbl" id="tdDiffTable">
+        <thead><tr><th>Type</th><th>Edge (from→to)</th><th>Cost A</th><th>Cost B</th><th>Δ</th><th>%</th></tr></thead>
+        <tbody id="tdDiffRows"></tbody>
+      </table>
+    </div>
+    <div class="td-panel" id="tdPairPanel">
+      <h4>🌍 Country Pair Δ</h4>
+      <table class="td-tbl td-pair-tbl">
+        <thead><tr><th>Route</th><th>A</th><th>B</th><th>Δ</th></tr></thead>
+        <tbody id="tdPairRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /tdRoot -->
+{% endblock %}

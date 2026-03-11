@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block metadata %}
+<meta name="description" content="OSPF Impact Lab — node/link failure blast radius analysis with ring visualisation">
+{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
+<script src="/static/js/ospf-ksp.js"></script>
+<script src="/static/js/impact-lab.js"></script>
+
+<style>
+  /* ── Layout ─────────────────────────────────────────────────────── */
+  #ilRoot { display:flex; gap:10px; height:calc(100vh - 120px); min-height:500px; }
+  #ilLeft  { width:400px; min-width:300px; flex-shrink:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
+  #ilRight { flex:1; min-width:300px; display:flex; flex-direction:column; gap:6px; }
+
+  .il-panel { background:#1a2535; border-radius:8px; padding:12px; }
+  .il-panel h4 { margin:0 0 8px; color:#7cb4ff; font-size:13px; font-weight:700; }
+
+  /* ── Failure selector ────────────────────────────────────────────── */
+  .il-type-btns { display:flex; gap:4px; margin-bottom:8px; }
+  .il-type-btn { flex:1; padding:5px; text-align:center; cursor:pointer; border-radius:5px;
+    font-size:12px; color:#7cb4ff; background:#1e2a38; border:1px solid #2d3f54; }
+  .il-type-btn.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+
+  /* ── Search box ──────────────────────────────────────────────────── */
+  .il-search { background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:4px;
+    padding:5px 8px; font-size:13px; width:100%; }
+  .il-search:focus { outline:none; border-color:#4a9eff; }
+  .il-search-results { max-height:120px; overflow-y:auto; background:#1e2a38;
+    border:1px solid #2d3f54; border-radius:4px; margin-top:2px; display:none; }
+  .il-search-item { padding:4px 8px; cursor:pointer; font-size:11px; color:#c8d8e8; }
+  .il-search-item:hover { background:#2b3a4d; }
+  #ilSelectedFailure { color:#f59e0b; font-size:12px; min-height:18px; margin-top:4px; }
+
+  /* ── Buttons ─────────────────────────────────────────────────────── */
+  .il-btn { background:#2563eb; color:#fff; border:none; border-radius:5px; padding:6px 14px;
+    font-size:13px; cursor:pointer; transition:background 0.15s; }
+  .il-btn:hover { background:#1d4ed8; }
+  .il-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  /* ── Blast rings summary ─────────────────────────────────────────── */
+  .il-rings-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .il-ring-card { background:#1e2a38; border-radius:6px; padding:8px; border-left:3px solid #374151; }
+  .il-ring-card.ring0 { border-left-color:#f87171; }
+  .il-ring-card.ring1 { border-left-color:#fb923c; }
+  .il-ring-card.ring2 { border-left-color:#fbbf24; }
+  .il-ring-card.unreach { border-left-color:#6b7280; }
+  .il-ring-label { font-size:10px; color:#9ca3af; }
+  .il-ring-count { font-size:22px; font-weight:700; color:#e0e8f0; }
+
+  /* ── Country impact table ────────────────────────────────────────── */
+  .il-tbl { width:100%; border-collapse:collapse; font-size:11px; color:#c8d8e8; }
+  .il-tbl th { color:#7cb4ff; font-weight:600; padding:3px 6px; border-bottom:1px solid #2d3f54; text-align:left; }
+  .il-tbl td { padding:3px 6px; border-bottom:1px solid #1e2a38; }
+  .il-tbl tr:hover td { background:#1e2a38; }
+
+  /* ── Topology ────────────────────────────────────────────────────── */
+  #ilTopoContainer { flex:1; background:#111827; border-radius:8px; border:1px solid #2d3f54; min-height:350px; }
+  #ilTopoLegend { display:flex; gap:12px; font-size:11px; color:#9ca3af; padding:4px 8px; flex-wrap:wrap; }
+  #ilTopoLegend span { display:flex; align-items:center; gap:4px; }
+  .il-leg-dot { width:10px; height:10px; border-radius:50%; }
+
+  #ilStatus { color:#9ca3af; font-size:12px; min-height:18px; }
+  .il-spinner { display:inline-block; width:10px; height:10px; border:2px solid #3d5066; border-top-color:#4a9eff; border-radius:50%; animation:il-spin 0.6s linear infinite; margin-right:4px; }
+  @keyframes il-spin { to { transform:rotate(360deg); } }
+</style>
+
+<div id="ilRoot">
+
+  <!-- ── Left ────────────────────────────────────────────────────── -->
+  <div id="ilLeft">
+
+    <!-- Graph selector -->
+    <div class="il-panel">
+      <h4>📅 Graph Snapshot</h4>
+      <select id="ilGraphTime" onchange="ilOnGraphTimeChange(this.value)"
+        style="width:100%;background:#2b3a4d;color:#e0e8f0;border:1px solid #3d5066;border-radius:4px;padding:5px;">
+        <option value="">— loading —</option>
+      </select>
+      <div id="ilStatus" style="margin-top:6px;">Loading…</div>
+    </div>
+
+    <!-- Failure selector -->
+    <div class="il-panel">
+      <h4>💥 Failure Scenario</h4>
+      <div class="il-type-btns">
+        <div class="il-type-btn active" id="ilTypeNode" onclick="ilSetType('node')">Node Failure</div>
+        <div class="il-type-btn" id="ilTypeEdge" onclick="ilSetType('edge')">Link Failure</div>
+      </div>
+      <input class="il-search" id="ilSearchBox" placeholder="Search node / edge ID…" oninput="ilSearch(this.value)" autocomplete="off">
+      <div class="il-search-results" id="ilSearchResults"></div>
+      <div id="ilSelectedFailure">No failure selected</div>
+      <button class="il-btn" id="ilBtnAnalyse" onclick="ilAnalyse()" disabled style="margin-top:8px;">▶ Compute Blast Radius</button>
+    </div>
+
+    <!-- Blast ring summary -->
+    <div class="il-panel" id="ilRingSection" style="display:none;">
+      <h4>📊 Blast Radius</h4>
+      <div class="il-rings-grid">
+        <div class="il-ring-card ring0">
+          <div class="il-ring-label">Ring 0 — Direct Adjacency</div>
+          <div class="il-ring-count" id="ilRing0">0</div>
+        </div>
+        <div class="il-ring-card ring1">
+          <div class="il-ring-label">Ring 1 — Primary Path Lost</div>
+          <div class="il-ring-count" id="ilRing1">0</div>
+        </div>
+        <div class="il-ring-card ring2">
+          <div class="il-ring-label">Ring 2 — Backup Degraded</div>
+          <div class="il-ring-count" id="ilRing2">0</div>
+        </div>
+        <div class="il-ring-card unreach">
+          <div class="il-ring-label">Unreachable</div>
+          <div class="il-ring-count" id="ilUnreach">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Country impact table -->
+    <div class="il-panel" id="ilCountrySection" style="display:none;">
+      <h4>🌍 Country Pair Impact</h4>
+      <table class="il-tbl">
+        <thead><tr><th>Route</th><th>Before</th><th>After</th><th>Δ</th></tr></thead>
+        <tbody id="ilCountryRows"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /ilLeft -->
+
+  <!-- ── Right — Topology ─────────────────────────────────────────── -->
+  <div id="ilRight">
+    <div id="ilTopoLegend">
+      <span><span class="il-leg-dot" style="background:#1e40af;"></span>Normal node</span>
+      <span><span class="il-leg-dot" style="background:#ef4444;"></span>Failed node</span>
+      <span><span class="il-leg-dot" style="background:#ea580c;"></span>Ring 0 (direct)</span>
+      <span><span class="il-leg-dot" style="background:#f59e0b;"></span>Ring 1 (primary path)</span>
+      <span><span class="il-leg-dot" style="background:#6b7280;"></span>Unreachable</span>
+    </div>
+    <div id="ilTopoContainer"></div>
+  </div>
+
+</div><!-- /ilRoot -->
+{% endblock %}

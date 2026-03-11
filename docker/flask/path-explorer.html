@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block metadata %}
+<meta name="description" content="OSPF K-Shortest Path Explorer — find up to 10 shortest paths between A-type countries with per-hop cost breakdown">
+{% endblock %}
+
+{% block content %}
+<!-- vis-network CDN (new-tab page needs its own load; base image serves vis globally only on main page) -->
+<script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
+
+<script src="/static/js/ospf-ksp.js"></script>
+<script src="/static/js/path-explorer.js"></script>
+
+<style>
+  /* ── Page layout ───────────────────────────────────────────────── */
+  #peRoot { display:flex; gap:10px; height:calc(100vh - 120px); min-height:500px; }
+  #peLeft  { width:420px; min-width:320px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+  #peRight { flex:1; min-width:300px; position:relative; }
+
+  /* ── Control bar ───────────────────────────────────────────────── */
+  #peControls { background:#1e2a38; border-radius:8px; padding:12px; }
+  #peControls label { color:#aab; font-size:12px; margin-bottom:2px; display:block; }
+  #peControls select, #peControls input[type=number] {
+    background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:4px;
+    padding:4px 8px; font-size:13px; width:100%;
+  }
+  #peControls select:focus, #peControls input:focus { outline:none; border-color:#4a9eff; }
+  .pe-ctrl-row { display:flex; gap:8px; align-items:flex-end; }
+  .pe-ctrl-col { flex:1; }
+
+  /* ── Buttons ───────────────────────────────────────────────────── */
+  .pe-btn {
+    background:#2563eb; color:#fff; border:none; border-radius:5px; padding:6px 14px;
+    font-size:13px; cursor:pointer; transition:background 0.15s; white-space:nowrap;
+  }
+  .pe-btn:hover { background:#1d4ed8; }
+  .pe-btn.secondary { background:#374151; }
+  .pe-btn.secondary:hover { background:#4b5563; }
+  .pe-btn.danger { background:#dc2626; }
+  .pe-btn.danger:hover { background:#b91c1c; }
+  .pe-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  /* ── Override panel ────────────────────────────────────────────── */
+  #peOverridePanel { background:#1a2535; border-radius:8px; padding:10px; }
+  #peOverrideToggle { cursor:pointer; color:#7cb4ff; font-size:12px; user-select:none; }
+  #peOverrideBody { display:none; }
+  #peOverrideBody.open { display:block; }
+  .ov-table { width:100%; border-collapse:collapse; font-size:12px; color:#c8d8e8; margin-top:8px; }
+  .ov-table th { color:#7cb4ff; font-weight:600; padding:3px 6px; border-bottom:1px solid #2d3f54; text-align:left; }
+  .ov-table td { padding:3px 4px; }
+  .ov-table input[type=text], .ov-table input[type=number] {
+    background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:3px;
+    padding:2px 5px; font-size:11px; width:100%;
+  }
+  .ov-table select { background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:3px; font-size:11px; padding:2px; width:100%; }
+  .ov-del-btn { background:none; border:none; color:#f87171; cursor:pointer; font-size:14px; }
+  #peOverrideActions { display:flex; gap:6px; margin-top:8px; }
+
+  /* ── Paths area ────────────────────────────────────────────────── */
+  #pePaths { background:#1a2535; border-radius:8px; padding:10px; flex:1; min-height:200px; overflow-y:auto; }
+  .pe-tabs { display:flex; gap:2px; margin-bottom:8px; }
+  .pe-tab { flex:1; text-align:center; padding:5px; cursor:pointer; border-radius:4px; font-size:12px; color:#7cb4ff; background:#1e2a38; border:1px solid #2d3f54; }
+  .pe-tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+  .pe-path-list { display:none; }
+  .pe-path-list.active { display:block; }
+
+  /* ── Path row ──────────────────────────────────────────────────── */
+  .pe-path-row {
+    border:1px solid #2d3f54; border-radius:5px; margin-bottom:6px;
+    cursor:pointer; transition:border-color 0.15s;
+    overflow:hidden;
+  }
+  .pe-path-row:hover { border-color:#4a9eff; }
+  .pe-path-row.selected { border-color:#22c55e; background:#0f2a18; }
+  .pe-path-header {
+    display:flex; align-items:center; gap:8px;
+    padding:6px 10px; background:#1e2a38;
+  }
+  .pe-path-num  { color:#7cb4ff; font-size:11px; font-weight:700; min-width:24px; }
+  .pe-path-cost { color:#f59e0b; font-size:13px; font-weight:700; }
+  .pe-path-hops { color:#9ca3af; font-size:11px; margin-left:auto; }
+  .pe-path-expand { color:#7cb4ff; font-size:11px; margin-left:4px; }
+  .pe-path-hops-detail { padding:0 10px 8px; display:none; }
+  .pe-path-hops-detail.open { display:block; }
+  .pe-hop { display:flex; align-items:center; gap:4px; padding:2px 0; font-size:11px; color:#c8d8e8; }
+  .pe-hop-node { color:#e0e8f0; font-weight:500; }
+  .pe-hop-cost { color:#f59e0b; background:#1e2a38; border-radius:3px; padding:1px 5px; font-size:10px; }
+  .pe-hop-arrow { color:#4a9eff; }
+
+  /* ── Status/spinner ────────────────────────────────────────────── */
+  #peStatus { color:#9ca3af; font-size:12px; padding:4px 0; min-height:18px; }
+  .pe-spinner { display:inline-block; width:10px; height:10px; border:2px solid #3d5066; border-top-color:#4a9eff; border-radius:50%; animation:pe-spin 0.6s linear infinite; margin-right:4px; }
+  @keyframes pe-spin { to { transform:rotate(360deg); } }
+
+  /* ── Topology panel ────────────────────────────────────────────── */
+  #peTopoContainer { width:100%; height:100%; background:#111827; border-radius:8px; border:1px solid #2d3f54; }
+  #peTopoLegend { position:absolute; top:10px; left:10px; background:rgba(17,24,39,0.85); border-radius:6px; padding:8px 12px; font-size:11px; color:#9ca3af; pointer-events:none; }
+  #peTopoLegend div { margin-bottom:3px; display:flex; align-items:center; gap:6px; }
+  .legend-line { width:24px; height:3px; border-radius:2px; }
+</style>
+
+<div id="peRoot">
+
+  <!-- ── Left Panel ─────────────────────────────────────────── -->
+  <div id="peLeft">
+
+    <!-- Controls -->
+    <div id="peControls">
+      <div class="pe-ctrl-row" style="margin-bottom:8px;">
+        <div class="pe-ctrl-col">
+          <label>📅 Graph Snapshot</label>
+          <select id="peGraphTime"><option value="">— loading —</option></select>
+        </div>
+        <div style="width:60px;">
+          <label>K Paths</label>
+          <input type="number" id="peK" value="10" min="1" max="20">
+        </div>
+      </div>
+      <div class="pe-ctrl-row">
+        <div class="pe-ctrl-col">
+          <label>🌍 Source Country</label>
+          <select id="peSrc"><option value="">— select —</option></select>
+        </div>
+        <div class="pe-ctrl-col">
+          <label>🎯 Destination</label>
+          <select id="peDst"><option value="">— select —</option></select>
+        </div>
+        <button class="pe-btn" id="peBtnGo" onclick="peRunAnalysis()">▶ Go</button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div id="peStatus">Load a graph from the main page, then select countries and click ▶ Go.</div>
+
+    <!-- Cost Overrides -->
+    <div id="peOverridePanel">
+      <div id="peOverrideToggle" onclick="peToggleOverrides()">
+        ▶ Cost Overrides (asymmetric support) <span id="peOverrideCount"></span>
+      </div>
+      <div id="peOverrideBody">
+        <table class="ov-table">
+          <thead><tr>
+            <th>Edge (from→to)</th>
+            <th>Mode</th>
+            <th>FWD</th>
+            <th>REV</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="peOvRows"></tbody>
+        </table>
+        <div id="peOverrideActions">
+          <button class="pe-btn secondary" onclick="peAddOverrideRow()">+ Add Link</button>
+          <button class="pe-btn" onclick="peApplyOverrides()">Apply</button>
+          <button class="pe-btn danger" onclick="peClearOverrides()">Reset All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Path Results -->
+    <div id="pePaths">
+      <div class="pe-tabs">
+        <div class="pe-tab active" id="peTabFwd" onclick="peSelectTab('fwd')">→ FWD (0 paths)</div>
+        <div class="pe-tab" id="peTabRev" onclick="peSelectTab('rev')">← REV (0 paths)</div>
+      </div>
+      <div class="pe-path-list active" id="peListFwd"></div>
+      <div class="pe-path-list" id="peListRev"></div>
+    </div>
+
+  </div><!-- /peLeft -->
+
+  <!-- ── Right Panel — Topology ─────────────────────────────── -->
+  <div id="peRight">
+    <div id="peTopoContainer"></div>
+    <div id="peTopoLegend">
+      <div><span class="legend-line" style="background:#3b82f6;"></span> Topology</div>
+      <div><span class="legend-line" style="background:#22c55e;height:4px;"></span> Selected path</div>
+    </div>
+  </div>
+
+</div><!-- /peRoot -->
+{% endblock %}
