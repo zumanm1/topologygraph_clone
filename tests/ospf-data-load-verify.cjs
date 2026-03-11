@@ -63,7 +63,7 @@ function ko(name, msg) { fail.push(name); console.log('  ✗ ' + name + ' — ' 
     const status = await tab.$eval(p.sel, el => el.textContent).catch(() => '');
     console.log('  status:', status.trim().slice(0, 90));
     console.log('  api errors:', apiErrs.length ? apiErrs : 'NONE');
-    const loaded = /Loaded[: ]+([1-9]\d*)/.test(status);
+    const loaded = /[Ll]oaded[: (]+([1-9]\d*)/.test(status);
     if (loaded) ok(p.name + ' nodes > 0');
     else ko(p.name, status.trim().slice(0, 60));
     // Check ECMP expansion worked (edges should be > raw count if ECMP present)

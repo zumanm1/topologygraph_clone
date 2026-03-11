@@ -85,12 +85,16 @@ function peLoadTopologyData(graphTime) {
       _peEdges = result.edges;
 
       _peRebuildAdjLists();
+      var countries = KSP_atypeCountries(_peNodes);
       _pePopulateCountryDropdowns();
       _peBuildTopoView();
 
       var n = _peNodes.length, e = _peEdges.length;
-      peSetStatus('Loaded: ' + n + ' nodes, ' + e + ' edges. Select countries and click ▶ Go.');
-      document.getElementById('peBtnGo').disabled = false;
+      if (countries.length > 0) {
+        peSetStatus('Loaded: ' + n + ' nodes, ' + e + ' edges. Select countries and click ▶ Go.');
+        document.getElementById('peBtnGo').disabled = false;
+      }
+      // If no A-type countries, _pePopulateCountryDropdowns() already set the warning status
     })
     .catch(function (err) {
       peSetStatus('⚠ Failed to load topology: ' + err.message);
@@ -129,6 +133,18 @@ function _pePopulateCountryDropdowns() {
   var prevSrc = srcSel.value;
   var prevDst = dstSel.value;
 
+  if (countries.length === 0) {
+    // No A-type hostnames — show a hint and disable Go
+    var hint = '<option value="">⚠ No A-type nodes (need xxx-yyy-zzz-r1 labels)</option>';
+    srcSel.innerHTML = hint;
+    dstSel.innerHTML = hint;
+    document.getElementById('peBtnGo').disabled = true;
+    peSetStatus('⚠ No A-type nodes found. Topology loaded (' + _peNodes.length +
+      ' nodes) but path-explorer requires A-type hostname format (e.g. fra-par-mar-r1). ' +
+      'Upload an OSPF database with structured hostnames to use K-Path analysis.');
+    return;
+  }
+
   var makeOptions = function (sel, prev) {
     sel.innerHTML = '<option value="">— select —</option>';
     countries.forEach(function (c) {
@@ -140,6 +156,7 @@ function _pePopulateCountryDropdowns() {
   };
   makeOptions(srcSel, prevSrc);
   makeOptions(dstSel, prevDst);
+  document.getElementById('peBtnGo').disabled = false;
 }
 
 /* ── Main analysis ───────────────────────────────────────────────── */
