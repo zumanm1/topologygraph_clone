@@ -25,6 +25,13 @@ var _peRowIdSeq   = 0;
 var _peSelectedTab = 'fwd';
 var _peGraphTime  = '';
 var _peGraphId    = '';
+var _peAnimInterval = null; // pulsing animation interval
+
+// Direction colour palette
+var PE_COLORS = {
+  fwd: { base: '#22d3ee', dim: '#0e7490', glow: '#67e8f9' },  // cyan
+  rev: { base: '#f97316', dim: '#c2410c', glow: '#fdba74' }   // orange
+};
 
 /* ── Init ────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function () {
@@ -221,13 +228,15 @@ function _peRenderPathList(containerId, paths, dir, label) {
 
   paths.forEach(function (path, idx) {
     var row = document.createElement('div');
-    row.className = 'pe-path-row';
+    row.className = 'pe-path-row dir-' + dir;
     row.id = 'pe-path-' + dir + '-' + idx;
 
     var hdr = document.createElement('div');
     hdr.className = 'pe-path-header';
+    var dirColor = (dir === 'fwd') ? '#22d3ee' : '#f97316';
     hdr.innerHTML =
-      '<span class="pe-path-num">#' + (idx + 1) + '</span>' +
+      '<span class="pe-path-num" style="color:' + dirColor + '">#' + (idx + 1) + '</span>' +
+      '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + dirColor + ';margin-right:4px;"></span>' +
       '<span class="pe-path-cost">Cost: ' + path.totalCost + '</span>' +
       '<span class="pe-path-hops">Hops: ' + (path.nodes.length - 1) + '</span>' +
       '<span class="pe-path-expand">▼</span>';
@@ -262,7 +271,7 @@ function _peRenderPathList(containerId, paths, dir, label) {
       // Select/highlight
       document.querySelectorAll('.pe-path-row').forEach(function (r) { r.classList.remove('selected'); });
       row.classList.add('selected');
-      _peHighlightPath(capturedDir === 'fwd' ? _peFwdPaths[capturedIdx] : _peRevPaths[capturedIdx]);
+      _peHighlightPath(capturedDir === 'fwd' ? _peFwdPaths[capturedIdx] : _peRevPaths[capturedIdx], capturedDir);
     });
 
     container.appendChild(row);
@@ -272,6 +281,14 @@ function _peRenderPathList(containerId, paths, dir, label) {
 /* ── Tab switching ───────────────────────────────────────────────── */
 function peSelectTab(tab) {
   _peSelectedTab = tab;
+  // Stop pulse animation and reset edge colours when switching tabs
+  if (_peAnimInterval) { clearInterval(_peAnimInterval); _peAnimInterval = null; }
+  if (_peVEdges) {
+    var reset = _peVEdges.get().map(function (e) {
+      return { id: e.id, color: { color: '#374151', highlight: '#6b7280' }, width: 1, dashes: false };
+    });
+    _peVEdges.update(reset);
+  }
   ['fwd', 'rev'].forEach(function (t) {
     document.getElementById('peTab' + (t === 'fwd' ? 'Fwd' : 'Rev')).classList.toggle('active', t === tab);
     document.getElementById('peList' + (t === 'fwd' ? 'Fwd' : 'Rev')).classList.toggle('active', t === tab);
@@ -323,26 +340,47 @@ function _peBuildTopoView() {
   _peNetwork.on('stabilizationIterationsDone', function () { _peNetwork.setOptions({ physics: { enabled: false } }); });
 }
 
-/* ── Highlight a path on the topology ───────────────────────────── */
-function _peHighlightPath(path) {
+/* ── Highlight a path on the topology with direction-aware colours ── */
+function _peHighlightPath(path, dir) {
   if (!_peVEdges || !path) return;
 
-  // Reset all edge colors
+  // Stop any existing pulse animation
+  if (_peAnimInterval) { clearInterval(_peAnimInterval); _peAnimInterval = null; }
+
+  var palette = PE_COLORS[dir] || PE_COLORS.fwd;
   var allEdges = _peVEdges.get();
+
+  // Reset all edges to dim grey
   var resetUpd = allEdges.map(function (e) {
-    return { id: e.id, color: { color: '#374151' }, width: 1 };
+    return { id: e.id, color: { color: '#374151', highlight: '#6b7280' }, width: 1, dashes: false };
   });
   _peVEdges.update(resetUpd);
 
-  // Highlight path edges (green, thick)
+  // Identify path edges
   var pathEdgeSet = new Set(path.edges.map(function (eid) { return String(eid); }));
-  var hlUpd = [];
+  var pathEdgeIds = [];
   allEdges.forEach(function (e) {
-    if (pathEdgeSet.has(String(e.id))) {
-      hlUpd.push({ id: e.id, color: { color: '#22c55e' }, width: 4 });
-    }
+    if (pathEdgeSet.has(String(e.id))) pathEdgeIds.push(e.id);
   });
-  if (hlUpd.length) _peVEdges.update(hlUpd);
+
+  if (!pathEdgeIds.length) return;
+
+  // Initial highlight — direction colour, dashed, wide
+  var applyEdges = function (width, color) {
+    var upd = pathEdgeIds.map(function (id) {
+      return { id: id, color: { color: color, highlight: palette.glow }, width: width, dashes: [8, 4] };
+    });
+    _peVEdges.update(upd);
+  };
+
+  applyEdges(4, palette.base);
+
+  // Pulse: alternate between base and glow widths
+  var tick = 0;
+  _peAnimInterval = setInterval(function () {
+    tick++;
+    applyEdges(tick % 2 === 0 ? 3 : 5, tick % 2 === 0 ? palette.base : palette.glow);
+  }, 600);
 
   // Focus network on path nodes
   if (_peNetwork && path.nodes.length) {

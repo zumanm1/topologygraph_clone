@@ -60,7 +60,10 @@
   #pePaths { background:#1a2535; border-radius:8px; padding:10px; flex:1; min-height:200px; overflow-y:auto; }
   .pe-tabs { display:flex; gap:2px; margin-bottom:8px; }
   .pe-tab { flex:1; text-align:center; padding:5px; cursor:pointer; border-radius:4px; font-size:12px; color:#7cb4ff; background:#1e2a38; border:1px solid #2d3f54; }
-  .pe-tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+  #peTabFwd.active { background:#0e7490; color:#fff; border-color:#22d3ee; box-shadow:0 0 6px #22d3ee66; }
+  #peTabRev.active { background:#9a3412; color:#fff; border-color:#f97316; box-shadow:0 0 6px #f9731666; }
+  #peTabFwd:not(.active) { color:#22d3ee; }
+  #peTabRev:not(.active) { color:#f97316; }
   .pe-path-list { display:none; }
   .pe-path-list.active { display:block; }
 
@@ -71,7 +74,8 @@
     overflow:hidden;
   }
   .pe-path-row:hover { border-color:#4a9eff; }
-  .pe-path-row.selected { border-color:#22c55e; background:#0f2a18; }
+  .pe-path-row.selected.dir-fwd { border-color:#22d3ee; background:#072431; }
+  .pe-path-row.selected.dir-rev { border-color:#f97316; background:#2c0f03; }
   .pe-path-header {
     display:flex; align-items:center; gap:8px;
     padding:6px 10px; background:#1e2a38;
@@ -173,7 +177,9 @@
     <div id="peTopoContainer"></div>
     <div id="peTopoLegend">
       <div><span class="legend-line" style="background:#3b82f6;"></span> Topology</div>
-      <div><span class="legend-line" style="background:#22c55e;height:4px;"></span> Selected path</div>
+      <div><span class="legend-line" style="background:#22d3ee;height:4px;border-radius:2px;"></span> FWD path (→)</div>
+      <div><span class="legend-line" style="background:#f97316;height:4px;border-radius:2px;"></span> REV path (←)</div>
+      <div style="font-size:9px;color:#6b7280;margin-top:2px;">Dashed = animated pulse</div>
     </div>
   </div>
 

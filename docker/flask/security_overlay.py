@@ -414,57 +414,36 @@ def topo_diff_page():
 
 @app.route('/api/graph-times', methods=['GET'], endpoint='api_graph_times')
 def api_graph_times():
-    """Return the list of uploaded OSPF graph timestamps.
+    """Return the list of uploaded OSPF graph timestamps for the logged-in user.
 
-    Strategy:
-    1. Try the base-image REST endpoint (proxied via localhost + Basic Auth).
-    2. If that 404s (base image doesn't expose the list endpoint), scrape the
-       /upload-ospf-isis-lsdb page and parse the #dynamic_graph_time <select>.
-    3. Falls back to empty list so JS pages still show the URL-param graph_time.
+    Queries MongoDB directly (same source as the main Upload LSDB page) so the
+    returned list is always identical to the dropdown on the main page.
     """
     login = _login()
     if not login:
         return jsonify({'error': 'Not logged in', 'graph_time_list': []}), 401
 
-    # ── Strategy 1: REST API list endpoint ──────────────────────────────────
+    # ── Primary: MongoDB direct query (user-scoped, same as main-page dropdown) ──
     try:
-        upstream = requests.get(
-            'http://127.0.0.1:5000/api/diagram/list',
-            auth=(DEFAULT_LOGIN, DEFAULT_PASSWORD),
-            timeout=10,
-        )
-        if upstream.status_code == 200:
-            data = upstream.json()
-            gt_list = (data.get('graph_time_list') or
-                       data.get('timestamps') or
-                       data.get('list') or
-                       (data if isinstance(data, list) else []))
+        user_doc = _users.find_one({'login': login}, {'_id': 1})
+        if user_doc:
+            uid = user_doc['_id']
+            gt_list = sorted(
+                _db.graphs.distinct('graph_time', {'owner_id': uid})
+            )
             if gt_list:
                 return jsonify({'graph_time_list': gt_list})
     except Exception:
         pass
 
-    # ── Strategy 2: Scrape the upload page dropdown ──────────────────────────
+    # ── Fallback: all distinct graph_times (no user filter) ─────────────────────
     try:
-        import re as _re
-        page_resp = requests.get(
-            'http://127.0.0.1:5000/upload-ospf-isis-lsdb',
-            auth=(DEFAULT_LOGIN, DEFAULT_PASSWORD),
-            timeout=10,
-        )
-        if page_resp.status_code == 200:
-            # Parse <option value="..."> inside #dynamic_graph_time select
-            vals = _re.findall(r'<option[^>]+value="([^"]+)"', page_resp.text)
-            # Filter to plausible graph_time values (contain digits + letters pattern)
-            gt_list = [v for v in vals if v and _re.match(r'\d{2}[A-Za-z]', v)]
-            # Deduplicate while preserving order
-            seen = set()
-            gt_list = [v for v in gt_list if not (v in seen or seen.add(v))]
-            if gt_list:
-                return jsonify({'graph_time_list': gt_list})
+        gt_list = sorted(_db.graphs.distinct('graph_time'))
+        if gt_list:
+            return jsonify({'graph_time_list': gt_list})
     except Exception:
         pass
 
-    # ── Fallback: empty list — JS will fall back to URL param / localStorage ─
+    # ── Last resort: empty list — JS will use URL param / localStorage ───────────
     return jsonify({'graph_time_list': []})
 
