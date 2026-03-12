@@ -49,9 +49,13 @@ COPY docker/flask/static/js/path-explorer.js     /home/flask/flask/static/js/pat
 COPY docker/flask/static/js/change-planner.js    /home/flask/flask/static/js/change-planner.js
 COPY docker/flask/static/js/impact-lab.js        /home/flask/flask/static/js/impact-lab.js
 COPY docker/flask/static/js/topo-diff.js         /home/flask/flask/static/js/topo-diff.js
+COPY docker/flask/static/js/cost-matrix.js       /home/flask/flask/static/js/cost-matrix.js
+COPY docker/flask/static/js/what-if-analysis.js  /home/flask/flask/static/js/what-if-analysis.js
 COPY docker/flask/path-explorer.html           /home/flask/flask/templates/path-explorer.html
 COPY docker/flask/change-planner.html          /home/flask/flask/templates/change-planner.html
 COPY docker/flask/impact-lab.html              /home/flask/flask/templates/impact-lab.html
 COPY docker/flask/topo-diff.html               /home/flask/flask/templates/topo-diff.html
+COPY docker/flask/cost-matrix.html             /home/flask/flask/templates/cost-matrix.html
+COPY docker/flask/what-if-analysis.html        /home/flask/flask/templates/what-if-analysis.html
 
 CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5000", "--timeout", "90", "security_overlay:app"]
