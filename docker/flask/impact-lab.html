@@ -102,6 +102,50 @@
   .il-rm-legend span { display:flex; align-items:center; gap:3px; }
   .il-rm-leg-box { width:10px; height:10px; border-radius:2px; }
   .il-matrix-summary { font-size:11px; color:#9ca3af; margin:6px 0; min-height:16px; }
+
+  /* ── OSPF Cost Detail Viewer ─────────────────────────────────────── */
+  .il-rm-table td.rm-clickable { cursor:pointer; }
+  .il-rm-table td.rm-clickable:hover { filter:brightness(1.4); outline:2px solid #7cb4ff; outline-offset:-2px; }
+  .il-rm-table td.rm-selected  { outline:2px solid #fff; outline-offset:-2px; }
+
+  #ilDetailPanel { background:#111827; border:1px solid #2d3f54; border-radius:8px;
+    margin-top:8px; overflow:hidden; }
+  .il-detail-header { display:flex; align-items:center; gap:8px; padding:8px 10px;
+    background:#1a2535; border-bottom:1px solid #2d3f54; }
+  .il-detail-title { flex:1; font-size:13px; font-weight:700; color:#7cb4ff; }
+  .il-detail-cost-badge { background:#2563eb; color:#fff; border-radius:4px;
+    padding:2px 8px; font-size:12px; font-weight:700; }
+  .il-detail-close { background:none; border:none; color:#6b7280; font-size:16px;
+    cursor:pointer; padding:0 4px; line-height:1; }
+  .il-detail-close:hover { color:#f87171; }
+  .il-detail-body { padding:8px 10px; }
+  .il-detail-gw { font-size:10px; color:#6b7280; margin-bottom:6px; }
+  .il-detail-section { margin-bottom:8px; }
+  .il-detail-section-title { font-size:10px; color:#9ca3af; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
+
+  /* Hop table */
+  .il-hop-tbl { width:100%; border-collapse:collapse; font-size:10px; }
+  .il-hop-tbl th { color:#7cb4ff; padding:2px 6px; text-align:left;
+    border-bottom:1px solid #2d3f54; font-weight:600; }
+  .il-hop-tbl td { padding:2px 6px; border-bottom:1px solid #1a2535; color:#c8d8e8; }
+  .il-hop-tbl tr.hop-gw td { color:#4ade80; font-weight:600; }
+  .il-hop-tbl td.hop-cost { color:#fbbf24; text-align:right; font-family:monospace; }
+  .il-hop-tbl td.hop-cum  { color:#fb923c; text-align:right; font-family:monospace; }
+  .il-hop-bar { height:3px; border-radius:1px; background:#2563eb; display:inline-block;
+    vertical-align:middle; margin-left:4px; opacity:0.8; }
+  .hop-failed { color:#f87171 !important; text-decoration:line-through; }
+
+  /* Alt paths */
+  .il-alt-paths { margin-top:4px; }
+  .il-alt-path-row { display:flex; gap:6px; align-items:center; padding:3px 0;
+    font-size:10px; color:#9ca3af; border-bottom:1px solid #1a2535; cursor:pointer; }
+  .il-alt-path-row:hover { color:#c8d8e8; }
+  .il-alt-path-rank { color:#4b5563; font-family:monospace; width:20px; }
+  .il-alt-path-cost { color:#fbbf24; font-family:monospace; width:60px; }
+  .il-alt-path-hops { width:40px; }
+  .il-alt-path-nodes { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .il-detail-no-route { text-align:center; color:#6b7280; padding:16px; font-size:12px; font-style:italic; }
 </style>
 
 <div id="ilRoot">
@@ -217,6 +261,20 @@
         </div>
         <div class="il-matrix-summary" id="ilMatrixSummary">Select a snapshot above and click ▶ Build Matrix.</div>
         <div class="il-matrix-wrap" id="ilMatrixWrap"></div>
+
+        <!-- OSPF Cost Detail Viewer — appears when a matrix cell is clicked -->
+        <div id="ilDetailPanel" style="display:none;">
+          <div class="il-detail-header">
+            <span class="il-detail-title" id="ilDetailTitle">—</span>
+            <span class="il-detail-cost-badge" id="ilDetailCostBadge"></span>
+            <button class="il-detail-close" onclick="ilCloseDetail()" title="Close detail">✕</button>
+          </div>
+          <div class="il-detail-body">
+            <div class="il-detail-gw" id="ilDetailGw"></div>
+            <div id="ilDetailContent"></div>
+          </div>
+        </div>
+
         <div class="il-rm-legend">
           <span><span class="il-rm-leg-box rm-low"></span>&lt;500</span>
           <span><span class="il-rm-leg-box rm-med"></span>500–1499</span>

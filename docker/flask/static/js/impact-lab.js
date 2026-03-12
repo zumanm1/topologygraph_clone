@@ -493,7 +493,10 @@ function _ilRenderMatrix(matrix, baseMatrix) {
         else if (isFinite(cost) && cost > baseCost) { extraCls = ' rm-degraded'; degradedCount++; }
       }
       var label = isFinite(cost) ? cost : '∞';
-      html += '<td class="' + cls + extraCls + '" title="' + src + '→' + dst + ': ' + label + '">' + label + '</td>';
+      var clickable = (src !== dst) ? ' rm-clickable' : '';
+      var onclick   = (src !== dst) ? ' onclick="ilCellDetail(\'' + src + '\',\'' + dst + '\')"' : '';
+      html += '<td class="' + cls + extraCls + clickable + '" id="ilCell-' + src + '-' + dst + '"' +
+              onclick + ' title="Click to inspect OSPF path: ' + src + '→' + dst + ' cost=' + label + '">' + label + '</td>';
     });
     html += '</tr>';
   });
@@ -532,4 +535,274 @@ function ilExportMatrixCsv() {
   a.download = fname;
   a.click();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   OSPF Cost Detail Viewer — click a matrix cell to inspect path
+   ════════════════════════════════════════════════════════════════════ */
+
+var _ilDetailSrc = null; // currently selected src country
+var _ilDetailDst = null; // currently selected dst country
+
+/**
+ * ilCellDetail(srcCountry, dstCountry)
+ * Called by onclick on each matrix cell. Runs Dijkstra + path reconstruction
+ * for the src→dst gateway pair and renders the OSPF cost detail panel.
+ */
+function ilCellDetail(srcCountry, dstCountry) {
+  if (!_ilMatrixBase) return;
+
+  // Deselect previous
+  if (_ilDetailSrc && _ilDetailDst) {
+    var prev = document.getElementById('ilCell-' + _ilDetailSrc + '-' + _ilDetailDst);
+    if (prev) prev.classList.remove('rm-selected');
+  }
+  _ilDetailSrc = srcCountry;
+  _ilDetailDst = dstCountry;
+
+  // Mark selected cell
+  var cell = document.getElementById('ilCell-' + srcCountry + '-' + dstCountry);
+  if (cell) cell.classList.add('rm-selected');
+
+  var panel    = document.getElementById('ilDetailPanel');
+  var titleEl  = document.getElementById('ilDetailTitle');
+  var badgeEl  = document.getElementById('ilDetailCostBadge');
+  var gwEl     = document.getElementById('ilDetailGw');
+  var content  = document.getElementById('ilDetailContent');
+
+  // Use the SAME gateway resolution as KSP_reachabilityMatrix for cost consistency
+  // (first A-type gateway per country — matches the matrix cell value exactly)
+  var adj      = _ilMatrixBase.adj;
+  var srcId    = KSP_countryGateway(srcCountry, _ilNodes);
+  var dstId    = KSP_countryGateway(dstCountry, _ilNodes);
+
+  titleEl.textContent = srcCountry + ' → ' + dstCountry;
+
+  if (!srcId || !dstId) {
+    badgeEl.textContent = '∞';
+    gwEl.textContent = 'No A-type gateway for ' + (!srcId ? srcCountry : dstCountry);
+    content.innerHTML = '<div class="il-detail-no-route">⚠ No gateway node found</div>';
+    panel.style.display = '';
+    return;
+  }
+
+  // Determine excl set from matrix failure selector
+  var failSel  = document.getElementById('ilMatrixFailNode');
+  var failId   = failSel ? failSel.value : '';
+  var excl     = failId ? new Set([String(failId)]) : new Set();
+
+  // Run Dijkstra from srcId (same as matrix), reconstruct path to dstId
+  var r         = KSP_dijkstra(srcId, adj, excl, new Set());
+  var bestCost  = r.dist.has(dstId) ? r.dist.get(dstId) : Infinity;
+  var bestPath  = KSP_reconstructPath(srcId, dstId, r.prev, r.dist);
+  var bestSrcId = srcId;
+  var bestDstId = dstId;
+
+  // Also compute base path if failure is active (for comparison)
+  var basePath  = null;
+  var baseCost  = null;
+  if (failId) {
+    var rb = KSP_dijkstra(srcId, _ilMatrixBase.adj, new Set(), new Set());
+    baseCost = rb.dist.has(dstId) ? rb.dist.get(dstId) : Infinity;
+    basePath = KSP_reconstructPath(srcId, dstId, rb.prev, rb.dist);
+  }
+
+  // Label helpers
+  function nodeLabel(id) {
+    var n = _ilNodes.find(function (x) { return String(x.id) === String(id); });
+    return n ? (n.label || String(n.id)) : String(id);
+  }
+  function isGw(id) { return !!KSP_parseAtype(nodeLabel(id)); }
+
+  // Badge
+  var costText = isFinite(bestCost) ? bestCost : '∞';
+  badgeEl.textContent = isFinite(bestCost) ? ('Cost: ' + bestCost) : 'No Route';
+  badgeEl.style.background = isFinite(bestCost) ? '#2563eb' : '#7f1d1d';
+
+  // Gateway info
+  var srcLabel = nodeLabel(bestSrcId);
+  var dstLabel = bestDstId ? nodeLabel(bestDstId) : '—';
+  gwEl.textContent = 'Gateway: ' + srcLabel + ' (' + bestSrcId + ') → ' + dstLabel + ' (' + bestDstId + ')';
+
+  // ── No route ────────────────────────────────────────────────────────
+  if (!isFinite(bestCost) || !bestPath) {
+    content.innerHTML = '<div class="il-detail-no-route">∞ No OSPF route — destination unreachable' +
+      (failId ? ' (after failure of ' + _ilEsc(nodeLabel(failId)) + ')' : '') + '</div>';
+    panel.style.display = '';
+    _ilResetTopoHighlight();
+    return;
+  }
+
+  // ── Build HTML ───────────────────────────────────────────────────────
+  var html = '';
+
+  // Failure comparison banner
+  if (failId && basePath && isFinite(baseCost)) {
+    var delta = bestCost - baseCost;
+    var deltaCol = delta > 0 ? '#fb923c' : (delta < 0 ? '#4ade80' : '#9ca3af');
+    var deltaSign = delta > 0 ? '+' : '';
+    html += '<div class="il-detail-section">' +
+      '<div class="il-detail-section-title">⚡ Failure Impact: ' + _ilEsc(nodeLabel(failId)) + '</div>' +
+      '<div style="display:flex;gap:16px;font-size:11px;padding:4px 0;">' +
+      '  <span style="color:#9ca3af;">Base cost: <b style="color:#e0e8f0;">' + baseCost + '</b></span>' +
+      '  <span style="color:#9ca3af;">After failure: <b style="color:#e0e8f0;">' + bestCost + '</b></span>' +
+      '  <span style="color:' + deltaCol + ';font-weight:700;">' + deltaSign + delta + '</span>' +
+      '</div></div>';
+  }
+
+  // Hop-by-hop primary path
+  html += '<div class="il-detail-section">';
+  html += '<div class="il-detail-section-title">📍 Primary Path — ' + bestPath.nodes.length + ' hops, ' + bestPath.edges.length + ' links</div>';
+  html += '<table class="il-hop-tbl"><thead><tr>' +
+    '<th>#</th><th>Router (Node ID)</th><th style="text-align:right">Hop Cost</th>' +
+    '<th style="text-align:right">Cumulative</th></tr></thead><tbody>';
+
+  var maxHopCost = bestPath.hopCosts.length ? Math.max.apply(null, bestPath.hopCosts) : 1;
+  bestPath.nodes.forEach(function (nodeId, i) {
+    var lbl      = nodeLabel(nodeId);
+    var gw       = isGw(nodeId);
+    var hopCost  = i > 0 ? bestPath.hopCosts[i - 1] : null;
+    var cumCost  = i > 0 ? bestPath.totalCost - (bestPath.hopCosts.slice(i).reduce(function(a,b){return a+b;},0)) : 0;
+    var isFailed = failId && String(nodeId) === String(failId);
+    var rowCls   = gw ? ' class="hop-gw"' : '';
+    var lblCls   = isFailed ? ' class="hop-failed"' : '';
+    var gwBadge  = gw ? ' <span style="font-size:9px;background:#14532d;color:#4ade80;padding:1px 4px;border-radius:3px;">GW</span>' : '';
+    var barW     = hopCost ? Math.round((hopCost / maxHopCost) * 60) : 0;
+    var barHtml  = hopCost ? '<span class="il-hop-bar" style="width:' + barW + 'px;"></span>' : '';
+
+    html += '<tr' + rowCls + '>' +
+      '<td style="color:#4b5563;font-family:monospace;">' + (i + 1) + '</td>' +
+      '<td' + lblCls + '>' + _ilEsc(lbl) + gwBadge + '</td>' +
+      '<td class="hop-cost">' + (hopCost !== null ? hopCost + barHtml : '—') + '</td>' +
+      '<td class="hop-cum">' + cumCost + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Top-3 alternate paths (Yen)
+  html += '<div class="il-detail-section">';
+  html += '<div class="il-detail-section-title" style="cursor:pointer;" onclick="ilToggleAltPaths(this)">▼ Alternate Paths (K=3)</div>';
+  html += '<div class="il-alt-paths" id="ilAltPaths">';
+
+  var altAdj = failId ? (function(){
+    var ef = new Set([String(failId)]);
+    return KSP_buildDirAdjList(_ilNodes, _ilEdges.filter(function(e){
+      return !ef.has(String(e.from)) && !ef.has(String(e.to));
+    }), {});
+  })() : adj;
+
+  var kPaths = KSP_yen(bestSrcId, bestDstId, 3, altAdj);
+  if (!kPaths || !kPaths.length) {
+    html += '<div style="color:#6b7280;font-size:10px;padding:4px;">No alternate paths found</div>';
+  } else {
+    kPaths.forEach(function (p, idx) {
+      var nodeNames = p.nodes.map(nodeLabel);
+      var rankColor = idx === 0 ? '#22c55e' : (idx === 1 ? '#fbbf24' : '#f97316');
+      html += '<div class="il-alt-path-row" onclick="ilSelectAltPath(' + idx + ')" data-path-idx="' + idx + '">' +
+        '<span class="il-alt-path-rank" style="color:' + rankColor + '">#' + (idx + 1) + '</span>' +
+        '<span class="il-alt-path-cost">' + p.totalCost + '</span>' +
+        '<span class="il-alt-path-hops">' + p.nodes.length + ' hops</span>' +
+        '<span class="il-alt-path-nodes">' + _ilEsc(nodeNames.join(' → ')) + '</span>' +
+        '</div>';
+    });
+  }
+  html += '</div></div>';
+
+  content.innerHTML = html;
+  panel.style.display = '';
+
+  // Highlight primary path on topology
+  _ilHighlightPathOnTopo(bestPath, false);
+
+  // Store alt paths for click-to-show
+  _ilDetailAltPaths = kPaths;
+  _ilDetailNodeLabel = nodeLabel;
+}
+
+var _ilDetailAltPaths  = [];
+var _ilDetailNodeLabel = null;
+
+function ilToggleAltPaths(titleEl) {
+  var body = document.getElementById('ilAltPaths');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  titleEl.textContent = (open ? '▶' : '▼') + ' Alternate Paths (K=3)';
+}
+
+function ilSelectAltPath(idx) {
+  var paths = _ilDetailAltPaths;
+  if (!paths || idx >= paths.length) return;
+  // Highlight selected row
+  var rows = document.querySelectorAll('.il-alt-path-row');
+  rows.forEach(function (r) { r.style.background = ''; });
+  var row = document.querySelector('.il-alt-path-row[data-path-idx="' + idx + '"]');
+  if (row) row.style.background = '#1e2a38';
+  _ilHighlightPathOnTopo(paths[idx], true);
+}
+
+function ilCloseDetail() {
+  var panel = document.getElementById('ilDetailPanel');
+  if (panel) panel.style.display = 'none';
+  if (_ilDetailSrc && _ilDetailDst) {
+    var cell = document.getElementById('ilCell-' + _ilDetailSrc + '-' + _ilDetailDst);
+    if (cell) cell.classList.remove('rm-selected');
+  }
+  _ilDetailSrc = null;
+  _ilDetailDst = null;
+  _ilResetTopoHighlight();
+}
+
+/**
+ * Highlight a path on the vis.js topology.
+ * Non-path edges are dimmed; path edges glow blue (or amber for alt).
+ */
+function _ilHighlightPathOnTopo(path, isAlt) {
+  if (!_ilVEdges || !_ilVNodes || !path) return;
+  var pathEdgeSet = new Set(path.edges.map(String));
+  var pathNodeSet = new Set(path.nodes.map(String));
+  var edgeColor   = isAlt ? '#f59e0b' : '#3b82f6';  // amber for alt, blue for primary
+
+  var edgeUpd = _ilEdges.map(function (e) {
+    var inPath = pathEdgeSet.has(String(e.id));
+    return {
+      id:    e.id,
+      color: { color: inPath ? edgeColor : '#1f2937' },
+      width: inPath ? 3 : 1,
+      dashes: isAlt ? [6, 3] : false
+    };
+  });
+  _ilVEdges.update(edgeUpd);
+
+  // Re-colour only path nodes (keep ring overlay for non-path nodes)
+  var nodeUpd = [];
+  path.nodes.forEach(function (nId) {
+    var n = _ilNodes.find(function (x) { return String(x.id) === String(nId); });
+    var isGwNode = n && !!KSP_parseAtype(n.label || n.id || '');
+    nodeUpd.push({
+      id:    nId,
+      color: isGwNode ? { background:'#1e40af', border:'#7cb4ff' } : { background:'#1e3a5f', border:'#3b82f6' }
+    });
+  });
+  if (nodeUpd.length) _ilVNodes.update(nodeUpd);
+
+  // Focus on midpoint of path
+  if (path.nodes.length > 0 && _ilNetwork) {
+    var mid = path.nodes[Math.floor(path.nodes.length / 2)];
+    _ilNetwork.focus(mid, { scale: 1.2, animation: { duration: 400 } });
+  }
+}
+
+function _ilResetTopoHighlight() {
+  if (!_ilVEdges || !_ilVNodes) return;
+  var edgeUpd = _ilEdges.map(function (e) {
+    return { id: e.id, color: { color: '#374151' }, width: 1, dashes: false };
+  });
+  _ilVEdges.update(edgeUpd);
+
+  var nodeUpd = _ilNodes.map(function (n) {
+    var isAtype = !!KSP_parseAtype(n.label || n.id || '');
+    return { id: n.id, color: isAtype ? { background:'#1e40af', border:'#3b82f6' } : { background:'#374151', border:'#6b7280' } };
+  });
+  _ilVNodes.update(nodeUpd);
 }
