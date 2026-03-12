@@ -116,7 +116,8 @@ async function rmLoadTopology(graphTime) {
         const adj = KSP_buildDirAdjList(rmNodes, rmEdges, {});
         rmFullMatrix = KSP_reachabilityMatrix(rmCountries, rmNodes, adj, new Set());
         rmRenderMatrix();
-        status.text(`Loaded ${rmNodes.length} nodes, ${rmEdges.length} edges. Matrix computed.`);
+        const msg = `Loaded ${rmNodes.length} nodes, ${rmEdges.length} edges. Matrix computed.`;
+        status.text(msg);
     } catch (e) {
         console.error("RM: Load failed", e);
         status.text('Load failed.');

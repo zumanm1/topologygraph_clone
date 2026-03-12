@@ -82,10 +82,13 @@ async function wiLoadTopology(graphTime) {
 
         wiBuildTopoView();
         wiUpdateImpact(0, 0, 0);
-        $('#wiStatus').text(`Loaded ${wiNodes.length} nodes, ${wiEdges.length} edges. Select a failure and click Compute.`);
+        const msg = `Loaded ${wiNodes.length} nodes, ${wiEdges.length} edges. Select a failure and click Compute.`;
+        $('#wiStatus').text(msg);
+        $('#wiStatusDetail').text('Current State: Baseline');
     } catch (e) {
         console.error("WI: Load failed", e);
         $('#wiStatus').html(`<span class="text-danger">❌ Load failed: ${e.message}</span>`);
+        $('#wiStatusDetail').text('Error loading topology');
     }
 }
 
@@ -215,10 +218,11 @@ function wiComputeImpact() {
     // Mock update for impact cards (placeholder for real Dijkstra logic)
     if (wiScenarios.some(s => s.target)) {
         wiUpdateImpact(72, 12, 6);
-        $('#wi-status').html('<span class="text-warning font-weight-bold">⚠️ SIMULATION ACTIVE</span>');
+        $('#wiStatus').html('<span class="text-warning font-weight-bold">⚠️ SIMULATION ACTIVE</span>');
+        $('#wiStatusDetail').html('<span class="text-warning font-weight-bold">⚠️ SIMULATION ACTIVE</span>');
     } else {
         wiUpdateImpact(0, 0, 0);
-        $('#wi-status').text('Current State: Baseline');
+        $('#wiStatusDetail').text('Current State: Baseline');
     }
 }
 
