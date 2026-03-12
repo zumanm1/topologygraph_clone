@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cost Matrix | Topolograph</title>
+    <!-- CSS is handled in base.html extra_css block if we were using it, 
+         but we'll define local styles for the matrix here for now or in a new css file -->
+    <style>
+        .matrix-container {
+            display: flex;
+            height: calc(100vh - 56px);
+            overflow: hidden;
+        }
+
+        .matrix-sidebar {
+            width: 300px;
+            background: #1e293b;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #334155;
+        }
+
+        .matrix-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+            position: relative;
+        }
+
+        .matrix-toolbar {
+            height: 50px;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #334155;
+            gap: 15px;
+        }
+
+        .matrix-viewport {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        table.rm-table {
+            border-collapse: separate;
+            border-spacing: 2px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+        }
+
+        th.rm-hdr-col {
+            position: sticky;
+            top: 0;
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 8px;
+            z-index: 10;
+            border-bottom: 1px solid #334155;
+            min-width: 50px;
+        }
+
+        th.rm-hdr-row {
+            position: sticky;
+            left: 0;
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 8px;
+            z-index: 9;
+            border-right: 1px solid #334155;
+            text-align: right;
+        }
+
+        .rm-cell {
+            width: 50px;
+            height: 35px;
+            text-align: center;
+            vertical-align: middle;
+            border-radius: 2px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .rm-cell:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+            z-index: 11;
+            position: relative;
+        }
+
+        .rm-self {
+            background: #374151;
+            color: #94a3b8;
+        }
+
+        .rm-low {
+            background: #166534;
+            color: #4ade80;
+        }
+
+        .rm-med {
+            background: #713f12;
+            color: #fbbf24;
+        }
+
+        .rm-high {
+            background: #7c2d12;
+            color: #fb923c;
+        }
+
+        .rm-crit {
+            background: #7f1d1d;
+            color: #f87171;
+        }
+
+        .rm-none {
+            background: #030712;
+            color: #6b7280;
+        }
+
+        /* Asymmetry highlighting */
+        .rm-asym-warn {
+            box-shadow: inset 0 0 0 2px #ec4899 !important;
+        }
+
+        #mini-topo {
+            width: 100%;
+            height: 200px;
+            background: #020617;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #334155;
+        }
+
+        .threshold-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .threshold-row input {
+            width: 60px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            padding: 2px 5px;
+        }
+    </style>
+</head>
+
+<body>
+    {% extends "base.html" %}
+    {% block content %}
+    <div class="matrix-container">
+        <div class="matrix-sidebar">
+            <h4 class="mb-4">🗺 Cost Matrix</h4>
+
+            <div class="form-group">
+                <label>Current Topology</label>
+                <select id="matrix-topo-select" class="form-control bg-dark text-white border-secondary"></select>
+            </div>
+
+            <div class="mt-4">
+                <h6>🎨 Cost Thresholds</h6>
+                <div class="threshold-row">
+                    <span class="badge badge-success">Low</span> <span>
+                        << /span> <input type="number" id="th-low" value="500">
+                </div>
+                <div class="threshold-row">
+                    <span class="badge badge-warning">Med</span> <span>
+                        << /span> <input type="number" id="th-med" value="1500">
+                </div>
+                <div class="threshold-row">
+                    <span class="badge badge-danger">High</span> <span>
+                        << /span> <input type="number" id="th-high" value="3000">
+                </div>
+                <button class="btn btn-sm btn-outline-info btn-block mt-2" onclick="rmApplyThresholds()">Apply
+                    Colors</button>
+            </div>
+
+            <div class="mt-4">
+                <h6>🔍 Audit Tools</h6>
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="sw-asymmetry"
+                        onchange="rmToggleAsymmetry()">
+                    <label class="custom-control-label" for="sw-asymmetry">Path Asymmetry Audit</label>
+                </div>
+                <div class="custom-control custom-switch mt-2">
+                    <input type="checkbox" class="custom-control-input" id="sw-srlg" onchange="rmToggleSRLG()">
+                    <label class="custom-control-label" for="sw-srlg">SRLG Awareness</label>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h6>📍 Route Details</h6>
+                <div id="route-info" class="text-muted small">Select a cell to view transit countries.</div>
+                <div id="mini-topo"></div>
+            </div>
+
+            <div class="mt-auto pt-4">
+                <button class="btn btn-primary btn-block" onclick="rmExportCSV()">📄 Export CSV</button>
+                <button class="btn btn-outline-secondary btn-block mt-2" onclick="rmExportMarkdown()">📋 Copy as
+                    Markdown</button>
+            </div>
+        </div>
+
+        <div class="matrix-main">
+            <div class="matrix-toolbar">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <div class="input-group-prepend"><span
+                            class="input-group-text bg-dark border-secondary text-muted">🔍</span></div>
+                    <input type="text" id="rm-search" class="form-control bg-dark border-secondary text-white"
+                        placeholder="Search countries..." onkeyup="rmFilterMatrix()">
+                </div>
+                <div class="divider ml-auto"></div>
+                <div id="matrix-stats" class="text-muted small"></div>
+            </div>
+            <div class="matrix-viewport" id="matrix-display">
+                <!-- Table will be injected here -->
+                <div class="d-flex justify-content-center align-items-center h-100">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3"></div>
+                        <p class="text-muted">Computing reachability matrix... (N Dijkstra runs)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script src="{{ url_for('static', filename='js/ospf-ksp.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cost-matrix.js') }}"></script>
+    <script>
+        // Initialize on load
+        $(document).ready(function () {
+            rmInit();
+        });
+    </script>
+    {% endblock %}
+</body>
+
+</html>

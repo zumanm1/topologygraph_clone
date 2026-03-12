@@ -412,6 +412,16 @@ def topo_diff_page():
     return render_template('topo-diff.html', csrf_token=_csrf())
 
 
+@app.route('/cost-matrix', methods=['GET'], endpoint='cost_matrix_page')
+def cost_matrix_page():
+    return render_template('cost-matrix.html', csrf_token=_csrf())
+
+
+@app.route('/what-if', methods=['GET'], endpoint='what_if_page')
+def what_if_page():
+    return render_template('what-if-analysis.html', csrf_token=_csrf())
+
+
 @app.route('/api/graph-times', methods=['GET'], endpoint='api_graph_times')
 def api_graph_times():
     """Return the list of uploaded OSPF graph timestamps for the logged-in user.
