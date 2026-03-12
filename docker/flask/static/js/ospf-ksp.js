@@ -595,12 +595,24 @@ function KSP_blastRadius(failedNodeId, failedEdgeIds, nodesList, edgesList, adjL
   K = K || 3;
   failedEdgeIds = failedEdgeIds || [];
 
-  var exclNodes = failedNodeId ? new Set([failedNodeId]) : new Set();
+  // PRD-24: accept failedNodeId as a string, array, or Set for multi-failure support
+  var exclNodes;
+  if (!failedNodeId) {
+    exclNodes = new Set();
+  } else if (failedNodeId instanceof Set) {
+    exclNodes = failedNodeId;
+    failedNodeId = null; // handled via set below
+  } else if (Array.isArray(failedNodeId)) {
+    exclNodes = new Set(failedNodeId);
+    failedNodeId = null;
+  } else {
+    exclNodes = new Set([failedNodeId]);
+  }
   var exclEdges = new Set(failedEdgeIds);
 
   // Build degraded adj list for post-failure Dijkstra
   var degradedAdj = KSP_buildDirAdjList(nodesList, edgesList.filter(function(e) {
-    return !failedEdgeIds.includes(e.id) && e.from !== failedNodeId && e.to !== failedNodeId;
+    return !exclEdges.has(e.id) && !exclNodes.has(e.from) && !exclNodes.has(e.to);
   }), {});
 
   // Identify A-type gateway nodes
@@ -616,10 +628,10 @@ function KSP_blastRadius(failedNodeId, failedEdgeIds, nodesList, edgesList, adjL
   var ring2 = new Set(); // backup also lost
   var unreachable = new Set();
 
-  if (failedNodeId) {
-    // ring0 = directly connected nodes in normal topology
-    (adjList.get(failedNodeId) || []).forEach(function(nb) { ring0.add(nb.to); });
-  }
+  // ring0 = directly connected nodes in normal topology (for all failed nodes)
+  exclNodes.forEach(function(fnId) {
+    (adjList.get(fnId) || []).forEach(function(nb) { ring0.add(nb.to); });
+  });
   failedEdgeIds.forEach(function(eid) {
     edgesList.forEach(function(e) {
       if (e.id === eid) { ring0.add(e.from); ring0.add(e.to); }
@@ -635,6 +647,9 @@ function KSP_blastRadius(failedNodeId, failedEdgeIds, nodesList, edgesList, adjL
       if (src.country === dst.country) return;
 
       var pair = String(src.id) + '>' + String(dst.id);
+
+      // Skip if src or dst is in the failed node set
+      if (exclNodes.has(src.id) || exclNodes.has(dst.id)) return;
 
       // Normal Dijkstra
       var norm = KSP_dijkstra(src.id, adjList, new Set(), new Set());

@@ -39,6 +39,8 @@
   .pe-btn.danger { background:#dc2626; }
   .pe-btn.danger:hover { background:#b91c1c; }
   .pe-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .pe-btn.active { background:#f59e0b; color:#000; box-shadow:0 0 8px #f59e0b66; }
+  .pe-btn.active:hover { background:#d97706; }
 
   /* ── Override panel ────────────────────────────────────────────── */
   #peOverridePanel { background:#1a2535; border-radius:8px; padding:10px; }
@@ -158,6 +160,39 @@
     <!-- Status -->
     <div id="peStatus">Load a graph from the main page, then select countries and click ▶ Go.</div>
 
+    <!-- Path Constraints (PRD-20) -->
+    <div id="peConstraintPanel" style="background:#1a2535;border-radius:8px;padding:10px;">
+      <div id="peConstraintToggle" onclick="peToggleConstraints()" style="cursor:pointer;color:#7cb4ff;font-size:12px;user-select:none;">
+        ▶ Path Constraints <span id="pePassCount" style="color:#f59e0b;"></span>
+      </div>
+      <div id="peConstraintBody" style="display:none;">
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+          <!-- Must-Pass -->
+          <div style="flex:1;min-width:140px;">
+            <label style="font-size:10px;color:#4ade80;display:block;margin-bottom:3px;">✓ Must Pass Through (ALL)</label>
+            <input type="text" id="peConstraintPassInput" placeholder="Search node…"
+              oninput="_peConstraintNodeSearch('peConstraintPassInput','mustPass')"
+              style="background:#2b3a4d;color:#e0e8f0;border:1px solid #3d5066;border-radius:4px;padding:3px 6px;font-size:11px;width:100%;">
+            <div id="peConstraintPassResults" style="display:none;background:#1e2a38;border:1px solid #2d3f54;border-radius:4px;margin-top:2px;max-height:100px;overflow-y:auto;"></div>
+            <div id="peConstraintPassChips" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px;"></div>
+          </div>
+          <!-- Must-Avoid -->
+          <div style="flex:1;min-width:140px;">
+            <label style="font-size:10px;color:#f87171;display:block;margin-bottom:3px;">✗ Must Avoid (ANY)</label>
+            <input type="text" id="peConstraintAvoidInput" placeholder="Search node…"
+              oninput="_peConstraintNodeSearch('peConstraintAvoidInput','mustAvoid')"
+              style="background:#2b3a4d;color:#e0e8f0;border:1px solid #3d5066;border-radius:4px;padding:3px 6px;font-size:11px;width:100%;">
+            <div id="peConstraintAvoidResults" style="display:none;background:#1e2a38;border:1px solid #2d3f54;border-radius:4px;margin-top:2px;max-height:100px;overflow-y:auto;"></div>
+            <div id="peConstraintAvoidChips" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px;"></div>
+            <span id="peAvoidCount" style="display:none;"></span>
+          </div>
+        </div>
+        <div style="margin-top:6px;">
+          <button class="pe-btn danger" style="font-size:11px;padding:3px 10px;" onclick="peClearConstraints()">✕ Clear All Constraints</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Cost Overrides -->
     <div id="peOverridePanel">
       <div id="peOverrideToggle" onclick="peToggleOverrides()">
@@ -188,6 +223,13 @@
         <div class="pe-tab active" id="peTabFwd"   onclick="peSelectTab('fwd')">→ FWD (0 paths)</div>
         <div class="pe-tab"        id="peTabRev"   onclick="peSelectTab('rev')">← REV (0 paths)</div>
         <div class="pe-tab"        id="peTabAudit" onclick="peSelectTab('audit')">⚡ Asymmetry Audit</div>
+      </div>
+      <!-- PRD-19: Show All toggle + SRLG legend hint -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+        <button class="pe-btn secondary" id="peBtnShowAll" onclick="peToggleShowAll()"
+          title="Show all K paths simultaneously on topology. Gold edges = SRLG (shared risk links used by 2+ paths)."
+          style="font-size:11px;padding:3px 10px;">🗂 Show All</button>
+        <span style="font-size:10px;color:#6b7280;" id="peSrlgHint"></span>
       </div>
       <div class="pe-path-list active" id="peListFwd"></div>
       <div class="pe-path-list"        id="peListRev"></div>

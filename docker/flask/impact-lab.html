@@ -128,16 +128,23 @@
     <!-- ── Blast Radius content ────────────────────────────────────── -->
     <div id="ilBlastPanel">
 
-    <!-- Failure selector -->
+    <!-- Failure selector — PRD-24: multi-failure support (up to 5) -->
     <div class="il-panel">
       <h4>💥 Failure Scenario</h4>
+      <!-- Default failure type (applies to search box) -->
       <div class="il-type-btns">
         <div class="il-type-btn active" id="ilTypeNode" onclick="ilSetType('node')">Node Failure</div>
         <div class="il-type-btn" id="ilTypeEdge" onclick="ilSetType('edge')">Link Failure</div>
       </div>
       <input class="il-search" id="ilSearchBox" placeholder="Search node / edge ID…" oninput="ilSearch(this.value)" autocomplete="off">
       <div class="il-search-results" id="ilSearchResults"></div>
-      <div id="ilSelectedFailure">No failure selected</div>
+      <!-- Multi-failure list -->
+      <div id="ilFailItems" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;"></div>
+      <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
+        <div id="ilSelectedFailure" style="flex:1;color:#f59e0b;font-size:12px;min-height:18px;">No failure selected</div>
+        <button class="il-btn" id="ilBtnClearAll" onclick="ilClearAllFailures()"
+          style="display:none;background:#374151;padding:3px 8px;font-size:11px;" title="Clear all failures">✕ Clear</button>
+      </div>
       <button class="il-btn" id="ilBtnAnalyse" onclick="ilAnalyse()" disabled style="margin-top:8px;">▶ Compute Blast Radius</button>
 
       <!-- Country pair filter — shown after topology loads -->

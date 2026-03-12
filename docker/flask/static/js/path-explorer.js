@@ -27,6 +27,8 @@ var _peGraphId    = '';
 var _peAnimInterval = null; // pulsing animation interval
 var _peAuditResults = [];  // cached full audit result set
 var _peCostMap      = new Map(); // key: "fromId:toId" → cost (number)
+var _peShowAll      = false;     // PRD-19: show all K paths simultaneously
+var _peConstraints  = { mustPass: [], mustAvoid: [] }; // PRD-20: node constraints
 
 // Direction colour palette for tab/header
 var PE_COLORS = {
@@ -254,8 +256,8 @@ function peRunAnalysis() {
   setTimeout(function () {
     try {
       // Gather paths across ALL gateway pairs — more alternatives than single-best-pair
-      _peFwdPaths = _peGatherAllPaths(srcCountry, dstCountry, K);
-      _peRevPaths = _peGatherAllPaths(dstCountry, srcCountry, K);
+      _peFwdPaths = _peFilterByConstraints(_peGatherAllPaths(srcCountry, dstCountry, K));
+      _peRevPaths = _peFilterByConstraints(_peGatherAllPaths(dstCountry, srcCountry, K));
 
       _peRenderPaths();
 
@@ -294,6 +296,11 @@ function _peRenderPathList(containerId, paths, dir, label) {
     return;
   }
 
+  // PRD-19: if show-all mode is active, render all paths on topology immediately
+  if (_peShowAll) {
+    setTimeout(function () { _peShowAllOnTopology(paths, dir); }, 0);
+  }
+
   paths.forEach(function (path, idx) {
     var row = document.createElement('div');
     row.className = 'pe-path-row dir-' + dir;
@@ -303,6 +310,21 @@ function _peRenderPathList(containerId, paths, dir, label) {
     var pathColor = PE_PATH_COLORS[Math.min(idx, PE_PATH_COLORS.length - 1)];
     var isBest = (idx === 0);
 
+    // PRD-21: diversity score vs path #1 (best path)
+    var diversityHtml = '';
+    if (idx > 0 && paths[0]) {
+      var div = _peDiversity(paths[0], path);
+      var divColor = div >= 60 ? '#22c55e' : div >= 30 ? '#f59e0b' : '#ef4444';
+      var divWarn = div < 30 ? ' title="⚠ Low diversity — high shared-risk with path #1"' : '';
+      diversityHtml = '<span style="display:inline-flex;align-items:center;gap:2px;margin-left:4px;" ' + divWarn + '>' +
+        '<span style="display:inline-block;width:32px;height:4px;background:#374151;border-radius:2px;overflow:hidden;">' +
+          '<span style="display:block;width:' + div + '%;height:100%;background:' + divColor + ';"></span>' +
+        '</span>' +
+        '<span style="font-size:9px;color:' + divColor + ';">' + div + '%</span>' +
+        (div < 30 ? '<span style="font-size:9px;color:#f59e0b;">⚠</span>' : '') +
+      '</span>';
+    }
+
     var hdr = document.createElement('div');
     hdr.className = 'pe-path-header';
     hdr.innerHTML =
@@ -310,6 +332,7 @@ function _peRenderPathList(containerId, paths, dir, label) {
       '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + pathColor + ';margin-right:4px;' + (isBest ? 'box-shadow:0 0 6px ' + pathColor + ';' : '') + '"></span>' +
       '<span class="pe-path-cost" style="color:' + pathColor + '">Cost: ' + path.totalCost + '</span>' +
       (isBest ? '<span style="font-size:9px;color:#22c55e;background:#052e16;border-radius:3px;padding:1px 5px;margin-left:2px;">BEST</span>' : '') +
+      diversityHtml +
       '<span class="pe-path-hops">Hops: ' + (path.nodes.length - 1) + '</span>' +
       '<span class="pe-path-expand">▼</span>';
 
@@ -349,11 +372,17 @@ function _peRenderPathList(containerId, paths, dir, label) {
       // Select/highlight — pass rank index so topology uses path quality colour
       document.querySelectorAll('.pe-path-row').forEach(function (r) { r.classList.remove('selected'); });
       row.classList.add('selected');
-      _peHighlightPath(
-        capturedDir === 'fwd' ? _peFwdPaths[capturedIdx] : _peRevPaths[capturedIdx],
-        capturedDir,
-        capturedIdx   // rank index → colour gradient
-      );
+
+      if (_peShowAll) {
+        // PRD-19: in show-all mode, keep all paths visible but boost the clicked one
+        _peHighlightOneAmongAll(capturedDir === 'fwd' ? _peFwdPaths : _peRevPaths, capturedIdx, capturedDir);
+      } else {
+        _peHighlightPath(
+          capturedDir === 'fwd' ? _peFwdPaths[capturedIdx] : _peRevPaths[capturedIdx],
+          capturedDir,
+          capturedIdx   // rank index → colour gradient
+        );
+      }
     });
 
     container.appendChild(row);
@@ -365,7 +394,7 @@ function peSelectTab(tab) {
   _peSelectedTab = tab;
   // Stop pulse animation and reset edge colours when switching tabs
   if (_peAnimInterval) { clearInterval(_peAnimInterval); _peAnimInterval = null; }
-  if (_peVEdges) {
+  if (_peVEdges && !_peShowAll) {
     var reset = _peVEdges.get().map(function (e) {
       return { id: e.id, color: { color: '#374151', highlight: '#6b7280' }, width: 1, dashes: false };
     });
@@ -383,6 +412,11 @@ function peSelectTab(tab) {
   var auditPanel = document.getElementById('peAuditPanel');
   if (auditTab)   auditTab.classList.toggle('active', tab === 'audit');
   if (auditPanel) auditPanel.classList.toggle('active', tab === 'audit');
+
+  // PRD-19: re-apply show-all overlay for the new active direction
+  if (_peShowAll && (tab === 'fwd' || tab === 'rev')) {
+    _peShowAllOnTopology(tab === 'fwd' ? _peFwdPaths : _peRevPaths, tab);
+  }
 }
 
 /* ── Topology view ───────────────────────────────────────────────── */
@@ -612,6 +646,209 @@ function _peBiLabel(e) {
   var rev = _peCostMap.get(String(e.to) + ':' + String(e.from));
   if (rev !== undefined && rev !== fwd) return fwd + ' / ' + rev;
   return String(fwd);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-19 — 🗂 Show All Paths Simultaneously + SRLG Highlighting
+   ════════════════════════════════════════════════════════════════════ */
+
+function peToggleShowAll() {
+  _peShowAll = !_peShowAll;
+  var btn = document.getElementById('peBtnShowAll');
+  if (btn) {
+    btn.textContent = _peShowAll ? '🗂 All ON' : '🗂 Show All';
+    btn.classList.toggle('active', _peShowAll);
+  }
+  if (_peAnimInterval) { clearInterval(_peAnimInterval); _peAnimInterval = null; }
+
+  if (_peShowAll) {
+    var paths = _peSelectedTab === 'rev' ? _peRevPaths : _peFwdPaths;
+    _peShowAllOnTopology(paths, _peSelectedTab);
+  } else {
+    if (_peVEdges) {
+      _peVEdges.update(_peVEdges.get().map(function (e) {
+        return { id: e.id, color: { color: '#374151', highlight: '#6b7280' }, width: 1, dashes: false, title: '' };
+      }));
+    }
+  }
+}
+
+function _peShowAllOnTopology(paths, dir) {
+  if (!_peVEdges || !paths || !paths.length) return;
+  if (_peAnimInterval) { clearInterval(_peAnimInterval); _peAnimInterval = null; }
+
+  // Build edge → [pathIndices] usage map
+  var edgeUsage = new Map();
+  paths.forEach(function (path, idx) {
+    (path.edges || []).forEach(function (eid) {
+      var k = String(eid);
+      if (!edgeUsage.has(k)) edgeUsage.set(k, []);
+      edgeUsage.get(k).push(idx);
+    });
+  });
+
+  var updates = _peVEdges.get().map(function (e) {
+    var eid = String(e.id);
+    if (!edgeUsage.has(eid)) {
+      return { id: e.id, color: { color: '#1f2937', highlight: '#374151' }, width: 1, dashes: false, title: '' };
+    }
+    var users = edgeUsage.get(eid);
+    var isSrlg = users.length >= 2;
+    var bestIdx = Math.min.apply(null, users);
+    var baseColor = isSrlg ? '#f59e0b' : PE_PATH_COLORS[Math.min(bestIdx, PE_PATH_COLORS.length - 1)];
+    var width = isSrlg ? Math.min(2 + users.length, 5) : 2;
+    var pathNums = users.map(function (i) { return '#' + (i + 1); }).join(', ');
+    var title = isSrlg
+      ? '⚠ SRLG: shared by paths ' + pathNums + ' (' + users.length + ' paths — high shared risk)'
+      : 'Path ' + pathNums;
+    return { id: e.id, color: { color: baseColor, highlight: baseColor }, width: width, dashes: false, title: title };
+  });
+
+  _peVEdges.update(updates);
+}
+
+/* Highlight one path among all — clicked path pulses, others dimmed but still visible */
+function _peHighlightOneAmongAll(paths, selectedIdx, dir) {
+  if (!_peVEdges || !paths || !paths.length) return;
+  if (_peAnimInterval) { clearInterval(_peAnimInterval); _peAnimInterval = null; }
+
+  // Build per-path edge sets
+  var pathEdgeSets = paths.map(function (p) {
+    return new Set((p.edges || []).map(String));
+  });
+  var selectedSet = pathEdgeSets[selectedIdx] || new Set();
+  var selectedColor = PE_PATH_COLORS[Math.min(selectedIdx, PE_PATH_COLORS.length - 1)];
+
+  var updates = _peVEdges.get().map(function (e) {
+    var eid = String(e.id);
+    if (selectedSet.has(eid)) {
+      // Selected path: full bright colour, wide, dashed
+      return { id: e.id, color: { color: selectedColor, highlight: selectedColor }, width: 5, dashes: [8, 4] };
+    }
+    // Check if any other path uses this edge (dim but visible)
+    var anyOther = false;
+    pathEdgeSets.forEach(function (set, i) {
+      if (i !== selectedIdx && set.has(eid)) anyOther = true;
+    });
+    if (anyOther) {
+      return { id: e.id, color: { color: '#374151', highlight: '#4b5563' }, width: 1, dashes: false };
+    }
+    return { id: e.id, color: { color: '#1f2937', highlight: '#374151' }, width: 1, dashes: false };
+  });
+  _peVEdges.update(updates);
+
+  // Pulse the selected path edges
+  var tick = 0;
+  _peAnimInterval = setInterval(function () {
+    tick++;
+    var w = tick % 2 === 0 ? 4 : 6;
+    var upd = [];
+    _peVEdges.get().forEach(function (e) {
+      if (selectedSet.has(String(e.id))) upd.push({ id: e.id, width: w });
+    });
+    if (upd.length) _peVEdges.update(upd);
+  }, 600);
+
+  // Focus on selected path nodes
+  if (_peNetwork && paths[selectedIdx] && paths[selectedIdx].nodes.length) {
+    _peNetwork.fit({ nodes: paths[selectedIdx].nodes, animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-21 — 📊 Path Diversity Score
+   ════════════════════════════════════════════════════════════════════ */
+
+function _peDiversity(pathA, pathB) {
+  if (!pathA || !pathB || !pathA.edges || !pathB.edges) return 0;
+  var setA = new Set(pathA.edges.map(String));
+  var setB = new Set(pathB.edges.map(String));
+  var intersection = 0;
+  setA.forEach(function (e) { if (setB.has(e)) intersection++; });
+  var union = setA.size + setB.size - intersection;
+  return union === 0 ? 100 : Math.round((1 - intersection / union) * 100);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-20 — 🎯 Constraint-Based Path Filtering
+   ════════════════════════════════════════════════════════════════════ */
+
+function peAddConstraint(type, nodeId) {
+  if (!nodeId) return;
+  var list = _peConstraints[type];
+  if (list.indexOf(nodeId) === -1) {
+    list.push(nodeId);
+    _peRenderConstraintChips(type);
+  }
+}
+
+function peRemoveConstraint(type, nodeId) {
+  _peConstraints[type] = _peConstraints[type].filter(function (n) { return n !== nodeId; });
+  _peRenderConstraintChips(type);
+}
+
+function peClearConstraints() {
+  _peConstraints = { mustPass: [], mustAvoid: [] };
+  _peRenderConstraintChips('mustPass');
+  _peRenderConstraintChips('mustAvoid');
+}
+
+function _peRenderConstraintChips(type) {
+  var containerId = type === 'mustPass' ? 'peConstraintPassChips' : 'peConstraintAvoidChips';
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  _peConstraints[type].forEach(function (nodeId) {
+    var n = _peNodes.find(function (x) { return String(x.id) === String(nodeId); });
+    var lbl = n ? (n.label || String(n.id)) : String(nodeId);
+    var chip = document.createElement('span');
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:3px;background:#1e2a38;border:1px solid #3d5066;border-radius:12px;padding:2px 8px;font-size:11px;color:#c8d8e8;margin:2px;';
+    chip.innerHTML = _peEscHtml(lbl) + '<button onclick="peRemoveConstraint(\'' + type + '\',\'' + _peEscHtml(nodeId) + '\')" style="background:none;border:none;color:#f87171;cursor:pointer;padding:0;font-size:12px;line-height:1;">×</button>';
+    container.appendChild(chip);
+  });
+  var countId = type === 'mustPass' ? 'pePassCount' : 'peAvoidCount';
+  var countEl = document.getElementById(countId);
+  if (countEl) countEl.textContent = _peConstraints[type].length ? '(' + _peConstraints[type].length + ')' : '';
+}
+
+function _peConstraintNodeSearch(inputId, type) {
+  var query = (document.getElementById(inputId) || {}).value || '';
+  query = query.toLowerCase().trim();
+  var listId = type === 'mustPass' ? 'peConstraintPassResults' : 'peConstraintAvoidResults';
+  var results = document.getElementById(listId);
+  if (!results) return;
+  if (!query) { results.style.display = 'none'; return; }
+  var matches = _peNodes.filter(function (n) {
+    return (n.label || '').toLowerCase().includes(query) || String(n.id).toLowerCase().includes(query);
+  }).slice(0, 10);
+  if (!matches.length) { results.style.display = 'none'; return; }
+  results.innerHTML = matches.map(function (n) {
+    var lbl = n.label || String(n.id);
+    return '<div class="il-search-item" style="padding:3px 8px;cursor:pointer;font-size:11px;color:#c8d8e8;" onclick="peAddConstraint(\'' + type + '\',\'' + _peEscHtml(String(n.id)) + '\');document.getElementById(\'' + inputId + '\').value=\'\';document.getElementById(\'' + listId + '\').style.display=\'none\';">' + _peEscHtml(lbl) + '</div>';
+  }).join('');
+  results.style.display = 'block';
+}
+
+function _peFilterByConstraints(paths) {
+  var mustPass  = _peConstraints.mustPass;
+  var mustAvoid = _peConstraints.mustAvoid;
+  if (!mustPass.length && !mustAvoid.length) return paths;
+  return paths.filter(function (path) {
+    var nodeSet = new Set(path.nodes.map(String));
+    if (mustAvoid.some(function (n) { return nodeSet.has(String(n)); })) return false;
+    if (mustPass.length && !mustPass.every(function (n) { return nodeSet.has(String(n)); })) return false;
+    return true;
+  });
+}
+
+function peToggleConstraints() {
+  var body = document.getElementById('peConstraintBody');
+  var toggle = document.getElementById('peConstraintToggle');
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  var cnt = (_peConstraints.mustPass.length + _peConstraints.mustAvoid.length);
+  toggle.textContent = (isOpen ? '▶' : '▼') + ' Path Constraints ' + (cnt ? '(' + cnt + ' active)' : '');
 }
 
 /* ════════════════════════════════════════════════════════════════════

@@ -262,13 +262,148 @@ function _cpRenderImpact() {
   imp.pairs.slice(0, 50).forEach(function (p) {
     var tr = document.createElement('tr');
     tr.className = p.delta < 0 ? 'improved' : 'degraded';
+    tr.style.cursor = 'pointer';
+    tr.title = 'Click to see before/after path detail';
     var sign = p.delta > 0 ? '+' : '';
-    tr.innerHTML = '<td>' + p.src + '→' + p.dst + '</td>' +
+    tr.innerHTML = '<td>' + _cpEsc(p.src) + '→' + _cpEsc(p.dst) + ' <span style="font-size:9px;color:#6b7280;">▼ paths</span></td>' +
       '<td>' + (p.before === Infinity ? '∞' : p.before) + '</td>' +
       '<td>' + (p.after  === Infinity ? '∞' : p.after)  + '</td>' +
       '<td>' + sign + p.delta + '</td>';
+    var capturedP = p;
+    tr.addEventListener('click', function () { cpExpandPairDetail(capturedP, tr, tbody); });
     tbody.appendChild(tr);
   });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-22 — K-Path Before/After Detail View (click row in impact table)
+   ════════════════════════════════════════════════════════════════════ */
+
+var _cpDetailRow = null;  // currently expanded detail <tr>
+
+function cpExpandPairDetail(pair, clickedTr, tbody) {
+  // Remove any existing detail row
+  if (_cpDetailRow && _cpDetailRow.parentNode) {
+    _cpDetailRow.parentNode.removeChild(_cpDetailRow);
+    _cpDetailRow = null;
+    // If same row was clicked again, just collapse
+    if (clickedTr.dataset.expanded === 'true') {
+      clickedTr.dataset.expanded = 'false';
+      return;
+    }
+  }
+  // Mark all rows as not expanded
+  tbody.querySelectorAll('tr[data-expanded]').forEach(function (r) { r.dataset.expanded = 'false'; });
+  clickedTr.dataset.expanded = 'true';
+
+  var src = pair.src;
+  var dst = pair.dst;
+  var K3 = 3;
+
+  // Get gateways for this pair
+  var gw = KSP_atypeGateways(_cpNodes);
+  var srcGws = gw[src] || [];
+  var dstGws = gw[dst] || [];
+
+  function gatherPaths(adj, srcGwList, dstGwList) {
+    var all = [], seen = new Set();
+    srcGwList.forEach(function (s) {
+      dstGwList.forEach(function (d) {
+        if (s === d) return;
+        KSP_yen(s, d, K3, adj).forEach(function (p) {
+          var k = p.nodes.join(',');
+          if (!seen.has(k)) { seen.add(k); all.push(p); }
+        });
+      });
+    });
+    all.sort(function (a, b) { return a.totalCost - b.totalCost; });
+    return all.slice(0, K3);
+  }
+
+  var pathsBefore = (_cpAdjBefore && srcGws.length && dstGws.length) ? gatherPaths(_cpAdjBefore, srcGws, dstGws) : [];
+  var pathsAfter  = (_cpAdjAfter  && srcGws.length && dstGws.length) ? gatherPaths(_cpAdjAfter,  srcGws, dstGws) : [];
+
+  function renderPathMini(paths, color) {
+    if (!paths.length) return '<span style="color:#6b7280;font-size:11px;">No route</span>';
+    return paths.map(function (p, i) {
+      var hops = p.nodes.map(function (nid) {
+        var n = _cpNodes.find(function (x) { return String(x.id) === String(nid); });
+        return n ? (n.label || String(nid)) : String(nid);
+      }).join('<span style="color:#4a9eff;">→</span>');
+      return '<div style="font-size:10px;color:#c8d8e8;margin:2px 0;">' +
+        '<span style="color:' + color + ';font-size:9px;font-weight:700;">#' + (i + 1) + ' </span>' +
+        '<span style="color:' + color + ';">cost:' + p.totalCost + '</span> ' + hops + '</div>';
+    }).join('');
+  }
+
+  var detailHtml =
+    '<td colspan="4" style="background:#111827;padding:8px 12px;border-top:1px solid #1f2937;">' +
+    '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">' +
+    '<span style="font-size:11px;color:#9ca3af;">Show on topology:</span>' +
+    '<button onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'before\')" style="font-size:10px;background:#7c2d12;color:#fb923c;border:1px solid #f97316;border-radius:3px;padding:2px 8px;cursor:pointer;">🔴 Before</button>' +
+    '<button onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'after\')"  style="font-size:10px;background:#14532d;color:#4ade80;border:1px solid #22c55e;border-radius:3px;padding:2px 8px;cursor:pointer;">🟢 After</button>' +
+    '<button onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'both\')"  style="font-size:10px;background:#1e3a5f;color:#60a5fa;border:1px solid #3b82f6;border-radius:3px;padding:2px 8px;cursor:pointer;">🔵 Both</button>' +
+    '</div>' +
+    '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+    '<div style="flex:1;min-width:200px;">' +
+    '<div style="font-size:10px;color:#f97316;font-weight:700;margin-bottom:3px;">⬅ Before (cost: ' + (pair.before === Infinity ? '∞' : pair.before) + ')</div>' +
+    renderPathMini(pathsBefore, '#f97316') +
+    '</div>' +
+    '<div style="flex:1;min-width:200px;">' +
+    '<div style="font-size:10px;color:#22c55e;font-weight:700;margin-bottom:3px;">➡ After (cost: ' + (pair.after === Infinity ? '∞' : pair.after) + ')</div>' +
+    renderPathMini(pathsAfter, '#22c55e') +
+    '</div>' +
+    '</div>' +
+    '</td>';
+
+  var detailTr = document.createElement('tr');
+  detailTr.style.background = '#111827';
+  detailTr.innerHTML = detailHtml;
+  _cpDetailRow = detailTr;
+  clickedTr.insertAdjacentElement('afterend', detailTr);
+
+  // Default: show "both" on topology
+  cpShowPathsOnTopo(src, dst, 'both');
+}
+
+function cpShowPathsOnTopo(src, dst, mode) {
+  if (!_cpVEdges) return;
+  var gw = KSP_atypeGateways(_cpNodes);
+  var srcGws = gw[src] || [];
+  var dstGws = gw[dst] || [];
+
+  function getTopPath(adj) {
+    var best = null;
+    srcGws.forEach(function (s) {
+      dstGws.forEach(function (d) {
+        if (s === d) return;
+        var paths = KSP_yen(s, d, 1, adj);
+        if (paths.length && (!best || paths[0].totalCost < best.totalCost)) best = paths[0];
+      });
+    });
+    return best;
+  }
+
+  var pathBefore = (mode !== 'after'  && _cpAdjBefore) ? getTopPath(_cpAdjBefore) : null;
+  var pathAfter  = (mode !== 'before' && _cpAdjAfter)  ? getTopPath(_cpAdjAfter)  : null;
+
+  // Reset all edges to dim
+  _cpVEdges.update(_cpVEdges.get().map(function (e) {
+    return { id: e.id, color: { color: '#1f2937' }, width: 1, dashes: false };
+  }));
+
+  function applyPath(path, color, dashes) {
+    if (!path || !path.edges) return;
+    var edgeSet = new Set(path.edges.map(String));
+    _cpVEdges.update(_cpVEdges.get().filter(function (e) {
+      return edgeSet.has(String(e.id));
+    }).map(function (e) {
+      return { id: e.id, color: { color: color }, width: 4, dashes: dashes };
+    }));
+  }
+
+  applyPath(pathBefore, '#f97316', [8, 4]);  // orange dashed = old path
+  applyPath(pathAfter,  '#22c55e', false);    // green solid = new path
 }
 
 /* ── Animation sequence ──────────────────────────────────────────── */

@@ -17,8 +17,9 @@ var _ilAdj        = null;
 var _ilNetwork    = null;
 var _ilVNodes     = null;
 var _ilVEdges     = null;
-var _ilFailType   = 'node';   // 'node' | 'edge'
-var _ilFailId     = null;
+var _ilFailType   = 'node';   // 'node' | 'edge' — type for next search
+var _ilFailId     = null;     // kept for topology-click compat
+var _ilFailItems  = [];       // PRD-24: [{id, type, label}] — multi-failure list
 var _ilGraphTime  = '';
 var _ilLastResult = null;    // cached blast result for re-filtering without re-compute
 
@@ -124,27 +125,75 @@ function ilSearch(query) {
 }
 
 function ilSelectFailure(id, label) {
-  _ilFailId = id;
-  document.getElementById('ilSelectedFailure').textContent = (_ilFailType === 'node' ? '💥 Node: ' : '🔗 Edge: ') + label;
+  // PRD-24: add to multi-failure list (deduplicate by id)
+  if (_ilFailItems.find(function (f) { return String(f.id) === String(id); })) {
+    document.getElementById('ilSearchResults').style.display = 'none';
+    document.getElementById('ilSearchBox').value = '';
+    return; // already in list
+  }
+  if (_ilFailItems.length >= 5) {
+    ilSetStatus('⚠ Maximum 5 simultaneous failures. Remove one first.');
+    return;
+  }
+  _ilFailItems.push({ id: String(id), type: _ilFailType, label: label });
+  _ilFailId = id; // keep for topology overlay compat
+  _ilRenderFailItems();
   document.getElementById('ilSearchResults').style.display = 'none';
-  document.getElementById('ilSearchBox').value = label;
+  document.getElementById('ilSearchBox').value = '';
+  var btn = document.getElementById('ilBtnAnalyse');
+  if (btn) btn.disabled = false;
+}
+
+function _ilRenderFailItems() {
+  var container = document.getElementById('ilFailItems');
+  var clearBtn  = document.getElementById('ilBtnClearAll');
+  var selDiv    = document.getElementById('ilSelectedFailure');
+  if (!container) return;
+  container.innerHTML = '';
+  _ilFailItems.forEach(function (f, idx) {
+    var chip = document.createElement('div');
+    chip.style.cssText = 'display:flex;align-items:center;gap:6px;background:#1e2a38;border:1px solid #3d5066;border-radius:5px;padding:3px 8px;font-size:11px;color:#c8d8e8;';
+    chip.innerHTML = (f.type === 'node' ? '💥 ' : '🔗 ') + _ilEsc(f.label) +
+      '<button onclick="ilRemoveFailure(' + idx + ')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:13px;line-height:1;padding:0;margin-left:auto;">×</button>';
+    container.appendChild(chip);
+  });
+  if (clearBtn) clearBtn.style.display = _ilFailItems.length > 0 ? '' : 'none';
+  if (selDiv) selDiv.textContent = _ilFailItems.length === 0 ? 'No failure selected' : _ilFailItems.length + ' failure(s) queued';
+}
+
+function ilRemoveFailure(idx) {
+  _ilFailItems.splice(idx, 1);
+  _ilRenderFailItems();
+  var btn = document.getElementById('ilBtnAnalyse');
+  if (btn) btn.disabled = (_ilFailItems.length === 0);
+}
+
+function ilClearAllFailures() {
+  _ilFailItems = [];
+  _ilFailId = null;
+  _ilRenderFailItems();
+  var btn = document.getElementById('ilBtnAnalyse');
+  if (btn) btn.disabled = true;
 }
 
 /* ── Analyse blast radius ────────────────────────────────────────── */
 function ilAnalyse() {
-  if (!_ilFailId) { ilSetStatus('⚠ Select a failure first.'); return; }
-  if (!_ilAdj)    { ilSetStatus('⚠ Load a topology first.'); return; }
+  if (_ilFailItems.length === 0) { ilSetStatus('⚠ Select a failure first.'); return; }
+  if (!_ilAdj)                   { ilSetStatus('⚠ Load a topology first.'); return; }
 
   ilSetStatus('<span class="il-spinner"></span> Computing blast radius…');
   document.getElementById('ilBtnAnalyse').disabled = true;
 
   setTimeout(function () {
     try {
-      var failNodeId = _ilFailType === 'node' ? _ilFailId : null;
-      var failEdgeIds = _ilFailType === 'edge' ? [_ilFailId] : [];
+      // PRD-24: extract sets from multi-failure list
+      var failNodeIds = new Set(
+        _ilFailItems.filter(function (f) { return f.type === 'node'; }).map(function (f) { return f.id; })
+      );
+      var failEdgeIds = _ilFailItems.filter(function (f) { return f.type === 'edge'; }).map(function (f) { return f.id; });
 
-      var result = KSP_blastRadius(failNodeId, failEdgeIds, _ilNodes, _ilEdges, _ilAdj, 3);
-      _ilRenderResult(result, failNodeId, failEdgeIds);
+      var result = KSP_blastRadius(failNodeIds, failEdgeIds, _ilNodes, _ilEdges, _ilAdj, 3);
+      _ilRenderResult(result, failNodeIds, failEdgeIds);
       ilSetStatus('Blast radius computed. See topology overlay and tables below.');
     } catch (err) {
       ilSetStatus('⚠ Error: ' + err.message);
@@ -218,7 +267,7 @@ function ilFilterCountryPairs() {
   _ilRenderCountryTable(_ilLastResult);
 }
 
-function _ilApplyTopoOverlay(result, failNodeId, failEdgeIds) {
+function _ilApplyTopoOverlay(result, failNodeIds, failEdgeIds) {
   if (!_ilVNodes || !_ilVEdges) return;
 
   // Reset all nodes
@@ -246,11 +295,12 @@ function _ilApplyTopoOverlay(result, failNodeId, failEdgeIds) {
       if (n) n.color = { background:'#7c2d12', border:'#ea580c' };
     });
   }
-  // Failed node — bright red
-  if (failNodeId) {
-    var fn = nodeUpd.find(function(x){ return x.id === failNodeId || String(x.id) === String(failNodeId); });
+  // PRD-24: Failed nodes — bright red (supports Set)
+  var fnIds = failNodeIds instanceof Set ? failNodeIds : (failNodeIds ? new Set([failNodeIds]) : new Set());
+  fnIds.forEach(function (fnId) {
+    var fn = nodeUpd.find(function (x) { return String(x.id) === String(fnId); });
     if (fn) fn.color = { background:'#991b1b', border:'#ef4444' };
-  }
+  });
   _ilVNodes.update(nodeUpd);
 
   // Failed edges — red dashed
@@ -260,9 +310,9 @@ function _ilApplyTopoOverlay(result, failNodeId, failEdgeIds) {
   });
   _ilVEdges.update(edgeUpd);
 
-  // Focus on failed element
-  if (failNodeId && _ilNetwork) {
-    _ilNetwork.focus(failNodeId, { scale: 1.5, animation: { duration: 500 } });
+  // Focus on first failed node
+  if (fnIds.size > 0 && _ilNetwork) {
+    _ilNetwork.focus(fnIds.values().next().value, { scale: 1.5, animation: { duration: 500 } });
   }
 }
 
