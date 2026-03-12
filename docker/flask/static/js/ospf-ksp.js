@@ -164,7 +164,7 @@ function KSP_buildDirAdjList(nodesList, edgesList, overrides) {
     }
 
     if (!adj.has(e.from)) adj.set(e.from, []);
-    if (!adj.has(e.to))   adj.set(e.to,   []);
+    if (!adj.has(e.to)) adj.set(e.to, []);
 
     // Forward direction (always add)
     adj.get(e.from).push({ to: e.to, cost: fwdCost, edgeId: e.id });
@@ -217,7 +217,7 @@ function KSP_dijkstra(srcId, adjList, excludedNodeSet, excludedEdgeSet) {
     var nbrs = adjList.get(u.id) || [];
     for (var i = 0; i < nbrs.length; i++) {
       var nb = nbrs[i];
-      if (excludedNodeSet.has(nb.to))   continue;
+      if (excludedNodeSet.has(nb.to)) continue;
       if (excludedEdgeSet.has(nb.edgeId)) continue;
 
       var nd = u.dist + nb.cost;
@@ -257,9 +257,9 @@ function KSP_reconstructPath(srcId, dstId, prev, dist) {
   if (!prev.has(dstId) && srcId !== dstId) return null;
   if (!dist || !dist.has(dstId)) return null;
 
-  var nodes  = [];
-  var edges  = [];
-  var costs  = [];
+  var nodes = [];
+  var edges = [];
+  var costs = [];
   var cur = dstId;
   var visited = new Set();
 
@@ -271,7 +271,7 @@ function KSP_reconstructPath(srcId, dstId, prev, dist) {
     nodes.unshift(cur);
     edges.unshift(info.edgeId);
     // hopCost = dist[cur] - dist[prev]
-    var dCur  = dist.has(cur)       ? dist.get(cur)       : 0;
+    var dCur = dist.has(cur) ? dist.get(cur) : 0;
     var dPrev = dist.has(info.from) ? dist.get(info.from) : 0;
     costs.unshift(dCur - dPrev);
     cur = info.from;
@@ -279,9 +279,9 @@ function KSP_reconstructPath(srcId, dstId, prev, dist) {
   nodes.unshift(srcId);
 
   return {
-    nodes:     nodes,
-    edges:     edges,
-    hopCosts:  costs,
+    nodes: nodes,
+    edges: edges,
+    hopCosts: costs,
     totalCost: dist.get(dstId)
   };
 }
@@ -341,7 +341,7 @@ function KSP_yen(srcId, dstId, K, adjList) {
       var rootNodes = prevPath.nodes.slice(0, i + 1);
       var rootEdges = prevPath.edges.slice(0, i);
       var rootCosts = prevPath.hopCosts.slice(0, i);
-      var rootCost  = 0;
+      var rootCost = 0;
       for (var c = 0; c < rootCosts.length; c++) rootCost += rootCosts[c];
 
       // Build exclusion sets
@@ -349,7 +349,7 @@ function KSP_yen(srcId, dstId, K, adjList) {
       var exclNodes = new Set(rootNodes.slice(0, i)); // exclude root nodes except spurNode
 
       // Exclude edges that share the same root prefix with paths already in A or B
-      var allPaths = A.concat(B.map(function(b){ return b.path; }));
+      var allPaths = A.concat(B.map(function (b) { return b.path; }));
       for (var pi = 0; pi < allPaths.length; pi++) {
         var pNodes = allPaths[pi].nodes;
         var pEdges = allPaths[pi].edges;
@@ -375,10 +375,10 @@ function KSP_yen(srcId, dstId, K, adjList) {
       if (!spurPath) continue;
 
       // Combine root + spur into candidate
-      var candNodes    = rootNodes.concat(spurPath.nodes.slice(1));
-      var candEdges    = rootEdges.concat(spurPath.edges);
+      var candNodes = rootNodes.concat(spurPath.nodes.slice(1));
+      var candEdges = rootEdges.concat(spurPath.edges);
       var candHopCosts = rootCosts.concat(spurPath.hopCosts);
-      var candCost     = rootCost + spurPath.totalCost;
+      var candCost = rootCost + spurPath.totalCost;
 
       // Deduplication by node sequence
       var key = candNodes.join(',');
@@ -388,9 +388,9 @@ function KSP_yen(srcId, dstId, K, adjList) {
       B.push({
         cost: candCost,
         path: {
-          nodes:     candNodes,
-          edges:     candEdges,
-          hopCosts:  candHopCosts,
+          nodes: candNodes,
+          edges: candEdges,
+          hopCosts: candHopCosts,
           totalCost: candCost
         }
       });
@@ -425,12 +425,12 @@ function KSP_parseAtype(hostname) {
   var m = h.match(/^([a-z]{2,3})-([a-z]{2,3})-([a-z]{2,3})-([a-z]+)(\d+.*)$/);
   if (!m) return null;
   return {
-    raw:     h,
+    raw: h,
     country: m[1].toUpperCase(),
-    city:    m[2].toUpperCase(),
+    city: m[2].toUpperCase(),
     airport: m[3].toUpperCase(),
-    role:    m[4].toUpperCase(),
-    num:     m[5]
+    role: m[4].toUpperCase(),
+    num: m[5]
   };
 }
 
@@ -559,8 +559,8 @@ function KSP_edgeLabel(edgeId, edgesList, nodesList) {
     var e = edgesList[i];
     if (String(e.id) === String(edgeId) || e.id === edgeId) {
       var fromLabel = KSP_nodeLabel(e.from, nodesList);
-      var toLabel   = KSP_nodeLabel(e.to,   nodesList);
-      var cost      = _KSP_edgeCost(e);
+      var toLabel = KSP_nodeLabel(e.to, nodesList);
+      var cost = _KSP_edgeCost(e);
       return fromLabel + ' \u2192 ' + toLabel + ' (' + cost + ')';
     }
   }
@@ -611,15 +611,15 @@ function KSP_blastRadius(failedNodeId, failedEdgeIds, nodesList, edgesList, adjL
   var exclEdges = new Set(failedEdgeIds);
 
   // Build degraded adj list for post-failure Dijkstra
-  var degradedAdj = KSP_buildDirAdjList(nodesList, edgesList.filter(function(e) {
+  var degradedAdj = KSP_buildDirAdjList(nodesList, edgesList.filter(function (e) {
     return !exclEdges.has(e.id) && !exclNodes.has(e.from) && !exclNodes.has(e.to);
   }), {});
 
   // Identify A-type gateway nodes
   var gateways = KSP_atypeGateways(nodesList);
   var allGWIds = [];
-  Object.keys(gateways).forEach(function(c) {
-    gateways[c].forEach(function(id) { allGWIds.push({ id: id, country: c }); });
+  Object.keys(gateways).forEach(function (c) {
+    gateways[c].forEach(function (id) { allGWIds.push({ id: id, country: c }); });
   });
 
   // Run Dijkstra from each gateway in normal + degraded topology
@@ -629,11 +629,11 @@ function KSP_blastRadius(failedNodeId, failedEdgeIds, nodesList, edgesList, adjL
   var unreachable = new Set();
 
   // ring0 = directly connected nodes in normal topology (for all failed nodes)
-  exclNodes.forEach(function(fnId) {
-    (adjList.get(fnId) || []).forEach(function(nb) { ring0.add(nb.to); });
+  exclNodes.forEach(function (fnId) {
+    (adjList.get(fnId) || []).forEach(function (nb) { ring0.add(nb.to); });
   });
-  failedEdgeIds.forEach(function(eid) {
-    edgesList.forEach(function(e) {
+  failedEdgeIds.forEach(function (eid) {
+    edgesList.forEach(function (e) {
       if (e.id === eid) { ring0.add(e.from); ring0.add(e.to); }
     });
   });
@@ -641,8 +641,8 @@ function KSP_blastRadius(failedNodeId, failedEdgeIds, nodesList, edgesList, adjL
   // For each gateway pair: compare normal vs degraded shortest path
   var countryImpact = {}; // country → { affected: count, total: count }
 
-  allGWIds.forEach(function(src) {
-    allGWIds.forEach(function(dst) {
+  allGWIds.forEach(function (src) {
+    allGWIds.forEach(function (dst) {
       if (src.id === dst.id) return;
       if (src.country === dst.country) return;
 
@@ -704,28 +704,28 @@ function KSP_blastRadius(failedNodeId, failedEdgeIds, nodesList, edgesList, adjL
 function KSP_topoDiff(nodesA, edgesA, nodesB, edgesB) {
   function edgeKey(e) { return String(e.from) + '>' + String(e.to); }
 
-  var nodeIdsA = new Set((nodesA || []).map(function(n){ return n.id; }));
-  var nodeIdsB = new Set((nodesB || []).map(function(n){ return n.id; }));
+  var nodeIdsA = new Set((nodesA || []).map(function (n) { return n.id; }));
+  var nodeIdsB = new Set((nodesB || []).map(function (n) { return n.id; }));
 
-  var newNodes  = (nodesB || []).filter(function(n){ return !nodeIdsA.has(n.id); });
-  var lostNodes = (nodesA || []).filter(function(n){ return !nodeIdsB.has(n.id); });
+  var newNodes = (nodesB || []).filter(function (n) { return !nodeIdsA.has(n.id); });
+  var lostNodes = (nodesA || []).filter(function (n) { return !nodeIdsB.has(n.id); });
 
   // Build edge maps by from>to key
   var edgeMapA = {};
-  (edgesA || []).forEach(function(e){ edgeMapA[edgeKey(e)] = e; });
+  (edgesA || []).forEach(function (e) { edgeMapA[edgeKey(e)] = e; });
   var edgeMapB = {};
-  (edgesB || []).forEach(function(e){ edgeMapB[edgeKey(e)] = e; });
+  (edgesB || []).forEach(function (e) { edgeMapB[edgeKey(e)] = e; });
 
   var keysA = Object.keys(edgeMapA);
   var keysB = Object.keys(edgeMapB);
   var allKeys = new Set(keysA.concat(keysB));
 
-  var newEdges    = [];
-  var lostEdges   = [];
+  var newEdges = [];
+  var lostEdges = [];
   var costChanged = [];
-  var unchanged   = [];
+  var unchanged = [];
 
-  allKeys.forEach(function(k) {
+  allKeys.forEach(function (k) {
     var eA = edgeMapA[k];
     var eB = edgeMapB[k];
     if (eA && !eB) { lostEdges.push(eA); }
@@ -735,7 +735,7 @@ function KSP_topoDiff(nodesA, edgesA, nodesB, edgesB) {
       var cB = _KSP_edgeCost(eB);
       if (cA !== cB) {
         var delta = cB - cA;
-        var pct   = cA !== 0 ? Math.round((delta / cA) * 100) : Infinity;
+        var pct = cA !== 0 ? Math.round((delta / cA) * 100) : Infinity;
         costChanged.push({ edge: eB, costA: cA, costB: cB, delta: delta, pct: pct });
       } else {
         unchanged.push(eB);
@@ -744,7 +744,7 @@ function KSP_topoDiff(nodesA, edgesA, nodesB, edgesB) {
   });
 
   // Sort cost changes by abs(delta) descending
-  costChanged.sort(function(a, b){ return Math.abs(b.delta) - Math.abs(a.delta); });
+  costChanged.sort(function (a, b) { return Math.abs(b.delta) - Math.abs(a.delta); });
 
   return { newNodes: newNodes, lostNodes: lostNodes, newEdges: newEdges, lostEdges: lostEdges, costChanged: costChanged, unchanged: unchanged };
 }
@@ -790,7 +790,7 @@ function KSP_countryPairDiff(nodesA, edgesA, nodesB, edgesB) {
     }
   }
 
-  results.sort(function(a, b){ return Math.abs(b.delta) - Math.abs(a.delta); });
+  results.sort(function (a, b) { return Math.abs(b.delta) - Math.abs(a.delta); });
   return results;
 }
 
@@ -846,12 +846,12 @@ function KSP_normaliseGraphData(data) {
   if (!data || typeof data !== 'object') return { nodes: [], edges: [] };
   var nodes = data.nodes_attr_dd_in_ll || data.nodes || [];
   var rawEdges = data.edges_attr_dd_in_ll || data.edges || [];
-  if (!Array.isArray(nodes))    nodes    = [];
+  if (!Array.isArray(nodes)) nodes = [];
   if (!Array.isArray(rawEdges)) rawEdges = [];
   return {
-    nodes:     nodes,
-    edges:     KSP_expandEcmpEdges(rawEdges),
-    graphId:   data.graph_id   || '',
+    nodes: nodes,
+    edges: KSP_expandEcmpEdges(rawEdges),
+    graphId: data.graph_id || '',
     graphTime: data.start_time_iso || ''
   };
 }
@@ -867,8 +867,10 @@ function KSP_normaliseGraphData(data) {
  * @returns {Promise<{nodes:Array, edges:Array, graphId:string, graphTime:string}>}
  */
 function KSP_loadTopology(graphTime) {
+  console.log('KSP_loadTopology: starting for', graphTime);
   var fd = new FormData();
   fd.append('dynamic_graph_time', graphTime);
+  console.log('KSP_loadTopology: fetching /upload-ospf-lsdb-from-js...');
   return fetch('/upload-ospf-lsdb-from-js', { method: 'POST', body: fd })
     .then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status + ' loading topology for ' + graphTime);
