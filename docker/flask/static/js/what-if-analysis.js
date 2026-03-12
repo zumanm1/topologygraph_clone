@@ -56,20 +56,23 @@ async function wiLoadTopology(graphTime) {
     $('#wi-status').html(`<span class="spinner-border spinner-border-sm mr-2"></span> Loading ${graphTime}...`);
 
     try {
-        const [nodesResp, edgesResp] = await Promise.all([
-            fetch(`/api/diagram/${graphTime}/nodes`),
-            fetch(`/api/diagram/${graphTime}/edges`)
-        ]);
+        console.log("WI: Loading via KSP_loadTopology:", graphTime);
+        const data = await KSP_loadTopology(graphTime);
 
-        wiNodes = await nodesResp.json();
-        wiEdges = await edgesResp.json();
+        wiNodes = data.nodes;
+        wiEdges = data.edges;
+        console.log(`WI: Loaded ${wiNodes.length} nodes, ${wiEdges.length} edges`);
+
+        if (!wiNodes || wiNodes.length === 0) {
+            throw new Error("No nodes found in topology.");
+        }
 
         wiBuildTopoView();
         wiUpdateImpact(0, 0, 0);
-        $('#wi-status').text('Current State: Baseline');
+        $('#wi-status').text(`Loaded ${wiNodes.length} nodes, ${wiEdges.length} edges. Current State: Baseline`);
     } catch (e) {
         console.error("WI: Load failed", e);
-        $('#wi-status').html('<span class="text-danger">Failed to load topology.</span>');
+        $('#wi-status').html(`<span class="text-danger">❌ Load failed: ${e.message}</span>`);
     }
 }
 

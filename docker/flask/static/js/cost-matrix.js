@@ -50,7 +50,8 @@ async function rmInit() {
 
 async function rmLoadTopology(graphTime) {
     rmGraphTime = graphTime;
-    $('#matrix-display').html(`
+    const display = $('#matrix-display');
+    display.html(`
         <div class="d-flex justify-content-center align-items-center h-100">
             <div class="text-center">
                 <div class="spinner-border text-primary mb-3"></div>
@@ -60,13 +61,12 @@ async function rmLoadTopology(graphTime) {
     `);
 
     try {
-        const [nodesResp, edgesResp] = await Promise.all([
-            fetch(`/api/diagram/${graphTime}/nodes`),
-            fetch(`/api/diagram/${graphTime}/edges`)
-        ]);
+        console.log("RM: Loading via KSP_loadTopology:", graphTime);
+        const result = await KSP_loadTopology(graphTime);
+        rmNodes = result.nodes;
+        rmEdges = result.edges;
 
-        rmNodes = await nodesResp.json();
-        rmEdges = await edgesResp.json();
+        console.log(`RM: Loaded ${rmNodes.length} nodes, ${rmEdges.length} edges`);
 
         // Find A-type countries
         const countrySet = new Set();
@@ -79,9 +79,18 @@ async function rmLoadTopology(graphTime) {
         console.log(`RM: Found ${rmCountries.length} countries`);
 
         if (rmCountries.length < 2) {
-            $('#matrix-display').html('<div class="alert alert-warning m-4">No A-type countries found in this topology.</div>');
+            display.html('<div class="alert alert-warning m-4"><h5>⚠️ No Countries Found</h5><p>This topology does not contain enough nodes matching the {country}-{city}-{airport}-... naming convention required for a cost matrix.</p></div>');
             return;
         }
+
+        display.html(`
+            <div class="d-flex justify-content-center align-items-center h-100">
+                <div class="text-center">
+                    <div class="spinner-border text-info mb-3"></div>
+                    <p class="text-info">Computing ${rmCountries.length}x${rmCountries.length} reachability matrix...</p>
+                </div>
+            </div>
+        `);
 
         // Compute Base Matrix
         const adj = KSP_buildDirAdjList(rmNodes, rmEdges, {});
@@ -90,7 +99,7 @@ async function rmLoadTopology(graphTime) {
         rmRenderMatrix();
     } catch (e) {
         console.error("RM: Load failed", e);
-        $('#matrix-display').html('<div class="alert alert-danger m-4">Error loading topology.</div>');
+        display.html(`<div class="alert alert-danger m-4"><h5>❌ Load Failed</h5><p>${e.message}</p></div>`);
     }
 }
 

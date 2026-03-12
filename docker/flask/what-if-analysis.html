@@ -1,184 +1,174 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>What-If Analysis | Topolograph</title>
-    <style>
-        .wi-container {
-            display: flex;
-            height: calc(100vh - 56px);
-            overflow: hidden;
-        }
+{% block metadata %}
+<meta name="description" content="What-If Analysis — Node and Link failure simulation workspace">
+{% endblock %}
 
-        .wi-sidebar {
-            width: 350px;
-            background: #1e293b;
-            color: white;
-            padding: 20px;
-            overflow-y: auto;
-            border-right: 1px solid #334155;
-        }
+{% block content %}
+<style>
+    .wi-container {
+        display: flex;
+        height: calc(100vh - 120px);
+        overflow: hidden;
+        gap: 10px;
+    }
 
-        .wi-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #0f172a;
-            position: relative;
-        }
+    .wi-sidebar {
+        width: 320px;
+        background: #1e293b;
+        color: white;
+        padding: 15px;
+        overflow-y: auto;
+        border-right: 1px solid #334155;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+    }
 
-        .wi-toolbar {
-            height: 50px;
-            background: #1e293b;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            border-bottom: 1px solid #334155;
-            gap: 15px;
-        }
+    .wi-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #0f172a;
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+    }
 
-        .wi-viewport {
-            flex: 1;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
+    .wi-toolbar {
+        height: 50px;
+        background: #1e293b;
+        display: flex;
+        align-items: center;
+        padding: 0 15px;
+        border-bottom: 1px solid #334155;
+        gap: 15px;
+    }
 
-        #wi-canvas {
-            flex: 1;
-            background: #020617;
-        }
+    .wi-viewport {
+        flex: 1;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
 
-        .scenario-card {
-            background: #334155;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-left: 4px solid #3b82f6;
-        }
+    #wiFilterBar {
+        padding: 5px 10px;
+        background: #1e2a38;
+        border-bottom: 1px solid #2d3f54;
+    }
 
-        .scenario-card.active {
-            border-left-color: #10b981;
-            background: #475569;
-        }
+    #wi-canvas {
+        flex: 1;
+        background: #020617;
+    }
 
-        .impact-summary {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
+    .scenario-card {
+        background: #334155;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-left: 4px solid #3b82f6;
+    }
 
-        .stat-box {
-            background: #0f172a;
-            padding: 10px;
-            border-radius: 4px;
-            text-align: center;
-            border: 1px solid #334155;
-        }
+    .impact-summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-top: 15px;
+    }
 
-        .stat-val {
-            font-size: 18px;
-            font-weight: bold;
-            display: block;
-        }
+    .stat-box {
+        background: #0f172a;
+        padding: 8px;
+        border-radius: 4px;
+        text-align: center;
+        border: 1px solid #334155;
+    }
 
-        .stat-label {
-            font-size: 10px;
-            color: #94a3b8;
-            text-transform: uppercase;
-        }
+    .stat-val {
+        font-size: 16px;
+        font-weight: bold;
+        display: block;
+    }
 
-        .diff-added {
-            color: #4ade80;
-        }
+    .stat-label {
+        font-size: 9px;
+        color: #94a3b8;
+        text-transform: uppercase;
+    }
+</style>
 
-        .diff-removed {
-            color: #f87171;
-        }
-    </style>
-</head>
+<div class="wi-container">
+    <div class="wi-sidebar">
+        <h5 class="mb-3">⚡ What-If Analysis</h5>
 
-<body>
-    {% extends "base.html" %}
-    {% block content %}
-    <div class="wi-container">
-        <div class="wi-sidebar">
-            <h4 class="mb-4">⚡ What-If Analysis</h4>
+        <div class="form-group mb-3">
+            <label class="small text-muted">Baseline Topology</label>
+            <select id="wi-topo-select"
+                class="form-control form-control-sm bg-dark text-white border-secondary"></select>
+        </div>
 
-            <div class="form-group">
-                <label>Baseline Topology</label>
-                <select id="wi-topo-select" class="form-control bg-dark text-white border-secondary"></select>
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="small font-weight-bold mb-0">🛠 Active Scenarios</h6>
+                <button class="btn btn-xs btn-primary" onclick="wiAddScenario()">+</button>
             </div>
-
-            <div class="mt-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6>🛠 Active Scenarios</h6>
-                    <button class="btn btn-xs btn-primary" onclick="wiAddScenario()">+</button>
-                </div>
-                <div id="scenario-list">
-                    <!-- Scenarios will be listed here -->
-                    <div class="text-muted small">No modifications applied.</div>
-                </div>
-            </div>
-
-            <div class="mt-4">
-                <h6>📊 Impact Summary</h6>
-                <div class="impact-summary">
-                    <div class="stat-box">
-                        <span class="stat-val text-success" id="impact-unaffected">0</span>
-                        <span class="stat-label">Stable</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-val text-warning" id="impact-degraded">0</span>
-                        <span class="stat-label">Slow</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-val text-danger" id="impact-lost">0</span>
-                        <span class="stat-label">Lost</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-4">
-                <h6>🚀 Actions</h6>
-                <button class="btn btn-success btn-block" onclick="wiPushToPlanner()">📋 Push to Change Planner</button>
-                <button class="btn btn-outline-info btn-block mt-2" onclick="wiRunKPath()">🛤 Run K-Path on
-                    Modified</button>
+            <div id="scenario-list">
+                <div class="text-muted small">No modifications applied.</div>
             </div>
         </div>
 
-        <div class="wi-main">
-            <div class="wi-toolbar">
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-dark border-secondary active">Topology View</button>
-                    <button class="btn btn-dark border-secondary">Impact Matrix</button>
+        <div class="mb-3">
+            <h6 class="small font-weight-bold mb-2">📊 Impact Summary</h6>
+            <div class="impact-summary">
+                <div class="stat-box">
+                    <span class="stat-val text-success" id="impact-unaffected">0</span>
+                    <span class="stat-label">Stable</span>
                 </div>
-                <div class="ml-auto text-muted small" id="wi-status">Current State: Baseline</div>
+                <div class="stat-box">
+                    <span class="stat-val text-warning" id="impact-degraded">0</span>
+                    <span class="stat-label">Slow</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val text-danger" id="impact-lost">0</span>
+                    <span class="stat-label">Lost</span>
+                </div>
             </div>
-            <div class="wi-viewport">
-                <div id="wiFilterBar" style="padding: 5px 10px;"></div>
-                <div id="wi-canvas"></div>
-                <!-- Overlay for comparisons -->
-                <div id="wi-overlay" style="position:absolute; bottom:20px; right:20px; z-index:100;"></div>
-            </div>
+        </div>
+
+        <div class="mt-auto pt-3">
+            <button class="btn btn-sm btn-success btn-block" onclick="wiPushToPlanner()">📋 Push to Planner</button>
+            <button class="btn btn-sm btn-outline-info btn-block mt-1" onclick="wiRunKPath()">🛤 Run K-Path</button>
         </div>
     </div>
-    {% endblock %}
 
-    {% block extra_js %}
-    <script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
-    <script src="{{ url_for('static', filename='js/topolograph.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/ospf-ksp.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/topo-filter-bar.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/what-if-analysis.js') }}"></script>
-    <script>
-        $(document).ready(function () {
-            wiInit();
-        });
-    </script>
-    {% endblock %}
-</body>
+    <div class="wi-main">
+        <div class="wi-toolbar">
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-dark border-secondary active">Topology View</button>
+                <button class="btn btn-dark border-secondary">Impact Matrix</button>
+            </div>
+            <div class="ml-auto text-muted small" id="wi-status">Current State: Baseline</div>
+        </div>
+        <div class="wi-viewport">
+            <div id="wiFilterBar"></div>
+            <div id="wi-canvas"></div>
+            <div id="wi-overlay" style="position:absolute; bottom:20px; right:20px; z-index:100;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-</html>
+{% block extra_js %}
+<script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
+<script src="{{ url_for('static', filename='js/topolograph.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ospf-ksp.js') }}"></script>
+<script src="{{ url_for('static', filename='js/topo-filter-bar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/what-if-analysis.js') }}"></script>
+<script>
+    $(document).ready(function () {
+        wiInit();
+    });
+</script>
+{% endblock %}
