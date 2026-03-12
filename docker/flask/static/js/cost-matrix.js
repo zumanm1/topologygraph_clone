@@ -8,24 +8,41 @@ let rmCountries = [];
 let rmNodes = [];
 let rmEdges = [];
 let rmGraphTime = null;
+let rmAsymmetryMode = false;
+let rmMiniNetwork = null;
 
 async function rmInit() {
     console.log("RM: Initializing...");
 
-    // 1. Load available graph times
+    // 1. Check for global graph_time in URL or localStorage (parity with other pages)
+    const urlParams = new URLSearchParams(window.location.search);
+    const storedGraphTime = urlParams.get('graph_time') || localStorage.getItem('ospf_graph_time') || '';
+
+    // 2. Load available graph times
     try {
         const resp = await fetch('/api/graph-times');
         const data = await resp.json();
         const select = $('#matrix-topo-select');
-        data.graph_time_list.reverse().forEach((gt, idx) => {
-            select.append(`<option value="${gt}" ${idx === 0 ? 'selected' : ''}>${gt}</option>`);
+
+        const list = (data.graph_time_list || data.timestamps || []);
+        list.reverse().forEach((gt) => {
+            select.append(`<option value="${gt}">${gt}</option>`);
         });
 
-        select.change(() => rmLoadTopology(select.val()));
+        // Use stored time if available, else latest
+        let target = storedGraphTime;
+        if (!target && list.length > 0) target = list[0];
 
-        if (data.graph_time_list.length > 0) {
-            rmLoadTopology(data.graph_time_list[data.graph_time_list.length - 1]);
+        if (target) {
+            select.val(target);
+            rmLoadTopology(target);
         }
+
+        select.change(() => {
+            const val = select.val();
+            localStorage.setItem('ospf_graph_time', val);
+            rmLoadTopology(val);
+        });
     } catch (e) {
         console.error("RM: Failed to load graph times", e);
     }
@@ -184,6 +201,42 @@ async function rmSelectCell(src, dst) {
         </div>
         <div class="mt-2 small text-muted">Nodes: ${pathNodes.length} hops</div>
     `);
+
+    // Render Mini Topo
+    rmRenderMiniTopo(pathNodes);
+}
+
+function rmRenderMiniTopo(pathNodes) {
+    const container = document.getElementById('mini-topo');
+    if (!container) return;
+
+    const pathSet = new Set(pathNodes);
+
+    // Filter nodes and edges involved in the path
+    const vNodes = new vis.DataSet(rmNodes.filter(n => pathSet.has(String(n.id))).map(n => {
+        const p = KSP_parseAtype(n.label || n.id);
+        return {
+            id: n.id,
+            label: n.label || n.id,
+            color: p ? { background: '#1e40af', border: '#3b82f6' } : { background: '#374151', border: '#6b7280' },
+            font: { color: '#e0e8f0', size: 8 }
+        };
+    }));
+
+    const vEdges = new vis.DataSet(rmEdges.filter(e => pathSet.has(String(e.from)) && pathSet.has(String(e.to))).map(e => ({
+        id: e.id,
+        from: e.from,
+        to: e.to,
+        color: { color: '#3b82f6' },
+        width: 2,
+        arrows: { to: { enabled: true, scaleFactor: 0.3 } }
+    })));
+
+    if (rmMiniNetwork) rmMiniNetwork.destroy();
+    rmMiniNetwork = new vis.Network(container, { nodes: vNodes, edges: vEdges }, {
+        physics: { enabled: true, solver: 'forceAtlas2Based', stabilization: { iterations: 50 } },
+        interaction: { zoomView: true, dragView: true }
+    });
 }
 
 function rmFilterMatrix() {
