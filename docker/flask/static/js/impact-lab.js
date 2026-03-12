@@ -20,6 +20,7 @@ var _ilVEdges     = null;
 var _ilFailType   = 'node';   // 'node' | 'edge'
 var _ilFailId     = null;
 var _ilGraphTime  = '';
+var _ilLastResult = null;    // cached blast result for re-filtering without re-compute
 
 /* ── Init ────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function () {
@@ -70,6 +71,7 @@ function ilLoadTopology(gt) {
       _ilEdges = result.edges;
       _ilAdj = KSP_buildDirAdjList(_ilNodes, _ilEdges, {});
       _ilBuildVis();
+      _ilPopulateCountryFilters();
       ilSetStatus('Loaded ' + _ilNodes.length + ' nodes, ' + _ilEdges.length + ' edges. Select a failure and click Compute.');
       document.getElementById('ilBtnAnalyse').disabled = false;
     })
@@ -162,23 +164,58 @@ function _ilRenderResult(result, failNodeId, failEdgeIds) {
 
   // Country table
   document.getElementById('ilCountrySection').style.display = '';
+  _ilLastResult = result;
+  _ilRenderCountryTable(result);
+
+  // Topology overlay
+  _ilApplyTopoOverlay(result, failNodeId, failEdgeIds);
+}
+
+function _ilPopulateCountryFilters() {
+  var countries = KSP_atypeCountries(_ilNodes);
+  ['ilFilterSrc', 'ilFilterDst'].forEach(function (id) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">All</option>';
+    countries.forEach(function (c) { sel.appendChild(new Option(c, c)); });
+  });
+  var filterDiv = document.getElementById('ilCountryFilter');
+  if (filterDiv) filterDiv.style.display = countries.length > 0 ? '' : 'none';
+}
+
+function _ilRenderCountryTable(result) {
+  if (!result) return;
+  var src = (document.getElementById('ilFilterSrc') || {}).value || '';
+  var dst = (document.getElementById('ilFilterDst') || {}).value || '';
   var tbody = document.getElementById('ilCountryRows');
   tbody.innerHTML = '';
   var pairs = Object.keys(result.countries).sort();
+  var shown = 0;
   pairs.forEach(function (key) {
     var c = result.countries[key];
     if (c.affected === 0) return;
-    var tr = document.createElement('tr');
     var parts = key.split('>');
-    tr.innerHTML = '<td>' + _ilEsc(parts[0] || key) + '→' + _ilEsc(parts[1] || '') + '</td>' +
+    var pairSrc = parts[0] || '';
+    var pairDst = parts[1] || '';
+    if (src && pairSrc !== src) return;
+    if (dst && pairDst !== dst) return;
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + _ilEsc(pairSrc) + '→' + _ilEsc(pairDst) + '</td>' +
       '<td>' + c.total + '</td>' +
       '<td>' + (c.total - c.affected) + '</td>' +
       '<td style="color:#ef4444">-' + c.affected + '</td>';
     tbody.appendChild(tr);
+    shown++;
   });
+  if (shown === 0) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="4" style="color:#6b7280;text-align:center;padding:8px;">No affected pairs match filter</td>';
+    tbody.appendChild(tr);
+  }
+}
 
-  // Topology overlay
-  _ilApplyTopoOverlay(result, failNodeId, failEdgeIds);
+function ilFilterCountryPairs() {
+  _ilRenderCountryTable(_ilLastResult);
 }
 
 function _ilApplyTopoOverlay(result, failNodeId, failEdgeIds) {

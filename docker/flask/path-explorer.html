@@ -151,6 +151,7 @@
           <select id="peDst"><option value="">— select —</option></select>
         </div>
         <button class="pe-btn" id="peBtnGo" onclick="peRunAnalysis()">▶ Go</button>
+        <button class="pe-btn secondary" id="peBtnExport" onclick="peExportPathsCsv()" title="Export all FWD + REV paths to CSV (opens in Excel)">📥 CSV</button>
       </div>
     </div>
 
@@ -227,10 +228,11 @@
   <div id="peRight">
     <div id="peTopoContainer"></div>
     <div id="peTopoLegend">
-      <div><span class="legend-line" style="background:#3b82f6;"></span> Topology</div>
-      <div><span class="legend-line" style="background:#22d3ee;height:4px;border-radius:2px;"></span> FWD path (→)</div>
-      <div><span class="legend-line" style="background:#f97316;height:4px;border-radius:2px;"></span> REV path (←)</div>
-      <div style="font-size:9px;color:#6b7280;margin-top:2px;">Dashed = animated pulse</div>
+      <div><span class="legend-line" style="background:#374151;"></span> Topology (unselected)</div>
+      <div><span class="legend-line" style="background:#22c55e;height:4px;"></span> Path #1 — Best (lowest cost)</div>
+      <div><span class="legend-line" style="background:#f59e0b;height:4px;"></span> Path #2–5 — Alternative</div>
+      <div><span class="legend-line" style="background:#ef4444;height:4px;"></span> Path #6–10 — Worst</div>
+      <div style="font-size:9px;color:#6b7280;margin-top:2px;">Click a path row to highlight it. Dashed = animated.</div>
     </div>
   </div>
 

@@ -12,8 +12,7 @@
 /* ── State ───────────────────────────────────────────────────────── */
 var _peNodes      = [];   // raw API node objects
 var _peEdges      = [];   // raw API edge objects
-var _peAdjFwd     = null; // directed adj list (normal/overridden)
-var _peAdjRev     = null; // reversed adj list for REV direction
+var _peAdjFwd     = null; // bidirectional OSPF adj list (shared for FWD & REV)
 var _peFwdPaths   = [];   // computed FWD paths
 var _peRevPaths   = [];   // computed REV paths
 var _peNetwork    = null; // vis.js Network
@@ -27,12 +26,27 @@ var _peGraphTime  = '';
 var _peGraphId    = '';
 var _peAnimInterval = null; // pulsing animation interval
 var _peAuditResults = [];  // cached full audit result set
+var _peCostMap      = new Map(); // key: "fromId:toId" → cost (number)
 
-// Direction colour palette
+// Direction colour palette for tab/header
 var PE_COLORS = {
   fwd: { base: '#22d3ee', dim: '#0e7490', glow: '#67e8f9' },  // cyan
   rev: { base: '#f97316', dim: '#c2410c', glow: '#fdba74' }   // orange
 };
+
+// Path quality gradient: path #1 = best (green) → path #10 = worst (dark red)
+var PE_PATH_COLORS = [
+  '#22c55e',  // 1 best   — green
+  '#84cc16',  // 2        — lime
+  '#a3e635',  // 3        — yellow-green
+  '#facc15',  // 4        — yellow
+  '#f59e0b',  // 5        — amber
+  '#f97316',  // 6        — orange
+  '#ef4444',  // 7        — red
+  '#dc2626',  // 8        — dark red
+  '#b91c1c',  // 9        — darker red
+  '#7f1d1d'   // 10 worst — deep red
+];
 
 /* ── Init ────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function () {
@@ -92,6 +106,7 @@ function peLoadTopologyData(graphTime) {
       _peNodes = result.nodes;
       _peEdges = result.edges;
 
+      _peBuildCostMap();
       _peRebuildAdjLists();
       var countries = KSP_atypeCountries(_peNodes);
       _pePopulateCountryDropdowns();
@@ -110,27 +125,82 @@ function peLoadTopologyData(graphTime) {
     });
 }
 
-/* ── Build adjacency lists (normal + reversed) ──────────────────── */
+/* ── Build adjacency list (single bidirectional OSPF graph) ─────── */
 function _peRebuildAdjLists() {
+  // KSP_buildDirAdjList now synthesises the reverse direction for every edge
+  // that has no explicit reverse entry, making the graph bidirectional.
+  // We use this single adj list for both FWD (src→dst) and REV (dst→src) paths.
   _peAdjFwd = KSP_buildDirAdjList(_peNodes, _peEdges, _peOverrides);
+}
 
-  // Build reversed adjacency list for REV direction paths
-  // Swap fwd/rev overrides when reversing
-  var revOverrides = {};
-  Object.keys(_peOverrides).forEach(function (eid) {
-    var ov = _peOverrides[eid];
-    if (ov.sym !== undefined) {
-      revOverrides[eid] = { sym: ov.sym };
-    } else {
-      revOverrides[eid] = { fwd: ov.rev, rev: ov.fwd };
-    }
+/* ── Gather paths from ALL gateway pairs → richer alternatives ───── */
+function _peGatherAllPaths(srcCountry, dstCountry, K) {
+  if (!_peAdjFwd) return [];
+  var gw     = KSP_atypeGateways(_peNodes);
+  var srcGws = gw[srcCountry] || [];
+  var dstGws = gw[dstCountry] || [];
+  if (!srcGws.length || !dstGws.length) return [];
+
+  var allPaths = [];
+  var seenKeys = new Set();
+
+  srcGws.forEach(function (srcId) {
+    dstGws.forEach(function (dstId) {
+      if (srcId === dstId) return;
+      var paths = KSP_yen(srcId, dstId, K, _peAdjFwd);
+      paths.forEach(function (p) {
+        var key = p.nodes.join(',');
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          allPaths.push(p);
+        }
+      });
+    });
   });
 
-  // Build a reversed edge list (swap from/to)
-  var revEdges = _peEdges.map(function (e) {
-    return { id: e.id + '_r', from: e.to, to: e.from, cost: e.cost, label: e.label, title: e.title, weight: e.weight, value: e.value };
-  });
-  _peAdjRev = KSP_buildDirAdjList(_peNodes, revEdges, revOverrides);
+  // Sort by ascending cost, return top K
+  allPaths.sort(function (a, b) { return a.totalCost - b.totalCost; });
+  return allPaths.slice(0, K);
+}
+
+/* ── Export FWD + REV paths to CSV (opens in Excel) ──────────────── */
+function peExportPathsCsv() {
+  var srcC = document.getElementById('peSrc').value;
+  var dstC = document.getElementById('peDst').value;
+  if (!_peFwdPaths.length && !_peRevPaths.length) {
+    alert('No paths to export. Select countries and click ▶ Go first.');
+    return;
+  }
+
+  var rows = [['Direction','Rank','From Country','To Country','Total Cost (OSPF metric)','Hop Count','Path Detail']];
+
+  function addRows(paths, dir, src, dst) {
+    paths.forEach(function (p, idx) {
+      var hopStr = '';
+      for (var i = 0; i < p.nodes.length; i++) {
+        hopStr += KSP_nodeLabel(p.nodes[i], _peNodes);
+        if (i < p.hopCosts.length) hopStr += ' -[cost:' + p.hopCosts[i] + ']-> ';
+      }
+      rows.push([dir, idx + 1, src, dst, p.totalCost, p.nodes.length - 1, hopStr]);
+    });
+  }
+
+  addRows(_peFwdPaths, 'FWD', srcC, dstC);
+  addRows(_peRevPaths, 'REV', dstC, srcC);
+
+  var csv = rows.map(function (r) {
+    return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\r\n');
+
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url;
+  a.download = 'ospf-paths-' + srcC + '-' + dstC + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 /* ── Country dropdowns ───────────────────────────────────────────── */
@@ -183,22 +253,19 @@ function peRunAnalysis() {
   // Run async so spinner renders
   setTimeout(function () {
     try {
-      var pairFwd = KSP_bestPair(srcCountry, dstCountry, _peNodes, _peAdjFwd);
-      var pairRev = KSP_bestPair(dstCountry, srcCountry, _peNodes, _peAdjRev);
-
-      if (!pairFwd) {
-        peSetStatus('⚠ No path found from ' + srcCountry + ' to ' + dstCountry + '.');
-        document.getElementById('peBtnGo').disabled = false;
-        return;
-      }
-
-      _peFwdPaths = KSP_yen(pairFwd.srcId, pairFwd.dstId, K, _peAdjFwd);
-      _peRevPaths = pairRev ? KSP_yen(pairRev.srcId, pairRev.dstId, K, _peAdjRev) : [];
+      // Gather paths across ALL gateway pairs — more alternatives than single-best-pair
+      _peFwdPaths = _peGatherAllPaths(srcCountry, dstCountry, K);
+      _peRevPaths = _peGatherAllPaths(dstCountry, srcCountry, K);
 
       _peRenderPaths();
 
-      peSetStatus('Found: ' + _peFwdPaths.length + ' FWD path(s) ' + srcCountry + '→' + dstCountry +
-        ',  ' + _peRevPaths.length + ' REV path(s) ' + dstCountry + '→' + srcCountry + '.');
+      var fwdMsg = _peFwdPaths.length
+        ? _peFwdPaths.length + ' FWD path(s) ' + srcCountry + '→' + dstCountry
+        : '⚠ No FWD path ' + srcCountry + '→' + dstCountry;
+      var revMsg = _peRevPaths.length
+        ? _peRevPaths.length + ' REV path(s) ' + dstCountry + '→' + srcCountry
+        : '⚠ No REV path ' + dstCountry + '→' + srcCountry;
+      peSetStatus(fwdMsg + '  |  ' + revMsg);
     } catch (err) {
       peSetStatus('⚠ Computation error: ' + err.message);
     }
@@ -232,13 +299,17 @@ function _peRenderPathList(containerId, paths, dir, label) {
     row.className = 'pe-path-row dir-' + dir;
     row.id = 'pe-path-' + dir + '-' + idx;
 
+    // Path quality gradient: #1 = green (best), progressively worse toward red
+    var pathColor = PE_PATH_COLORS[Math.min(idx, PE_PATH_COLORS.length - 1)];
+    var isBest = (idx === 0);
+
     var hdr = document.createElement('div');
     hdr.className = 'pe-path-header';
-    var dirColor = (dir === 'fwd') ? '#22d3ee' : '#f97316';
     hdr.innerHTML =
-      '<span class="pe-path-num" style="color:' + dirColor + '">#' + (idx + 1) + '</span>' +
-      '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + dirColor + ';margin-right:4px;"></span>' +
-      '<span class="pe-path-cost">Cost: ' + path.totalCost + '</span>' +
+      '<span class="pe-path-num" style="color:' + pathColor + '">#' + (idx + 1) + '</span>' +
+      '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + pathColor + ';margin-right:4px;' + (isBest ? 'box-shadow:0 0 6px ' + pathColor + ';' : '') + '"></span>' +
+      '<span class="pe-path-cost" style="color:' + pathColor + '">Cost: ' + path.totalCost + '</span>' +
+      (isBest ? '<span style="font-size:9px;color:#22c55e;background:#052e16;border-radius:3px;padding:1px 5px;margin-left:2px;">BEST</span>' : '') +
       '<span class="pe-path-hops">Hops: ' + (path.nodes.length - 1) + '</span>' +
       '<span class="pe-path-expand">▼</span>';
 
@@ -251,7 +322,13 @@ function _peRenderPathList(containerId, paths, dir, label) {
       var nodeLabel = KSP_nodeLabel(path.nodes[i], _peNodes);
       hopHtml += '<div class="pe-hop"><span class="pe-hop-node">' + _peEscHtml(nodeLabel) + '</span>';
       if (i < path.hopCosts.length) {
-        hopHtml += '<span class="pe-hop-arrow">→</span><span class="pe-hop-cost">' + path.hopCosts[i] + '</span>';
+        var fwdCost = path.hopCosts[i];
+        var revCost = _peCostMap.get(String(path.nodes[i + 1]) + ':' + String(path.nodes[i]));
+        var costLabel = String(fwdCost);
+        if (revCost !== undefined && revCost !== fwdCost) {
+          costLabel += '<span style="color:#6b7280;font-size:9px;"> (&#8592;' + revCost + ')</span>';
+        }
+        hopHtml += '<span class="pe-hop-arrow">→</span><span class="pe-hop-cost">' + costLabel + '</span>';
       }
       hopHtml += '</div>';
     }
@@ -269,10 +346,14 @@ function _peRenderPathList(containerId, paths, dir, label) {
       detail.classList.toggle('open', !isOpen);
       hdr.querySelector('.pe-path-expand').textContent = isOpen ? '▼' : '▲';
 
-      // Select/highlight
+      // Select/highlight — pass rank index so topology uses path quality colour
       document.querySelectorAll('.pe-path-row').forEach(function (r) { r.classList.remove('selected'); });
       row.classList.add('selected');
-      _peHighlightPath(capturedDir === 'fwd' ? _peFwdPaths[capturedIdx] : _peRevPaths[capturedIdx], capturedDir);
+      _peHighlightPath(
+        capturedDir === 'fwd' ? _peFwdPaths[capturedIdx] : _peRevPaths[capturedIdx],
+        capturedDir,
+        capturedIdx   // rank index → colour gradient
+      );
     });
 
     container.appendChild(row);
@@ -325,10 +406,10 @@ function _peBuildTopoView() {
       id:     e.id,
       from:   e.from,
       to:     e.to,
-      label:  e.label || String(_peEdgeCostRaw(e)),
+      label:  _peBiLabel(e),
       color:  { color: '#374151', highlight: '#22c55e' },
       width:  1,
-      font:   { color: '#6b7280', size: 8, strokeWidth: 0 },
+      font:   { color: '#6b7280', size: 9, strokeWidth: 0 },
       arrows: { to: { enabled: true, scaleFactor: 0.4 } }
     };
   });
@@ -349,14 +430,24 @@ function _peBuildTopoView() {
   _peNetwork.on('stabilizationIterationsDone', function () { _peNetwork.setOptions({ physics: { enabled: false } }); });
 }
 
-/* ── Highlight a path on the topology with direction-aware colours ── */
-function _peHighlightPath(path, dir) {
+/* ── Highlight a path on the topology with rank-quality colour ───── */
+function _peHighlightPath(path, dir, rankIdx) {
   if (!_peVEdges || !path) return;
 
   // Stop any existing pulse animation
   if (_peAnimInterval) { clearInterval(_peAnimInterval); _peAnimInterval = null; }
 
-  var palette = PE_COLORS[dir] || PE_COLORS.fwd;
+  // Use rank-based colour (green for best, red for worst).
+  // Fall back to direction palette if rankIdx not provided.
+  var baseColor, glowColor;
+  if (rankIdx !== undefined && rankIdx !== null) {
+    baseColor = PE_PATH_COLORS[Math.min(rankIdx, PE_PATH_COLORS.length - 1)];
+    glowColor = baseColor;
+  } else {
+    var palette = PE_COLORS[dir] || PE_COLORS.fwd;
+    baseColor = palette.base;
+    glowColor = palette.glow;
+  }
   var allEdges = _peVEdges.get();
 
   // Reset all edges to dim grey
@@ -374,21 +465,21 @@ function _peHighlightPath(path, dir) {
 
   if (!pathEdgeIds.length) return;
 
-  // Initial highlight — direction colour, dashed, wide
+  // Initial highlight — rank/direction colour, dashed, wide
   var applyEdges = function (width, color) {
     var upd = pathEdgeIds.map(function (id) {
-      return { id: id, color: { color: color, highlight: palette.glow }, width: width, dashes: [8, 4] };
+      return { id: id, color: { color: color, highlight: glowColor }, width: width, dashes: [8, 4] };
     });
     _peVEdges.update(upd);
   };
 
-  applyEdges(4, palette.base);
+  applyEdges(4, baseColor);
 
-  // Pulse: alternate between base and glow widths
+  // Pulse: alternate widths to create animated dashed effect
   var tick = 0;
   _peAnimInterval = setInterval(function () {
     tick++;
-    applyEdges(tick % 2 === 0 ? 3 : 5, tick % 2 === 0 ? palette.base : palette.glow);
+    applyEdges(tick % 2 === 0 ? 3 : 5, tick % 2 === 0 ? baseColor : glowColor);
   }, 600);
 
   // Focus network on path nodes
@@ -504,6 +595,23 @@ function _peEdgeCostRaw(e) {
   var c = e.cost || e.weight || e.value || 0;
   if (!c && e.label) { var l = String(e.label).trim(); if (/^\d+$/.test(l)) c = parseInt(l, 10); }
   return c || 1;
+}
+
+/* Build a fast lookup: "fromId:toId" → cost, used for bi-directional edge labels */
+function _peBuildCostMap() {
+  _peCostMap = new Map();
+  _peEdges.forEach(function (e) {
+    var k = String(e.from) + ':' + String(e.to);
+    if (!_peCostMap.has(k)) _peCostMap.set(k, _peEdgeCostRaw(e));
+  });
+}
+
+/* Return "cost" or "fwd / rev" label for a vis.js edge */
+function _peBiLabel(e) {
+  var fwd = _peEdgeCostRaw(e);
+  var rev = _peCostMap.get(String(e.to) + ':' + String(e.from));
+  if (rev !== undefined && rev !== fwd) return fwd + ' / ' + rev;
+  return String(fwd);
 }
 
 /* ════════════════════════════════════════════════════════════════════

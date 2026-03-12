@@ -139,6 +139,26 @@
       <div class="il-search-results" id="ilSearchResults"></div>
       <div id="ilSelectedFailure">No failure selected</div>
       <button class="il-btn" id="ilBtnAnalyse" onclick="ilAnalyse()" disabled style="margin-top:8px;">▶ Compute Blast Radius</button>
+
+      <!-- Country pair filter — shown after topology loads -->
+      <div id="ilCountryFilter" style="display:none;margin-top:10px;">
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:#9ca3af;display:block;margin-bottom:2px;">Source Country</label>
+            <select id="ilFilterSrc" onchange="ilFilterCountryPairs()"
+              style="background:#2b3a4d;color:#e0e8f0;border:1px solid #3d5066;border-radius:4px;padding:3px 6px;font-size:11px;width:100%;">
+              <option value="">All</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:#9ca3af;display:block;margin-bottom:2px;">Destination Country</label>
+            <select id="ilFilterDst" onchange="ilFilterCountryPairs()"
+              style="background:#2b3a4d;color:#e0e8f0;border:1px solid #3d5066;border-radius:4px;padding:3px 6px;font-size:11px;width:100%;">
+              <option value="">All</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Blast ring summary -->

@@ -126,6 +126,18 @@ function KSP_buildDirAdjList(nodesList, edgesList, overrides) {
 
   if (!edgesList) return adj;
 
+  // Pre-compute the set of explicitly stored directed pairs.
+  // OSPF LSDBs typically store each physical link as ONE directed entry
+  // (from the advertising router's perspective). We synthesise the reverse
+  // direction for any link that has no explicit reverse edge, making the
+  // graph bidirectional as OSPF routing requires.
+  var explicitPairs = new Set();
+  edgesList.forEach(function (e) {
+    if (e.from !== undefined && e.to !== undefined) {
+      explicitPairs.add(String(e.from) + ':' + String(e.to));
+    }
+  });
+
   edgesList.forEach(function (e) {
     if (e.hidden === true) return;
     if (e.from === undefined || e.to === undefined) return;
@@ -144,18 +156,24 @@ function KSP_buildDirAdjList(nodesList, edgesList, overrides) {
       }
     } else {
       fwdCost = baseCost;
-      revCost = null; // no reverse — only add if explicitly in edgesList
+      // OSPF bidirectional: use weight_rev for the opposite direction if the
+      // LSDB recorded it (asymmetric link); otherwise mirror the forward cost.
+      var revBase = (e.weight_rev !== undefined && Number(e.weight_rev) > 0)
+        ? Number(e.weight_rev) : baseCost;
+      revCost = revBase;
     }
 
-    // Forward direction (always add)
     if (!adj.has(e.from)) adj.set(e.from, []);
     if (!adj.has(e.to))   adj.set(e.to,   []);
+
+    // Forward direction (always add)
     adj.get(e.from).push({ to: e.to, cost: fwdCost, edgeId: e.id });
 
-    // If override has an explicit revCost, inject synthetic reverse entry.
-    // This handles asymmetric overrides for paths in the reverse direction.
-    // We mark it with a synthetic edgeId so Yen's exclusion sets work correctly.
-    if (ov && revCost !== null && ov.rev !== undefined) {
+    // Reverse direction: add a synthetic entry ONLY when there is no explicit
+    // edge in the opposite direction already in edgesList. This avoids
+    // duplicating an entry that will be processed on its own iteration.
+    var reverseKey = String(e.to) + ':' + String(e.from);
+    if (!explicitPairs.has(reverseKey)) {
       adj.get(e.to).push({ to: e.from, cost: revCost, edgeId: e.id + '_rev' });
     }
   });
