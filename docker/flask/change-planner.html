@@ -82,6 +82,24 @@
   /* ── Node pulse (affected countries) ────────────────────────────── */
   @keyframes cp-node-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   .cp-pulsing { animation:cp-node-pulse 0.4s ease 3; }
+
+  /* ── Edge Picker ─────────────────────────────────────────────────── */
+  .cp-picker-label { color:#aab; font-size:11px; display:block; margin-bottom:2px; }
+  #cpPickFromNode, #cpPickToNode, #cpPickEdge {
+    background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066;
+    border-radius:4px; padding:4px 6px; font-size:12px; width:100%; }
+  #cpPickEdgeInfo { font-size:11px; color:#9ca3af; margin-top:4px; min-height:14px; }
+
+  /* ── Topology edge-click toast ───────────────────────────────────── */
+  #cpTopoRoot { flex:1; position:relative; display:flex; flex-direction:column; gap:4px; min-width:300px; }
+  #cpTopoClickToast {
+    position:absolute; bottom:12px; left:12px; right:12px; z-index:100;
+    background:rgba(17,24,39,0.97); border:1px solid #f59e0b;
+    border-radius:7px; padding:8px 12px; font-size:12px; color:#e0e8f0;
+    display:none; align-items:center; gap:10px; flex-wrap:wrap; }
+  #cpTopoClickToast.visible { display:flex; }
+  #cpToastEdgeInfo { flex:1; }
+  #cpToastEdgeInfo b { color:#f59e0b; }
 </style>
 
 <div id="cpRoot">
@@ -96,6 +114,34 @@
         <option value="">— loading —</option>
       </select>
       <div id="cpStatus" style="margin-top:6px;">Loading…</div>
+    </div>
+
+    <!-- Edge Picker -->
+    <div class="cp-panel" id="cpEdgePickerPanel">
+      <h4>🔗 Pick Edge by Node Pair</h4>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="flex:1;min-width:90px;">
+          <label class="cp-picker-label">From Node</label>
+          <select id="cpPickFromNode" onchange="cpPickFromChanged()">
+            <option value="">— load topology first —</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:90px;">
+          <label class="cp-picker-label">To Node</label>
+          <select id="cpPickToNode" onchange="cpPickToChanged()">
+            <option value="">— select From first —</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:110px;">
+          <label class="cp-picker-label">Link / Edge</label>
+          <select id="cpPickEdge" onchange="cpPickEdgeChanged()">
+            <option value="">— select pair —</option>
+          </select>
+        </div>
+        <button class="cp-btn success" id="cpBtnPickAdd" onclick="cpPickAddToPlan()" disabled
+          title="Add selected edge to the Change Plan table">＋ Add to Plan</button>
+      </div>
+      <div id="cpPickEdgeInfo"></div>
     </div>
 
     <!-- Change Plan table -->
@@ -152,9 +198,19 @@
       <span><span class="cp-leg" style="background:#374151;"></span>Unchanged</span>
       <span><span class="cp-leg" style="background:#ef4444;"></span>Old path (fading)</span>
       <span><span class="cp-leg" style="background:#22c55e;"></span>New path (growing)</span>
+      <span style="color:#6b7280;font-size:11px;margin-left:8px;">💡 Click an edge to select it</span>
     </div>
     <div id="cpAnimStatus"></div>
-    <div id="cpTopoContainer"></div>
+    <div id="cpTopoRoot">
+      <div id="cpTopoClickToast">
+        <div id="cpToastEdgeInfo">Click an edge in the topology to select it</div>
+        <button class="cp-btn success" id="cpToastAddBtn" onclick="cpToastAddToPlan()"
+          disabled style="padding:4px 10px;font-size:12px;white-space:nowrap;">＋ Add</button>
+        <button class="cp-btn secondary" onclick="cpToastDismiss()"
+          style="padding:4px 10px;font-size:12px;">✕</button>
+      </div>
+      <div id="cpTopoContainer" style="flex:1;min-height:300px;"></div>
+    </div>
   </div>
 
 </div><!-- /cpRoot -->

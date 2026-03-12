@@ -25,6 +25,8 @@ var _cpRowIdSeq  = 0;
 var _cpImpact    = null; // last computed impact
 var _cpAnimating = false;
 var _cpGraphTime = '';
+var _cpSelectedEdgeId  = null;  // edge selected via topology click
+var _cpPrevHighlightId = null;  // previously highlighted edge (reset on next select)
 
 /* ── Init ────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function () {
@@ -75,6 +77,8 @@ function cpLoadTopology(gt) {
       _cpEdges = result.edges;
       _cpAdjBefore = KSP_buildDirAdjList(_cpNodes, _cpEdges, {});
       _cpBuildVis();
+      _cpPopulateNodeDropdowns();
+      _cpSetupEdgeClickHandler();
       cpSetStatus('Loaded ' + _cpNodes.length + ' nodes, ' + _cpEdges.length + ' edges. Add changes and click Analyse.');
       document.getElementById('cpBtnAnalyse').disabled = false;
     })
@@ -183,6 +187,13 @@ function cpAnalyse() {
   if (!_cpAdjBefore) { cpSetStatus('⚠ Load a topology first.'); return; }
   var ov = _cpBuildOverrides();
   if (!Object.keys(ov).length) { cpSetStatus('⚠ Add at least one cost change to the plan.'); return; }
+  // Warn about unknown edge IDs (non-blocking)
+  var _edgeIdSet = new Set(_cpEdges.map(function(e){ return String(e.id); }));
+  var _unknownIds = _cpPlanRows.map(function(r){ return String(r.edgeId).trim(); })
+    .filter(function(eid){ return eid && !_edgeIdSet.has(eid); });
+  if (_unknownIds.length) {
+    cpSetStatus('⚠ Unknown edge IDs: ' + _unknownIds.join(', ') + ' — verify they exist in the loaded topology.');
+  }
 
   cpSetStatus('<span class="cp-spinner"></span> Computing impact across all country pairs…');
   document.getElementById('cpBtnAnalyse').disabled = true;
@@ -604,4 +615,214 @@ function _cpImpactTable() {
   }).join('');
   return '<table><thead><tr><th>Pair</th><th>Before</th><th>After</th><th>Delta</th>' +
     '<th>Status</th></tr></thead><tbody>' + rows + '</tbody></table>' + note;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Edge Picker — Node-Pair Dropdowns + Topology Click Selection
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Cost extractor ──────────────────────────────────────────────── */
+function _cpEdgeCost(e) {
+  if (!e) return 0;
+  var c = e.cost || e.weight || e.value || 0;
+  if (!c && e.label) { var l = String(e.label).trim(); if (/^\d+$/.test(l)) c = parseInt(l, 10); }
+  if (!c && e.title) { var mt = String(e.title).match(/cost[:\s]+(\d+)/i); if (mt) c = parseInt(mt[1], 10); }
+  return c || 0;
+}
+
+/* ── Find edges between two nodes (either direction) ─────────────── */
+function _cpFindEdgesByNodes(fromId, toId) {
+  return _cpEdges.filter(function (e) {
+    return (String(e.from) === fromId && String(e.to) === toId) ||
+           (String(e.from) === toId   && String(e.to) === fromId);
+  });
+}
+
+/* ── Populate From-Node dropdown after topology loads ───────────── */
+function _cpPopulateNodeDropdowns() {
+  var fromSel = document.getElementById('cpPickFromNode');
+  if (!fromSel) return;
+  fromSel.innerHTML = '<option value="">— From Node —</option>';
+  // Sort: A-type countries first, then rest; alphabetical within each group
+  var sorted = _cpNodes.slice().sort(function (a, b) {
+    var aIsA = !!KSP_parseAtype(a.label || String(a.id));
+    var bIsA = !!KSP_parseAtype(b.label || String(b.id));
+    if (aIsA !== bIsA) return aIsA ? -1 : 1;
+    return String(a.label || a.id).localeCompare(String(b.label || b.id));
+  });
+  sorted.forEach(function (n) {
+    var lbl = n.label || String(n.id);
+    var isA = !!KSP_parseAtype(lbl);
+    var opt = new Option((isA ? '🌍 ' : '') + lbl, String(n.id));
+    fromSel.appendChild(opt);
+  });
+  document.getElementById('cpPickToNode').innerHTML   = '<option value="">— select From first —</option>';
+  document.getElementById('cpPickEdge').innerHTML     = '<option value="">— select pair —</option>';
+  document.getElementById('cpPickEdgeInfo').textContent = '';
+  document.getElementById('cpBtnPickAdd').disabled    = true;
+}
+
+/* ── From-node changed: rebuild To dropdown ─────────────────────── */
+function cpPickFromChanged() {
+  var fromId = document.getElementById('cpPickFromNode').value;
+  var toSel  = document.getElementById('cpPickToNode');
+  toSel.innerHTML = '<option value="">— To Node —</option>';
+  document.getElementById('cpPickEdge').innerHTML     = '<option value="">— select pair —</option>';
+  document.getElementById('cpPickEdgeInfo').textContent = '';
+  document.getElementById('cpBtnPickAdd').disabled    = true;
+  if (!fromId) return;
+
+  // Collect all directly-adjacent node IDs (both directions — OSPF is directed but show both)
+  var targets = {};
+  _cpEdges.forEach(function (e) {
+    if (String(e.from) === fromId) targets[String(e.to)]   = true;
+    if (String(e.to)   === fromId) targets[String(e.from)] = true;
+  });
+  var targetKeys = Object.keys(targets);
+  if (!targetKeys.length) {
+    toSel.innerHTML = '<option value="">No edges from this node</option>';
+    return;
+  }
+  var toNodes = _cpNodes
+    .filter(function (n) { return targets[String(n.id)]; })
+    .sort(function (a, b) { return String(a.label || a.id).localeCompare(String(b.label || b.id)); });
+  toNodes.forEach(function (n) {
+    var lbl = n.label || String(n.id);
+    var isA = !!KSP_parseAtype(lbl);
+    toSel.appendChild(new Option((isA ? '🌍 ' : '') + lbl, String(n.id)));
+  });
+}
+
+/* ── To-node changed: populate Edge dropdown ────────────────────── */
+function cpPickToChanged() {
+  var fromId  = document.getElementById('cpPickFromNode').value;
+  var toId    = document.getElementById('cpPickToNode').value;
+  var edgeSel = document.getElementById('cpPickEdge');
+  edgeSel.innerHTML = '<option value="">— Link —</option>';
+  document.getElementById('cpPickEdgeInfo').textContent = '';
+  document.getElementById('cpBtnPickAdd').disabled = true;
+  if (!fromId || !toId) return;
+
+  var edges = _cpFindEdgesByNodes(fromId, toId);
+  if (!edges.length) {
+    edgeSel.innerHTML = '<option value="">No direct link found</option>';
+    return;
+  }
+  edges.forEach(function (e) {
+    var cost = _cpEdgeCost(e);
+    var dir  = (String(e.from) === fromId) ? '→' : '←';
+    var text = '#' + e.id + ' ' + dir + '  cost:' + cost;
+    if (e.label && !/^\d+$/.test(String(e.label).trim())) text += '  [' + e.label + ']';
+    edgeSel.appendChild(new Option(text, String(e.id)));
+  });
+  // Auto-select when there is only one edge between the pair
+  if (edges.length === 1) {
+    edgeSel.value = String(edges[0].id);
+    cpPickEdgeChanged();
+  }
+}
+
+/* ── Edge dropdown changed: show info + enable Add ──────────────── */
+function cpPickEdgeChanged() {
+  var eid    = document.getElementById('cpPickEdge').value;
+  var addBtn = document.getElementById('cpBtnPickAdd');
+  var info   = document.getElementById('cpPickEdgeInfo');
+  if (!eid) { addBtn.disabled = true; info.textContent = ''; return; }
+
+  var e = _cpEdges.find(function (x) { return String(x.id) === eid; });
+  if (!e) { addBtn.disabled = true; info.textContent = '⚠ Edge not found in loaded topology'; return; }
+
+  var fromNode = _cpNodes.find(function (n) { return String(n.id) === String(e.from); });
+  var toNode   = _cpNodes.find(function (n) { return String(n.id) === String(e.to);   });
+  var fromLbl  = fromNode ? (fromNode.label || String(e.from)) : String(e.from);
+  var toLbl    = toNode   ? (toNode.label   || String(e.to))   : String(e.to);
+  var cost     = _cpEdgeCost(e);
+  info.textContent = 'Edge #' + eid + '  ' + fromLbl + ' → ' + toLbl + '  current cost: ' + cost;
+  addBtn.disabled  = false;
+  _cpHighlightEdge(eid);
+}
+
+/* ── Add picker-selected edge as a new plan row ──────────────────── */
+function cpPickAddToPlan() {
+  var eid = document.getElementById('cpPickEdge').value;
+  if (!eid) return;
+  var e    = _cpEdges.find(function (x) { return String(x.id) === eid; });
+  var cost = e ? String(_cpEdgeCost(e)) : '';
+  _cpPlanRows.push({ id: ++_cpRowIdSeq, edgeId: eid, mode: 'sym', fwd: cost, rev: '' });
+  cpRenderPlanTable();
+}
+
+/* ── Highlight an edge in gold in the vis.js network ─────────────── */
+function _cpHighlightEdge(eid) {
+  if (!_cpVEdges) return;
+  // Reset previously highlighted edge
+  if (_cpPrevHighlightId && _cpPrevHighlightId !== eid) {
+    try {
+      _cpVEdges.update({ id: _cpPrevHighlightId, color: { color: '#374151' }, width: 1, dashes: false });
+    } catch (e) { /* edge may no longer exist */ }
+  }
+  if (eid) {
+    try {
+      _cpVEdges.update({ id: eid, color: { color: '#f59e0b', highlight: '#fbbf24' }, width: 4, dashes: false });
+      _cpNetwork.selectEdges([eid]);
+    } catch (e) { /* edge may not exist in vis dataset */ }
+  }
+  _cpPrevHighlightId = eid || null;
+}
+
+/* ── Clear edge highlight and dismiss toast ──────────────────────── */
+function _cpClearEdgeHighlight() {
+  if (_cpPrevHighlightId && _cpVEdges) {
+    try { _cpVEdges.update({ id: _cpPrevHighlightId, color: { color: '#374151' }, width: 1 }); } catch (e) {}
+    _cpPrevHighlightId = null;
+  }
+  _cpSelectedEdgeId = null;
+  var toast = document.getElementById('cpTopoClickToast');
+  if (toast) toast.classList.remove('visible');
+}
+
+/* ── Register vis.js click handler on network ────────────────────── */
+function _cpSetupEdgeClickHandler() {
+  if (!_cpNetwork) return;
+  _cpNetwork.on('click', function (params) {
+    if (!params.edges || !params.edges.length) return;  // blank-space click — ignore
+    var clickedId = String(params.edges[0]);
+    _cpSelectedEdgeId = clickedId;
+    _cpHighlightEdge(clickedId);
+
+    var e        = _cpEdges.find(function (x) { return String(x.id) === clickedId; });
+    var fromNode = e ? _cpNodes.find(function (n) { return String(n.id) === String(e.from); }) : null;
+    var toNode   = e ? _cpNodes.find(function (n) { return String(n.id) === String(e.to);   }) : null;
+    var fromLbl  = fromNode ? (fromNode.label || String(e.from)) : (e ? String(e.from) : '?');
+    var toLbl    = toNode   ? (toNode.label   || String(e.to))   : (e ? String(e.to)   : '?');
+    var cost     = e ? _cpEdgeCost(e) : '?';
+
+    var infoEl = document.getElementById('cpToastEdgeInfo');
+    var addBtn = document.getElementById('cpToastAddBtn');
+    if (infoEl) {
+      infoEl.innerHTML =
+        '<b>Edge #' + _cpEsc(clickedId) + '</b>&nbsp;&nbsp;' +
+        _cpEsc(fromLbl) + ' → ' + _cpEsc(toLbl) +
+        '&nbsp;&nbsp;<span style="color:#9ca3af;">current cost: ' + cost + '</span>';
+    }
+    if (addBtn) addBtn.disabled = false;
+    var toast = document.getElementById('cpTopoClickToast');
+    if (toast) toast.classList.add('visible');
+  });
+}
+
+/* ── Toast: Add clicked edge to plan ─────────────────────────────── */
+function cpToastAddToPlan() {
+  if (!_cpSelectedEdgeId) return;
+  var e    = _cpEdges.find(function (x) { return String(x.id) === _cpSelectedEdgeId; });
+  var cost = e ? String(_cpEdgeCost(e)) : '';
+  _cpPlanRows.push({ id: ++_cpRowIdSeq, edgeId: _cpSelectedEdgeId, mode: 'sym', fwd: cost, rev: '' });
+  cpRenderPlanTable();
+  var toast = document.getElementById('cpTopoClickToast');
+  if (toast) toast.classList.remove('visible');
+}
+
+/* ── Toast: Dismiss ──────────────────────────────────────────────── */
+function cpToastDismiss() {
+  _cpClearEdgeHighlight();
 }
