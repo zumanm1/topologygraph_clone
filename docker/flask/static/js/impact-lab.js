@@ -17,6 +17,7 @@ var _ilAdj        = null;
 var _ilNetwork    = null;
 var _ilVNodes     = null;
 var _ilVEdges     = null;
+var _ilFilterBar  = null; // TopoFilterBar instance
 var _ilFailType   = 'node';   // 'node' | 'edge' — type for next search
 var _ilFailId     = null;     // kept for topology-click compat
 var _ilFailItems  = [];       // PRD-24: [{id, type, label}] — multi-failure list
@@ -341,6 +342,19 @@ function _ilBuildVis() {
     interaction:{ hover:true }, layout:{ improvedLayout:false }
   });
   _ilNetwork.on('stabilizationIterationsDone', function () { _ilNetwork.setOptions({ physics:{ enabled:false } }); });
+
+  // ── Filter bar ────────────────────────────────────────────────────
+  if (typeof TopoFilterBar === 'function') {
+    if (_ilFilterBar) _ilFilterBar.destroy();
+    _ilFilterBar = new TopoFilterBar({
+      containerId: 'ilFilterBar',
+      vNodes: _ilVNodes,
+      vEdges: _ilVEdges,
+      rawNodes: _ilNodes,
+      rawEdges: _ilEdges,
+      network: _ilNetwork,
+    });
+  }
 
   // Click to select failure
   _ilNetwork.on('click', function (params) {

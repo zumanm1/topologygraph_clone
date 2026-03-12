@@ -18,6 +18,7 @@ var _tdNetA   = null, _tdNetB = null;
 var _tdVNA    = null, _tdVEA  = null;
 var _tdVNB    = null, _tdVEB  = null;
 var _tdDiff   = null;
+var _tdFilterBar = null; // TopoFilterBar instance (dual topology)
 var _tdPairs  = null;
 
 /* ── Init ────────────────────────────────────────────────────────── */
@@ -73,6 +74,22 @@ function tdCompare() {
     _tdBuildVis('B', _tdNodesB, _tdEdgesB, _tdDiff);
     _tdRenderDiffTable();
     _tdRenderPairTable();
+
+    // ── Filter bar (controls both topologies simultaneously) ────────
+    if (typeof TopoFilterBar === 'function') {
+      if (_tdFilterBar) _tdFilterBar.destroy();
+      _tdFilterBar = new TopoFilterBar({
+        containerId:       'tdFilterBar',
+        vNodes:            _tdVNA,
+        vEdges:            _tdVEA,
+        rawNodes:          _tdNodesA,
+        rawEdges:          _tdEdgesA,
+        network:           _tdNetA,
+        secondaryVNodes:   _tdVNB,
+        secondaryVEdges:   _tdVEB,
+        secondaryRawNodes: _tdNodesB,
+      });
+    }
 
     var totalChanges = _tdDiff.costChanged.length + _tdDiff.newEdges.length + _tdDiff.lostEdges.length;
     tdSetStatus('Diff complete: ' + totalChanges + ' edge changes, ' + _tdPairs.length + ' country pair changes.');

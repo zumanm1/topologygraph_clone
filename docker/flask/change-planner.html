@@ -7,6 +7,7 @@
 {% block content %}
 <script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
 <script src="/static/js/ospf-ksp.js"></script>
+<script src="/static/js/topo-filter-bar.js"></script>
 <script src="/static/js/change-planner.js"></script>
 
 <style>
@@ -91,7 +92,7 @@
   #cpPickEdgeInfo { font-size:11px; color:#9ca3af; margin-top:4px; min-height:14px; }
 
   /* ── Topology edge-click toast ───────────────────────────────────── */
-  #cpTopoRoot { flex:1; position:relative; display:flex; flex-direction:column; gap:4px; min-width:300px; }
+  #cpTopoRoot { flex:1; position:relative; display:flex; flex-direction:column; gap:4px; min-width:300px; min-height:0; overflow:hidden; }
   #cpTopoClickToast {
     position:absolute; bottom:12px; left:12px; right:12px; z-index:100;
     background:rgba(17,24,39,0.97); border:1px solid #f59e0b;
@@ -209,7 +210,8 @@
         <button class="cp-btn secondary" onclick="cpToastDismiss()"
           style="padding:4px 10px;font-size:12px;">✕</button>
       </div>
-      <div id="cpTopoContainer" style="flex:1;min-height:300px;"></div>
+      <div id="cpFilterBar"></div>
+      <div id="cpTopoContainer" style="flex:1;min-height:0;overflow:hidden;"></div>
     </div>
   </div>
 

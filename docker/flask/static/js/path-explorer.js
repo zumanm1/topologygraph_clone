@@ -18,6 +18,7 @@ var _peRevPaths   = [];   // computed REV paths
 var _peNetwork    = null; // vis.js Network
 var _peVNodes     = null; // vis.js DataSet nodes
 var _peVEdges     = null; // vis.js DataSet edges
+var _peFilterBar  = null; // TopoFilterBar instance
 var _peOverrides  = {};   // { edgeId: { fwd, rev } or { sym } }
 var _peOverrideRows = []; // { id, mode, fwd, rev }
 var _peRowIdSeq   = 0;
@@ -462,6 +463,19 @@ function _peBuildTopoView() {
 
   _peNetwork = new vis.Network(container, { nodes: _peVNodes, edges: _peVEdges }, options);
   _peNetwork.on('stabilizationIterationsDone', function () { _peNetwork.setOptions({ physics: { enabled: false } }); });
+
+  // ── Filter bar ────────────────────────────────────────────────────
+  if (typeof TopoFilterBar === 'function') {
+    if (_peFilterBar) _peFilterBar.destroy();
+    _peFilterBar = new TopoFilterBar({
+      containerId: 'peFilterBar',
+      vNodes: _peVNodes,
+      vEdges: _peVEdges,
+      rawNodes: _peNodes,
+      rawEdges: _peEdges,
+      network: _peNetwork,
+    });
+  }
 }
 
 /* ── Highlight a path on the topology with rank-quality colour ───── */

@@ -7,6 +7,7 @@
 {% block content %}
 <script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
 <script src="/static/js/ospf-ksp.js"></script>
+<script src="/static/js/topo-filter-bar.js"></script>
 <script src="/static/js/topo-diff.js"></script>
 
 <style>
@@ -154,6 +155,9 @@
       <span><span class="td-leg" style="background:#3b82f6;height:4px;"></span>New adjacency</span>
       <span><span class="td-leg" style="background:#6b7280;height:1px;"></span>Lost adjacency (gone)</span>
     </div>
+
+    <!-- Filter bar (applies to both topologies) -->
+    <div id="tdFilterBar"></div>
 
     <!-- Dual topology -->
     <div id="tdTopos">

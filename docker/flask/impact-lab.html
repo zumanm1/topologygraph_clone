@@ -7,6 +7,7 @@
 {% block content %}
 <script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
 <script src="/static/js/ospf-ksp.js"></script>
+<script src="/static/js/topo-filter-bar.js"></script>
 <script src="/static/js/impact-lab.js"></script>
 
 <style>
@@ -289,6 +290,7 @@
 
   <!-- ── Right — Topology ─────────────────────────────────────────── -->
   <div id="ilRight">
+    <div id="ilFilterBar"></div>
     <div id="ilTopoLegend">
       <span><span class="il-leg-dot" style="background:#1e40af;"></span>Normal node</span>
       <span><span class="il-leg-dot" style="background:#ef4444;"></span>Failed node</span>

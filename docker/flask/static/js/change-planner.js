@@ -20,6 +20,7 @@ var _cpAdjAfter  = null;
 var _cpNetwork   = null;
 var _cpVNodes    = null;
 var _cpVEdges    = null;
+var _cpFilterBar = null; // TopoFilterBar instance
 var _cpPlanRows  = [];  // { id, edgeId, mode, fwd, rev }
 var _cpRowIdSeq  = 0;
 var _cpImpact    = null; // last computed impact
@@ -111,7 +112,23 @@ function _cpBuildVis() {
     },
     interaction:{ hover:true }, layout:{ improvedLayout:false }
   });
-  _cpNetwork.on('stabilizationIterationsDone', function () { _cpNetwork.setOptions({ physics:{ enabled:false } }); });
+  _cpNetwork.on('stabilizationIterationsDone', function () {
+    _cpNetwork.setOptions({ physics:{ enabled:false } });
+    _cpNetwork.fit();
+  });
+
+  // ── Filter bar ────────────────────────────────────────────────────
+  if (typeof TopoFilterBar === 'function') {
+    if (_cpFilterBar) _cpFilterBar.destroy();
+    _cpFilterBar = new TopoFilterBar({
+      containerId: 'cpFilterBar',
+      vNodes: _cpVNodes,
+      vEdges: _cpVEdges,
+      rawNodes: _cpNodes,
+      rawEdges: _cpEdges,
+      network: _cpNetwork,
+    });
+  }
 }
 
 /* ── Plan row management ─────────────────────────────────────────── */
