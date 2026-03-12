@@ -845,3 +845,56 @@ function KSP_loadTopology(graphTime) {
       return KSP_normaliseGraphData(data);
     });
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-15 helpers — Country gateway resolution & reachability matrix
+   ════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Return the first node ID whose A-type country === country (case-insensitive).
+ * Returns null if no gateway found.
+ */
+function KSP_countryGateway(country, nodesList) {
+  var c = country.toUpperCase();
+  var n = nodesList.find(function (node) {
+    var p = KSP_parseAtype(node.label || node.id || '');
+    return p && p.country.toUpperCase() === c;
+  });
+  return n ? n.id : null;
+}
+
+/**
+ * Build an N×N cost matrix for A-type country pairs.
+ * excludedNodeSet: Set of node ID strings to exclude (for failure simulation), or null.
+ * Returns: { [srcCountry]: { [dstCountry]: cost | Infinity } }
+ */
+function KSP_reachabilityMatrix(countries, nodesList, adjList, excludedNodeSet) {
+  var excl = excludedNodeSet || new Set();
+  var matrix = {};
+
+  countries.forEach(function (src) {
+    matrix[src] = {};
+    var srcId = KSP_countryGateway(src, nodesList);
+
+    if (!srcId || excl.has(String(srcId))) {
+      // Source gateway is excluded or not found — all routes from this country are ∞
+      countries.forEach(function (dst) { matrix[src][dst] = Infinity; });
+      return;
+    }
+
+    var result = KSP_dijkstra(srcId, adjList, excl, new Set());
+
+    countries.forEach(function (dst) {
+      if (dst === src) { matrix[src][dst] = 0; return; }
+      var dstId = KSP_countryGateway(dst, nodesList);
+      if (!dstId || excl.has(String(dstId))) {
+        matrix[src][dst] = Infinity;
+      } else {
+        var d = result.dist.get(String(dstId));
+        matrix[src][dst] = (d !== undefined && d !== null) ? d : Infinity;
+      }
+    });
+  });
+
+  return matrix;
+}

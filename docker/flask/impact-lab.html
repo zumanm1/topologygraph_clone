@@ -65,6 +65,43 @@
   #ilStatus { color:#9ca3af; font-size:12px; min-height:18px; }
   .il-spinner { display:inline-block; width:10px; height:10px; border:2px solid #3d5066; border-top-color:#4a9eff; border-radius:50%; animation:il-spin 0.6s linear infinite; margin-right:4px; }
   @keyframes il-spin { to { transform:rotate(360deg); } }
+
+  /* ── Mode tabs (Blast Radius / Reachability Matrix) ──────────────── */
+  .il-mode-tabs { display:flex; gap:2px; margin-bottom:8px; }
+  .il-mode-tab  { flex:1; text-align:center; padding:5px; cursor:pointer; border-radius:4px;
+    font-size:12px; color:#7cb4ff; background:#1e2a38; border:1px solid #2d3f54; }
+  #ilTabBlast.active  { background:#7c2d12; color:#fff; border-color:#fb923c; box-shadow:0 0 6px #fb923c44; }
+  #ilTabMatrix.active { background:#14532d; color:#fff; border-color:#4ade80; box-shadow:0 0 6px #4ade8044; }
+  #ilTabBlast:not(.active)  { color:#fb923c; }
+  #ilTabMatrix:not(.active) { color:#4ade80; }
+
+  /* ── Reachability Matrix panel ───────────────────────────────────── */
+  #ilMatrixPanel { display:none; }
+  #ilMatrixPanel.active { display:block; }
+  #ilBlastPanel { display:block; }
+  #ilBlastPanel.hidden { display:none; }
+  .il-matrix-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .il-matrix-controls select { background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066;
+    border-radius:4px; padding:3px 6px; font-size:11px; max-width:200px; }
+  .il-matrix-wrap { overflow:auto; max-height:calc(100vh - 320px); }
+  .il-rm-table { border-collapse:collapse; font-size:10px; white-space:nowrap; }
+  .il-rm-table th { background:#1e2a38; color:#7cb4ff; padding:4px 6px; text-align:center;
+    position:sticky; top:0; z-index:2; font-size:9px; }
+  .il-rm-table .il-rm-row-hdr { position:sticky; left:0; background:#1e2a38; color:#7cb4ff;
+    padding:4px 6px; font-size:9px; z-index:1; }
+  .il-rm-table td { padding:3px 6px; text-align:center; min-width:52px; border:1px solid #0f172a; }
+  .rm-self   { background:#1f2937; color:#4b5563; }
+  .rm-low    { background:#14532d; color:#4ade80; }
+  .rm-med    { background:#713f12; color:#fbbf24; }
+  .rm-high   { background:#7c2d12; color:#fb923c; }
+  .rm-crit   { background:#7f1d1d; color:#f87171; }
+  .rm-none   { background:#030712; color:#374151; font-style:italic; }
+  .rm-degraded { outline:2px solid #f97316; outline-offset:-2px; }
+  .rm-lost     { outline:2px solid #ef4444; outline-offset:-2px; font-weight:700; }
+  .il-rm-legend { display:flex; gap:6px; flex-wrap:wrap; font-size:9px; color:#9ca3af; margin-top:6px; }
+  .il-rm-legend span { display:flex; align-items:center; gap:3px; }
+  .il-rm-leg-box { width:10px; height:10px; border-radius:2px; }
+  .il-matrix-summary { font-size:11px; color:#9ca3af; margin:6px 0; min-height:16px; }
 </style>
 
 <div id="ilRoot">
@@ -72,7 +109,7 @@
   <!-- ── Left ────────────────────────────────────────────────────── -->
   <div id="ilLeft">
 
-    <!-- Graph selector -->
+    <!-- Graph selector (shared by both modes) -->
     <div class="il-panel">
       <h4>📅 Graph Snapshot</h4>
       <select id="ilGraphTime" onchange="ilOnGraphTimeChange(this.value)"
@@ -81,6 +118,15 @@
       </select>
       <div id="ilStatus" style="margin-top:6px;">Loading…</div>
     </div>
+
+    <!-- Mode tabs -->
+    <div class="il-mode-tabs">
+      <div class="il-mode-tab active" id="ilTabBlast"  onclick="ilSelectMode('blast')">💥 Blast Radius</div>
+      <div class="il-mode-tab"        id="ilTabMatrix" onclick="ilSelectMode('matrix')">🌍 Reachability Matrix</div>
+    </div>
+
+    <!-- ── Blast Radius content ────────────────────────────────────── -->
+    <div id="ilBlastPanel">
 
     <!-- Failure selector -->
     <div class="il-panel">
@@ -125,6 +171,33 @@
         <thead><tr><th>Route</th><th>Before</th><th>After</th><th>Δ</th></tr></thead>
         <tbody id="ilCountryRows"></tbody>
       </table>
+    </div>
+
+    </div><!-- /ilBlastPanel -->
+
+    <!-- ── Reachability Matrix content ────────────────────────────── -->
+    <div id="ilMatrixPanel">
+      <div class="il-panel">
+        <h4>🌍 Country Reachability Matrix</h4>
+        <div class="il-matrix-controls">
+          <label style="font-size:11px;color:#9ca3af;">Simulate failure:</label>
+          <select id="ilMatrixFailNode" onchange="ilMatrixSimulate(this.value)"
+            style="background:#2b3a4d;color:#e0e8f0;border:1px solid #3d5066;border-radius:4px;padding:3px 6px;font-size:11px;max-width:180px;">
+            <option value="">None (base state)</option>
+          </select>
+          <button class="il-btn" id="ilBtnBuildMatrix" onclick="ilBuildMatrix()" style="padding:4px 10px;font-size:11px;">▶ Build Matrix</button>
+          <button class="il-btn" id="ilBtnExportMatrix" onclick="ilExportMatrixCsv()" style="padding:4px 10px;font-size:11px;display:none;">📥 CSV</button>
+        </div>
+        <div class="il-matrix-summary" id="ilMatrixSummary">Select a snapshot above and click ▶ Build Matrix.</div>
+        <div class="il-matrix-wrap" id="ilMatrixWrap"></div>
+        <div class="il-rm-legend">
+          <span><span class="il-rm-leg-box rm-low"></span>&lt;500</span>
+          <span><span class="il-rm-leg-box rm-med"></span>500–1499</span>
+          <span><span class="il-rm-leg-box rm-high"></span>1500–2999</span>
+          <span><span class="il-rm-leg-box rm-crit"></span>≥3000</span>
+          <span><span class="il-rm-leg-box rm-none"></span>∞ No route</span>
+        </div>
+      </div>
     </div>
 
   </div><!-- /ilLeft -->

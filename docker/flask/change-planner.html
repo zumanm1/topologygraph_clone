@@ -107,13 +107,27 @@
         </tr></thead>
         <tbody id="cpPlanRows"></tbody>
       </table>
-      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+      <!-- Plan description -->
+      <input type="text" id="cpDescription"
+        placeholder="Plan description (optional — saved with file)"
+        style="width:100%;margin-bottom:6px;background:#1e2a38;color:#e0e8f0;border:1px solid #2d3f54;
+               border-radius:4px;padding:4px 8px;font-size:11px;box-sizing:border-box;">
+      <div style="display:flex;gap:6px;margin-top:2px;flex-wrap:wrap;">
         <button class="cp-btn secondary" id="cpBtnAddRow" onclick="cpAddRow()">+ Add Row</button>
         <button class="cp-btn" id="cpBtnAnalyse" onclick="cpAnalyse()" disabled>▶ Analyse Impact</button>
         <button class="cp-btn amber" id="cpBtnAnimate" onclick="cpAnimate()" disabled>🎬 Animate</button>
+        <button class="cp-btn secondary" onclick="cpSavePlan()" id="cpBtnSave" title="Save plan as JSON file">💾 Save Plan</button>
+        <button class="cp-btn secondary" onclick="cpLoadPlan()" id="cpBtnLoad" title="Load plan from JSON file">📂 Load Plan</button>
+        <button class="cp-btn" onclick="cpGenerateReport()" id="cpBtnReport" disabled
+          title="Run Analyse Impact first, then export risk report">📄 Export Report</button>
         <button class="cp-btn secondary" onclick="cpExportCSV()">📥 CSV</button>
         <button class="cp-btn danger" onclick="cpClearPlan()">🗑 Clear</button>
       </div>
+      <!-- Snapshot mismatch warning -->
+      <div id="cpMismatchWarn" style="display:none;margin-top:6px;padding:5px 8px;
+        background:#713f12;border-radius:4px;font-size:11px;color:#fbbf24;"></div>
+      <!-- Hidden file input for load -->
+      <input type="file" id="cpFileInput" accept=".json" style="display:none" onchange="cpOnFileSelected(event)">
     </div>
 
     <!-- Impact Summary -->

@@ -26,6 +26,7 @@ var _peSelectedTab = 'fwd';
 var _peGraphTime  = '';
 var _peGraphId    = '';
 var _peAnimInterval = null; // pulsing animation interval
+var _peAuditResults = [];  // cached full audit result set
 
 // Direction colour palette
 var PE_COLORS = {
@@ -289,10 +290,18 @@ function peSelectTab(tab) {
     });
     _peVEdges.update(reset);
   }
+  // Toggle path list tabs
   ['fwd', 'rev'].forEach(function (t) {
-    document.getElementById('peTab' + (t === 'fwd' ? 'Fwd' : 'Rev')).classList.toggle('active', t === tab);
-    document.getElementById('peList' + (t === 'fwd' ? 'Fwd' : 'Rev')).classList.toggle('active', t === tab);
+    var tabId  = 'peTab' + (t === 'fwd' ? 'Fwd' : 'Rev');
+    var listId = 'peList' + (t === 'fwd' ? 'Fwd' : 'Rev');
+    document.getElementById(tabId).classList.toggle('active', t === tab);
+    document.getElementById(listId).classList.toggle('active', t === tab);
   });
+  // Audit tab
+  var auditTab   = document.getElementById('peTabAudit');
+  var auditPanel = document.getElementById('peAuditPanel');
+  if (auditTab)   auditTab.classList.toggle('active', tab === 'audit');
+  if (auditPanel) auditPanel.classList.toggle('active', tab === 'audit');
 }
 
 /* ── Topology view ───────────────────────────────────────────────── */
@@ -495,4 +504,157 @@ function _peEdgeCostRaw(e) {
   var c = e.cost || e.weight || e.value || 0;
   if (!c && e.label) { var l = String(e.label).trim(); if (/^\d+$/.test(l)) c = parseInt(l, 10); }
   return c || 1;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-14 — ⚡ Asymmetry Audit
+   ════════════════════════════════════════════════════════════════════ */
+
+function peRunAudit() {
+  var countries = _peAdjFwd ? KSP_atypeCountries(_peNodes) : [];
+  if (countries.length < 2) {
+    document.getElementById('peAuditSummary').textContent =
+      '⚠ Load a topology with at least 2 A-type countries first.';
+    return;
+  }
+
+  var btn = document.getElementById('peBtnRunAudit');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+  document.getElementById('peAuditSummary').textContent = 'Computing all-pairs paths…';
+  document.getElementById('peAuditRows').innerHTML = '';
+
+  // Yield to browser then compute synchronously (fast for N≤20)
+  setTimeout(function () {
+    var results = [];
+    for (var i = 0; i < countries.length; i++) {
+      for (var j = 0; j < countries.length; j++) {
+        if (i === j) continue;
+        var src = countries[i], dst = countries[j];
+        var fwdPair = KSP_bestPair(src, dst, _peNodes, _peAdjFwd);
+        var revPair = KSP_bestPair(dst, src, _peNodes, _peAdjFwd);
+        var fwdCost = fwdPair ? fwdPair.cost : Infinity;
+        var revCost = revPair ? revPair.cost : Infinity;
+
+        var delta = (isFinite(fwdCost) && isFinite(revCost)) ? (revCost - fwdCost) : null;
+        var pct   = (delta !== null && fwdCost > 0) ? Math.abs(delta) / fwdCost * 100 : null;
+        var sev   = _peAuditSeverity(pct, fwdCost, revCost);
+
+        results.push({ src: src, dst: dst, fwdCost: fwdCost, revCost: revCost,
+                       delta: delta, pct: pct, sev: sev });
+      }
+    }
+
+    _peAuditResults = results;
+    btn.disabled = false;
+    btn.textContent = '▶ Run Audit';
+    document.getElementById('peBtnAuditTsv').style.display = '';
+    peAuditFilterByThreshold();
+  }, 0);
+}
+
+function _peAuditSeverity(pct, fwdCost, revCost) {
+  if (!isFinite(fwdCost) || !isFinite(revCost)) return 'NONE';  // no route one/both ways
+  if (pct === null) return 'NONE';
+  if (pct < 1)   return 'SYM';
+  if (pct < 5)   return 'LOW';
+  if (pct < 15)  return 'MED';
+  return 'HIGH';
+}
+
+function _peAuditSevLabel(sev, pct) {
+  var badges = { HIGH:'🔴 HIGH', MED:'🟡 MED', LOW:'🔵 LOW', SYM:'🟢 SYM', NONE:'⚫ NO ROUTE' };
+  return badges[sev] || sev;
+}
+
+function peAuditFilterByThreshold() {
+  var threshold = parseFloat(document.getElementById('peAuditThreshold').value) || 0;
+  var tbody = document.getElementById('peAuditRows');
+  tbody.innerHTML = '';
+
+  if (!_peAuditResults.length) return;
+
+  var shown = 0, highCount = 0, medCount = 0, symCount = 0, noRouteCount = 0;
+
+  _peAuditResults.forEach(function (r) {
+    // Filter: always show NO ROUTE and above-threshold
+    var aboveThreshold = (r.pct !== null && r.pct >= threshold) || r.sev === 'NONE';
+    if (!aboveThreshold && r.sev !== 'HIGH' && r.sev !== 'MED') return;
+    if (r.pct !== null && r.pct < threshold) return;
+
+    shown++;
+    if (r.sev === 'HIGH') highCount++;
+    else if (r.sev === 'MED') medCount++;
+    else if (r.sev === 'SYM' || r.sev === 'LOW') symCount++;
+    else noRouteCount++;
+
+    var tr = document.createElement('tr');
+    tr.className = 'audit-row';
+    var fwdStr = isFinite(r.fwdCost) ? r.fwdCost : '∞';
+    var revStr = isFinite(r.revCost) ? r.revCost : '∞';
+    var deltaStr = r.delta !== null ? (r.delta >= 0 ? '+' : '') + r.delta : '—';
+    var pctStr  = r.pct !== null ? r.pct.toFixed(1) + '%' : '—';
+    var sevHtml = '<span class="audit-sev-' + r.sev + '">' + _peAuditSevLabel(r.sev, r.pct) + '</span>';
+    var viewBtn = '<button class="pe-audit-view-btn" onclick="peAuditViewPair(\'' +
+                  r.src + '\',\'' + r.dst + '\')">🛤 View</button>';
+
+    tr.innerHTML =
+      '<td>' + _peEscHtml(r.src) + ' → ' + _peEscHtml(r.dst) + '</td>' +
+      '<td>' + fwdStr + '</td>' +
+      '<td>' + revStr + '</td>' +
+      '<td>' + deltaStr + '</td>' +
+      '<td>' + pctStr  + '</td>' +
+      '<td>' + sevHtml + '</td>' +
+      '<td>' + viewBtn + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  var total = _peAuditResults.filter(function (r) { return r.sev !== 'NONE'; }).length;
+  document.getElementById('peAuditSummary').textContent =
+    'Found ' + shown + ' pairs at threshold ≥' + threshold + '% · ' +
+    highCount + ' HIGH · ' + medCount + ' MED · ' + symCount + ' LOW/SYM · ' +
+    noRouteCount + ' NO ROUTE · ' + total + ' total pairs computed';
+}
+
+function peAuditViewPair(src, dst) {
+  // Switch to Paths tab and select this country pair
+  peSelectTab('fwd');
+  var srcSel = document.getElementById('peSrcCountry');
+  var dstSel = document.getElementById('peDstCountry');
+  if (srcSel) {
+    for (var i = 0; i < srcSel.options.length; i++) {
+      if (srcSel.options[i].value === src) { srcSel.selectedIndex = i; break; }
+    }
+  }
+  if (dstSel) {
+    for (var j = 0; j < dstSel.options.length; j++) {
+      if (dstSel.options[j].value === dst) { dstSel.selectedIndex = j; break; }
+    }
+  }
+  // Trigger path computation
+  if (typeof peComputePaths === 'function') peComputePaths();
+}
+
+function peAuditCopyTsv() {
+  if (!_peAuditResults.length) return;
+  var threshold = parseFloat(document.getElementById('peAuditThreshold').value) || 0;
+  var lines = ['Pair\tFWD Cost\tREV Cost\tDelta\t% Asymmetry\tSeverity'];
+  _peAuditResults.forEach(function (r) {
+    if (r.pct !== null && r.pct < threshold && r.sev !== 'NONE') return;
+    lines.push([
+      r.src + ' → ' + r.dst,
+      isFinite(r.fwdCost) ? r.fwdCost : 'inf',
+      isFinite(r.revCost) ? r.revCost : 'inf',
+      r.delta !== null ? r.delta : '',
+      r.pct !== null ? r.pct.toFixed(1) + '%' : '',
+      r.sev
+    ].join('\t'));
+  });
+  try {
+    navigator.clipboard.writeText(lines.join('\n'));
+    peSetStatus('✓ TSV copied to clipboard (' + lines.length + ' rows)');
+  } catch (e) {
+    peSetStatus('⚠ Clipboard unavailable — open browser console for TSV');
+    console.log(lines.join('\n'));
+  }
 }

@@ -193,6 +193,7 @@ function cpAnalyse() {
       _cpImpact = _cpComputeImpact();
       _cpRenderImpact();
       document.getElementById('cpBtnAnimate').disabled = false;
+      _cpEnableReport();
       cpSetStatus('Analysis complete. ' + _cpImpact.affected + ' country pairs affected.');
     } catch (err) {
       cpSetStatus('⚠ Analysis error: ' + err.message);
@@ -380,3 +381,227 @@ function _cpCountUp(elId, target, animate) {
 function _cpParam(name) { return new URLSearchParams(window.location.search).get(name) || ''; }
 function _cpLS(key) { try { return localStorage.getItem(key) || ''; } catch(e) { return ''; } }
 function _cpEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-16 — 💾 Save Plan / 📂 Load Plan
+   ════════════════════════════════════════════════════════════════════ */
+
+var CP_SCHEMA = 'ospf-change-scenario';
+
+function cpSavePlan() {
+  if (!_cpRows || !_cpRows.length) {
+    cpSetStatus('⚠ Nothing to save — add at least one change row first.');
+    return;
+  }
+  var desc = (document.getElementById('cpDescription') || {}).value || '';
+  var data = {
+    version:    '1.0',
+    schema:     CP_SCHEMA,
+    created:    new Date().toISOString(),
+    graph_time: _cpGraphTime || '',
+    description: desc.slice(0, 500),
+    author:     '',
+    changes:    _cpRows.map(function (r) {
+      return { id: r.id, edgeId: r.edgeId, mode: r.mode, fwd: r.fwd, rev: r.rev };
+    })
+  };
+  var json  = JSON.stringify(data, null, 2);
+  var fname = 'change-plan-' + (_cpGraphTime || 'plan') + '-' +
+    new Date().toISOString().slice(0,10).replace(/-/g,'') + '.json';
+  var blob = new Blob([json], { type: 'application/json' });
+  var a    = document.createElement('a');
+  a.href   = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
+  cpSetStatus('✓ Plan saved: ' + fname);
+}
+
+function cpLoadPlan() {
+  var inp = document.getElementById('cpFileInput');
+  if (inp) inp.click();
+}
+
+function cpOnFileSelected(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+  if (file.size > 1024 * 1024) {
+    cpSetStatus('⚠ File too large (max 1 MB).');
+    event.target.value = '';
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var data;
+    try { data = JSON.parse(e.target.result); } catch (err) {
+      cpSetStatus('⚠ Invalid JSON file — cannot load.');
+      return;
+    }
+    if (!data || data.schema !== CP_SCHEMA) {
+      cpSetStatus('⚠ Not a valid Change Plan file (wrong schema).');
+      return;
+    }
+    var changes = (data.changes || []).slice(0, 200);  // safety cap
+    // Snapshot mismatch warning
+    var warn = document.getElementById('cpMismatchWarn');
+    if (warn) {
+      if (data.graph_time && _cpGraphTime && data.graph_time !== _cpGraphTime) {
+        warn.style.display = '';
+        warn.textContent = '⚠ This plan was created for snapshot "' + data.graph_time +
+          '" but you have "' + _cpGraphTime + '" loaded. Impact results may differ.';
+      } else {
+        warn.style.display = 'none';
+      }
+    }
+    if (!confirm('Load ' + changes.length + ' change(s) from "' + file.name +
+        '"?\nThis will replace your current plan.')) return;
+
+    // Restore description
+    var descEl = document.getElementById('cpDescription');
+    if (descEl) descEl.value = data.description || '';
+
+    // Rebuild rows
+    _cpRows   = [];
+    _cpRowSeq = 0;
+    changes.forEach(function (c) {
+      _cpRowSeq++;
+      _cpRows.push({ id: _cpRowSeq, edgeId: c.edgeId || '', mode: c.mode || 'sym',
+                     fwd: c.fwd || '', rev: c.rev || '' });
+    });
+    _cpRenderPlan();
+    cpSetStatus('✓ Loaded ' + changes.length + ' change(s) from ' + file.name +
+      (changes.length < (data.changes || []).length ? ' (truncated to 200)' : ''));
+  };
+  reader.readAsText(file);
+  event.target.value = '';  // reset so same file can be loaded again
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-17 — 📄 Export Change Window Risk Report
+   ════════════════════════════════════════════════════════════════════ */
+
+// Called after cpAnalyse() completes successfully — enables the report button
+function _cpEnableReport() {
+  var btn = document.getElementById('cpBtnReport');
+  if (btn) btn.disabled = false;
+}
+
+function cpGenerateReport() {
+  if (!_cpImpactRows || !_cpImpactRows.length) {
+    cpSetStatus('⚠ Run Analyse Impact first.');
+    return;
+  }
+  var meta = {
+    generated:   new Date().toISOString().replace('T',' ').slice(0,19) + ' UTC',
+    graphTime:   _cpGraphTime || '—',
+    description: ((document.getElementById('cpDescription') || {}).value || '(none)').slice(0,500),
+    version:     '2.57.x'
+  };
+
+  var riskLevel = _cpComputeRisk(_cpImpactRows);
+  var riskColors = { LOW:'#166534', MEDIUM:'#713f12', HIGH:'#7c2d12', CRITICAL:'#7f1d1d' };
+  var riskEmoji  = { LOW:'🟢', MEDIUM:'🟡', HIGH:'🟠', CRITICAL:'🔴' };
+
+  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+    '<title>OSPF Change Report — ' + _cpEsc(meta.graphTime) + '</title><style>' +
+    'body{font-family:-apple-system,Arial,sans-serif;color:#111;margin:20mm;font-size:11pt;}' +
+    'h1{font-size:17pt;border-bottom:2px solid #1e3a5f;padding-bottom:6px;}' +
+    'h2{font-size:13pt;color:#1e3a5f;margin-top:18px;}' +
+    'table{border-collapse:collapse;width:100%;margin:8px 0;font-size:10pt;}' +
+    'th{background:#1e3a5f;color:#fff;padding:5px 8px;text-align:left;}' +
+    'td{border:1px solid #ddd;padding:4px 8px;}' +
+    'tr:nth-child(even)td{background:#f5f7fa;}' +
+    '.risk{font-weight:700;font-size:13pt;padding:4px 10px;border-radius:4px;color:#fff;display:inline-block;}' +
+    '.tag-deg{color:#c2410c;font-weight:700;}.tag-imp{color:#15803d;font-weight:700;}' +
+    '.tag-lost{color:#dc2626;font-weight:700;}.tag-unch{color:#6b7280;}' +
+    '@media print{body{margin:10mm;}}' +
+    '</style></head><body>' +
+    '<h1>OSPF Change Window Risk Report</h1>' +
+    '<table>' +
+    '<tr><th>Generated</th><td>' + _cpEsc(meta.generated) + '</td></tr>' +
+    '<tr><th>Topology Snapshot</th><td>' + _cpEsc(meta.graphTime) + '</td></tr>' +
+    '<tr><th>Plan Description</th><td>' + _cpEsc(meta.description) + '</td></tr>' +
+    '<tr><th>Changes</th><td>' + _cpRows.length + ' edge override(s)</td></tr>' +
+    '</table>' +
+    '<h2>Risk Assessment</h2>' +
+    '<p><span class="risk" style="background:' + (riskColors[riskLevel] || '#374151') + '">' +
+    (riskEmoji[riskLevel] || '') + ' ' + riskLevel + '</span></p>' +
+    _cpRiskBullets(_cpImpactRows) +
+    '<h2>Change Plan</h2>' +
+    _cpChangesTable() +
+    '<h2>Affected Country Pairs</h2>' +
+    _cpImpactTable() +
+    '<hr><p style="font-size:9pt;color:#6b7280;">Generated by Topolograph ' + meta.version +
+    ' · ' + meta.generated + '</p>' +
+    '</body></html>';
+
+  var fname = 'ospf-change-report-' + (_cpGraphTime || 'report') + '.html';
+  var blob  = new Blob([html], { type: 'text/html' });
+  var a     = document.createElement('a');
+  a.href    = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
+  cpSetStatus('✓ Report downloaded: ' + fname);
+}
+
+function _cpComputeRisk(rows) {
+  var degraded = 0, lost = 0;
+  rows.forEach(function (r) {
+    if (!isFinite(r.afterCost)) lost++;
+    else if (r.afterCost > r.beforeCost) degraded++;
+  });
+  if (lost > 5 || degraded > 12) return 'CRITICAL';
+  if (lost > 2 || degraded > 6)  return 'HIGH';
+  if (lost > 0 || degraded > 2)  return 'MEDIUM';
+  return 'LOW';
+}
+
+function _cpRiskBullets(rows) {
+  var degraded = 0, lost = 0, improved = 0;
+  rows.forEach(function (r) {
+    if (!isFinite(r.afterCost)) lost++;
+    else if (r.afterCost > r.beforeCost) degraded++;
+    else if (r.afterCost < r.beforeCost) improved++;
+  });
+  var items = [];
+  if (lost)     items.push('<li style="color:#dc2626">⚠ ' + lost + ' country pair(s) will lose primary path</li>');
+  if (degraded) items.push('<li style="color:#c2410c">↑ ' + degraded + ' pair(s) degraded (higher cost)</li>');
+  if (improved) items.push('<li style="color:#15803d">↓ ' + improved + ' pair(s) improved (lower cost)</li>');
+  if (!items.length) items.push('<li>No path cost changes detected</li>');
+  return '<ul>' + items.join('') + '</ul>';
+}
+
+function _cpChangesTable() {
+  if (!_cpRows.length) return '<p>No changes defined.</p>';
+  var rows = _cpRows.map(function (r) {
+    return '<tr><td>' + _cpEsc(r.edgeId || '—') + '</td><td>' + (r.mode || '').toUpperCase() +
+      '</td><td>' + (r.fwd || '—') + '</td><td>' + (r.rev || '—') + '</td></tr>';
+  }).join('');
+  return '<table><thead><tr><th>Edge ID</th><th>Mode</th><th>FWD Override</th>' +
+    '<th>REV Override</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function _cpImpactTable() {
+  if (!_cpImpactRows || !_cpImpactRows.length) return '<p>No affected pairs.</p>';
+  var shown = _cpImpactRows.slice(0, 500);
+  var note  = _cpImpactRows.length > 500 ? '<p style="font-size:9pt;color:#6b7280;">First 500 of ' +
+    _cpImpactRows.length + ' rows shown.</p>' : '';
+  var rows = shown.map(function (r) {
+    var bef = isFinite(r.beforeCost) ? r.beforeCost : '∞';
+    var aft = isFinite(r.afterCost)  ? r.afterCost  : '∞';
+    var delta = (isFinite(r.afterCost) && isFinite(r.beforeCost))
+      ? (r.afterCost - r.beforeCost >= 0 ? '+' : '') + (r.afterCost - r.beforeCost) : '—';
+    var cls = !isFinite(r.afterCost) ? 'tag-lost' :
+              r.afterCost > r.beforeCost ? 'tag-deg' :
+              r.afterCost < r.beforeCost ? 'tag-imp' : 'tag-unch';
+    var lbl = !isFinite(r.afterCost) ? '⚫ LOST' :
+              r.afterCost > r.beforeCost ? '↑ DEGRADED' :
+              r.afterCost < r.beforeCost ? '↓ IMPROVED' : '= UNCHANGED';
+    return '<tr><td>' + _cpEsc((r.src||'') + ' → ' + (r.dst||'')) + '</td>' +
+      '<td>' + bef + '</td><td>' + aft + '</td><td>' + delta + '</td>' +
+      '<td class="' + cls + '">' + lbl + '</td></tr>';
+  }).join('');
+  return '<table><thead><tr><th>Pair</th><th>Before</th><th>After</th><th>Delta</th>' +
+    '<th>Status</th></tr></thead><tbody>' + rows + '</tbody></table>' + note;
+}

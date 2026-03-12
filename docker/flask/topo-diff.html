@@ -12,7 +12,18 @@
 <style>
   /* ── Layout ─────────────────────────────────────────────────────── */
   #tdRoot { display:flex; flex-direction:column; gap:10px; min-height:calc(100vh - 120px); }
-  #tdTopBar { background:#1a2535; border-radius:8px; padding:12px; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+
+  /* ── Mode tabs ───────────────────────────────────────────────────── */
+  .td-mode-tabs { display:flex; gap:2px; }
+  .td-mode-tab { padding:6px 16px; cursor:pointer; border-radius:5px 5px 0 0;
+    font-size:13px; color:#7cb4ff; background:#1e2a38; border:1px solid #2d3f54; border-bottom:none; }
+  #tdTabCompare.active  { background:#1e3a5f; color:#fff; border-color:#3b82f6; }
+  #tdTabTimeline.active { background:#1a3a2a; color:#fff; border-color:#34d399; }
+  #tdTabCompare:not(.active)  { color:#60a5fa; }
+  #tdTabTimeline:not(.active) { color:#34d399; }
+
+  /* ── Top bar ─────────────────────────────────────────────────────── */
+  #tdTopBar { background:#1a2535; border-radius:0 8px 8px 8px; padding:12px; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
   #tdTopBar label { color:#aab; font-size:12px; display:block; margin-bottom:2px; }
   #tdTopBar select { background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:4px; padding:4px 8px; font-size:13px; }
 
@@ -53,68 +64,178 @@
   .td-btn:hover { background:#1d4ed8; }
   .td-btn:disabled { opacity:0.5; cursor:not-allowed; }
   .td-btn.secondary { background:#374151; } .td-btn.secondary:hover { background:#4b5563; }
+  .td-btn.danger    { background:#dc2626; } .td-btn.danger:hover    { background:#b91c1c; }
+  .td-btn.amber     { background:#d97706; } .td-btn.amber:hover     { background:#b45309; }
 
   /* ── Status ──────────────────────────────────────────────────────── */
   #tdStatus { color:#9ca3af; font-size:12px; min-height:18px; }
   .td-spinner { display:inline-block; width:10px; height:10px; border:2px solid #3d5066; border-top-color:#4a9eff; border-radius:50%; animation:td-spin 0.6s linear infinite; margin-right:4px; }
   @keyframes td-spin { to { transform:rotate(360deg); } }
+
+  /* ── Timeline panel ──────────────────────────────────────────────── */
+  #tdTimelinePanel { display:none; }
+  #tdTimelinePanel.active { display:flex; flex-direction:column; gap:10px; }
+
+  .td-tl-controls { background:#1a2535; border-radius:0 8px 8px 8px; padding:14px; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+  .td-tl-controls label { color:#aab; font-size:12px; display:block; margin-bottom:2px; }
+  .td-tl-controls select, .td-tl-controls input[type=number] {
+    background:#2b3a4d; color:#e0e8f0; border:1px solid #3d5066; border-radius:4px; padding:4px 8px; font-size:13px; }
+
+  /* ── Progress bar ────────────────────────────────────────────────── */
+  #tdProgressWrap { display:none; background:#1a2535; border-radius:8px; padding:10px 14px; }
+  #tdProgressWrap.visible { display:block; }
+  .td-progress-track { width:100%; height:12px; background:#0f172a; border-radius:6px; overflow:hidden; margin-top:6px; }
+  .td-progress-fill  { height:100%; background:linear-gradient(90deg,#34d399,#059669); border-radius:6px; transition:width 0.3s; }
+  #tdProgressText { font-size:11px; color:#9ca3af; }
+
+  /* ── Timeline list ───────────────────────────────────────────────── */
+  #tdTimelineList { flex:1; background:#1a2535; border-radius:8px; padding:10px; overflow-y:auto; min-height:300px; }
+  #tdTimelineList h4 { margin:0 0 8px; color:#7cb4ff; font-size:13px; font-weight:700; }
+
+  .td-transition-row { border:1px solid #2d3f54; border-radius:6px; margin-bottom:6px; overflow:hidden; }
+  .td-transition-header { display:flex; align-items:center; gap:8px; padding:7px 10px; background:#1e2a38; cursor:pointer; }
+  .td-transition-header:hover { background:#243447; }
+  .td-tr-times { font-size:11px; color:#c8d8e8; flex:1; }
+  .td-tr-badge { font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+  .td-tr-badge.none    { background:#1f2937; color:#6b7280; }
+  .td-tr-badge.minor   { background:#1e3a5f; color:#60a5fa; }
+  .td-tr-badge.medium  { background:#3f3108; color:#fbbf24; }
+  .td-tr-badge.major   { background:#450a0a; color:#f87171; }
+  .td-tr-arrow { color:#4a9eff; font-size:12px; }
+
+  .td-transition-detail { display:none; padding:6px 14px 8px; font-size:11px; }
+  .td-transition-detail.open { display:block; }
+  .td-tr-detail-row { display:flex; align-items:baseline; gap:6px; padding:2px 0; color:#c8d8e8; border-bottom:1px solid #1e2a38; }
+  .td-tr-detail-row:last-child { border-bottom:none; }
+  .td-tr-detail-type { color:#9ca3af; min-width:60px; }
+  .td-tr-detail-edge { color:#e0e8f0; flex:1; }
+  .td-tr-detail-cost { color:#f59e0b; white-space:nowrap; }
+  .td-tr-detail-up   { color:#ef4444; }
+  .td-tr-detail-dn   { color:#22c55e; }
+  .td-tr-detail-new  { color:#60a5fa; }
+  .td-tr-detail-lost { color:#9ca3af; }
+  .td-tr-show-all    { color:#7cb4ff; cursor:pointer; font-size:10px; padding-top:4px; }
+
+  .td-status-cancelled { color:#f59e0b; }
+  #tdTimelineSummary { font-size:11px; color:#9ca3af; min-height:16px; margin-bottom:6px; }
 </style>
 
 <div id="tdRoot">
 
-  <!-- Top control bar -->
-  <div id="tdTopBar">
-    <div>
-      <label>📅 Snapshot A (Before)</label>
-      <select id="tdSnapA"><option value="">— select —</option></select>
-    </div>
-    <div>
-      <label>📅 Snapshot B (After)</label>
-      <select id="tdSnapB"><option value="">— select —</option></select>
-    </div>
-    <button class="td-btn" id="tdBtnCompare" onclick="tdCompare()" disabled>▶ Compare</button>
-    <button class="td-btn secondary" onclick="tdExportCSV()">📥 CSV</button>
-    <div id="tdStatus" style="flex:1;padding-bottom:2px;">Select two snapshots and click Compare.</div>
+  <!-- Mode tabs -->
+  <div class="td-mode-tabs">
+    <div class="td-mode-tab active" id="tdTabCompare"  onclick="tdSelectMode('compare')">🔍 Compare</div>
+    <div class="td-mode-tab"        id="tdTabTimeline" onclick="tdSelectMode('timeline')">📅 Timeline</div>
   </div>
 
-  <!-- Legend -->
-  <div id="tdLegend">
-    <span><span class="td-leg" style="background:#374151;"></span>Unchanged</span>
-    <span><span class="td-leg" style="background:#ef4444;height:4px;"></span>Cost increased (worse)</span>
-    <span><span class="td-leg" style="background:#22c55e;height:4px;"></span>Cost decreased (better)</span>
-    <span><span class="td-leg" style="background:#3b82f6;height:4px;"></span>New adjacency</span>
-    <span><span class="td-leg" style="background:#6b7280;height:1px;"></span>Lost adjacency (gone)</span>
-  </div>
+  <!-- ── Compare Panel ─────────────────────────────────────────────── -->
+  <div id="tdComparePanel">
 
-  <!-- Dual topology -->
-  <div id="tdTopos">
-    <div class="td-topo-panel">
-      <div class="td-topo-label">Snapshot A</div>
-      <div class="td-topo-net" id="tdTopoA"></div>
+    <!-- Top control bar -->
+    <div id="tdTopBar">
+      <div>
+        <label>📅 Snapshot A (Before)</label>
+        <select id="tdSnapA"><option value="">— select —</option></select>
+      </div>
+      <div>
+        <label>📅 Snapshot B (After)</label>
+        <select id="tdSnapB"><option value="">— select —</option></select>
+      </div>
+      <button class="td-btn" id="tdBtnCompare" onclick="tdCompare()" disabled>▶ Compare</button>
+      <button class="td-btn secondary" onclick="tdExportCSV()">📥 CSV</button>
+      <div id="tdStatus" style="flex:1;padding-bottom:2px;">Select two snapshots and click Compare.</div>
     </div>
-    <div class="td-topo-panel">
-      <div class="td-topo-label">Snapshot B</div>
-      <div class="td-topo-net" id="tdTopoB"></div>
-    </div>
-  </div>
 
-  <!-- Results tables -->
-  <div id="tdResults">
-    <div class="td-panel" id="tdDiffPanel">
-      <h4>🔀 Edge Diff</h4>
-      <table class="td-tbl" id="tdDiffTable">
-        <thead><tr><th>Type</th><th>Edge (from→to)</th><th>Cost A</th><th>Cost B</th><th>Δ</th><th>%</th></tr></thead>
-        <tbody id="tdDiffRows"></tbody>
-      </table>
+    <!-- Legend -->
+    <div id="tdLegend">
+      <span><span class="td-leg" style="background:#374151;"></span>Unchanged</span>
+      <span><span class="td-leg" style="background:#ef4444;height:4px;"></span>Cost increased (worse)</span>
+      <span><span class="td-leg" style="background:#22c55e;height:4px;"></span>Cost decreased (better)</span>
+      <span><span class="td-leg" style="background:#3b82f6;height:4px;"></span>New adjacency</span>
+      <span><span class="td-leg" style="background:#6b7280;height:1px;"></span>Lost adjacency (gone)</span>
     </div>
-    <div class="td-panel" id="tdPairPanel">
-      <h4>🌍 Country Pair Δ</h4>
-      <table class="td-tbl td-pair-tbl">
-        <thead><tr><th>Route</th><th>A</th><th>B</th><th>Δ</th></tr></thead>
-        <tbody id="tdPairRows"></tbody>
-      </table>
+
+    <!-- Dual topology -->
+    <div id="tdTopos">
+      <div class="td-topo-panel">
+        <div class="td-topo-label">Snapshot A</div>
+        <div class="td-topo-net" id="tdTopoA"></div>
+      </div>
+      <div class="td-topo-panel">
+        <div class="td-topo-label">Snapshot B</div>
+        <div class="td-topo-net" id="tdTopoB"></div>
+      </div>
     </div>
-  </div>
+
+    <!-- Results tables -->
+    <div id="tdResults">
+      <div class="td-panel" id="tdDiffPanel">
+        <h4>🔀 Edge Diff</h4>
+        <table class="td-tbl" id="tdDiffTable">
+          <thead><tr><th>Type</th><th>Edge (from→to)</th><th>Cost A</th><th>Cost B</th><th>Δ</th><th>%</th></tr></thead>
+          <tbody id="tdDiffRows"></tbody>
+        </table>
+      </div>
+      <div class="td-panel" id="tdPairPanel">
+        <h4>🌍 Country Pair Δ</h4>
+        <table class="td-tbl td-pair-tbl">
+          <thead><tr><th>Route</th><th>A</th><th>B</th><th>Δ</th></tr></thead>
+          <tbody id="tdPairRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /tdComparePanel -->
+
+  <!-- ── Timeline Panel ────────────────────────────────────────────── -->
+  <div id="tdTimelinePanel">
+
+    <div class="td-tl-controls">
+      <div>
+        <label>📅 From date</label>
+        <select id="tdTimelineFrom"></select>
+      </div>
+      <div>
+        <label>📅 To date</label>
+        <select id="tdTimelineTo"></select>
+      </div>
+      <div>
+        <label>Filter</label>
+        <select id="tdTimelineFilter">
+          <option value="">All snapshots</option>
+          <option value="84_hosts">84_hosts only</option>
+          <option value="13_hosts">13_hosts only</option>
+        </select>
+      </div>
+      <div>
+        <label>Max transitions</label>
+        <select id="tdTimelineMax">
+          <option value="10">10</option>
+          <option value="20" selected>20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <button class="td-btn" id="tdBtnRunTimeline" onclick="tdRunTimeline()" disabled>▶ Run Timeline</button>
+      <button class="td-btn danger" id="tdBtnCancelTimeline" onclick="tdCancelTimeline()" disabled>✕ Cancel</button>
+      <button class="td-btn secondary" id="tdBtnExportTimeline" onclick="tdExportTimelineCsv()" disabled>📥 Export CSV</button>
+    </div>
+
+    <!-- Progress bar -->
+    <div id="tdProgressWrap">
+      <div id="tdProgressText">Processing…</div>
+      <div class="td-progress-track">
+        <div class="td-progress-fill" id="tdProgressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Timeline results -->
+    <div id="tdTimelineList">
+      <h4>📅 Snapshot Timeline</h4>
+      <div id="tdTimelineSummary">Select date range and click ▶ Run Timeline.</div>
+      <div id="tdTimelineRows"></div>
+    </div>
+
+  </div><!-- /tdTimelinePanel -->
 
 </div><!-- /tdRoot -->
 {% endblock %}

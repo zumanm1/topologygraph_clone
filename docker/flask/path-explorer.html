@@ -60,12 +60,33 @@
   #pePaths { background:#1a2535; border-radius:8px; padding:10px; flex:1; min-height:200px; overflow-y:auto; }
   .pe-tabs { display:flex; gap:2px; margin-bottom:8px; }
   .pe-tab { flex:1; text-align:center; padding:5px; cursor:pointer; border-radius:4px; font-size:12px; color:#7cb4ff; background:#1e2a38; border:1px solid #2d3f54; }
-  #peTabFwd.active { background:#0e7490; color:#fff; border-color:#22d3ee; box-shadow:0 0 6px #22d3ee66; }
-  #peTabRev.active { background:#9a3412; color:#fff; border-color:#f97316; box-shadow:0 0 6px #f9731666; }
-  #peTabFwd:not(.active) { color:#22d3ee; }
-  #peTabRev:not(.active) { color:#f97316; }
+  #peTabFwd.active  { background:#0e7490; color:#fff; border-color:#22d3ee; box-shadow:0 0 6px #22d3ee66; }
+  #peTabRev.active  { background:#9a3412; color:#fff; border-color:#f97316; box-shadow:0 0 6px #f9731666; }
+  #peTabAudit.active{ background:#78350f; color:#fff; border-color:#f59e0b; box-shadow:0 0 6px #f59e0b66; }
+  #peTabFwd:not(.active)   { color:#22d3ee; }
+  #peTabRev:not(.active)   { color:#f97316; }
+  #peTabAudit:not(.active) { color:#f59e0b; }
   .pe-path-list { display:none; }
   .pe-path-list.active { display:block; }
+
+  /* ── Audit tab ─────────────────────────────────────────────────── */
+  #peAuditPanel { display:none; }
+  #peAuditPanel.active { display:block; }
+  .pe-audit-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .pe-audit-controls label { font-size:11px; color:#9ca3af; }
+  .pe-audit-controls input[type=number] { width:60px; background:#1e2a38; color:#e0e8f0; border:1px solid #2d3f54; border-radius:4px; padding:3px 6px; font-size:11px; }
+  .pe-audit-summary { font-size:11px; color:#9ca3af; margin-bottom:6px; min-height:16px; }
+  .pe-audit-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .pe-audit-table th { background:#1e2a38; color:#7cb4ff; padding:4px 8px; text-align:left; position:sticky; top:0; }
+  .pe-audit-table td { padding:4px 8px; border-bottom:1px solid #1e2a38; color:#c8d8e8; }
+  .pe-audit-table tr:hover td { background:#1e2a38; }
+  .audit-sev-HIGH { color:#f87171; font-weight:700; }
+  .audit-sev-MED  { color:#fbbf24; font-weight:700; }
+  .audit-sev-LOW  { color:#60a5fa; }
+  .audit-sev-SYM  { color:#4ade80; }
+  .audit-sev-NONE { color:#6b7280; }
+  .pe-audit-view-btn { background:none; border:1px solid #2d3f54; color:#7cb4ff; border-radius:3px; padding:1px 6px; font-size:10px; cursor:pointer; }
+  .pe-audit-view-btn:hover { border-color:#7cb4ff; }
 
   /* ── Path row ──────────────────────────────────────────────────── */
   .pe-path-row {
@@ -160,14 +181,44 @@
       </div>
     </div>
 
-    <!-- Path Results -->
+    <!-- Path Results + Audit -->
     <div id="pePaths">
       <div class="pe-tabs">
-        <div class="pe-tab active" id="peTabFwd" onclick="peSelectTab('fwd')">→ FWD (0 paths)</div>
-        <div class="pe-tab" id="peTabRev" onclick="peSelectTab('rev')">← REV (0 paths)</div>
+        <div class="pe-tab active" id="peTabFwd"   onclick="peSelectTab('fwd')">→ FWD (0 paths)</div>
+        <div class="pe-tab"        id="peTabRev"   onclick="peSelectTab('rev')">← REV (0 paths)</div>
+        <div class="pe-tab"        id="peTabAudit" onclick="peSelectTab('audit')">⚡ Asymmetry Audit</div>
       </div>
       <div class="pe-path-list active" id="peListFwd"></div>
-      <div class="pe-path-list" id="peListRev"></div>
+      <div class="pe-path-list"        id="peListRev"></div>
+
+      <!-- Audit Panel -->
+      <div id="peAuditPanel">
+        <div class="pe-audit-controls">
+          <label>Threshold:</label>
+          <input type="number" id="peAuditThreshold" value="5" min="0" max="100" step="1"
+                 onchange="peAuditFilterByThreshold()" title="Flag pairs where |FWD−REV| / FWD ≥ this %">
+          <label>%</label>
+          <button class="pe-btn" id="peBtnRunAudit" onclick="peRunAudit()">▶ Run Audit</button>
+          <button class="pe-btn secondary" id="peBtnAuditTsv" onclick="peAuditCopyTsv()" style="display:none">📋 Copy TSV</button>
+        </div>
+        <div class="pe-audit-summary" id="peAuditSummary">Load a topology and click ▶ Run Audit.</div>
+        <div style="overflow-x:auto;">
+          <table class="pe-audit-table" id="peAuditTable">
+            <thead>
+              <tr>
+                <th>Pair</th>
+                <th>FWD Cost</th>
+                <th>REV Cost</th>
+                <th>Delta</th>
+                <th>% Asym</th>
+                <th>Severity</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="peAuditRows"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
   </div><!-- /peLeft -->

@@ -275,3 +275,174 @@ function ilSetStatus(html) { document.getElementById('ilStatus').innerHTML = htm
 function _ilParam(name) { return new URLSearchParams(window.location.search).get(name) || ''; }
 function _ilLS(key) { try { return localStorage.getItem(key) || ''; } catch(e) { return ''; } }
 function _ilEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ════════════════════════════════════════════════════════════════════
+   PRD-15 — 🌍 Country Reachability Matrix
+   ════════════════════════════════════════════════════════════════════ */
+
+var _ilMatrixBase     = null;  // { countries, matrix } — base (no failure)
+var _ilMatrixCurrent  = null;  // matrix with failure applied
+var _ilMatrixCountries= [];
+
+/* ── Mode tab switch ─────────────────────────────────────────────── */
+function ilSelectMode(mode) {
+  var blast  = document.getElementById('ilBlastPanel');
+  var matrix = document.getElementById('ilMatrixPanel');
+  var tabB   = document.getElementById('ilTabBlast');
+  var tabM   = document.getElementById('ilTabMatrix');
+
+  if (mode === 'matrix') {
+    if (blast)  blast.classList.add('hidden');
+    if (matrix) matrix.classList.add('active');
+    if (tabB)   tabB.classList.remove('active');
+    if (tabM)   tabM.classList.add('active');
+    // Populate failure node dropdown if topology loaded
+    _ilPopulateMatrixFailNodes();
+  } else {
+    if (blast)  blast.classList.remove('hidden');
+    if (matrix) matrix.classList.remove('active');
+    if (tabB)   tabB.classList.add('active');
+    if (tabM)   tabM.classList.remove('active');
+  }
+}
+
+function _ilPopulateMatrixFailNodes() {
+  var sel = document.getElementById('ilMatrixFailNode');
+  if (!sel || !_ilNodes || !_ilNodes.length) return;
+  // Preserve current selection
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">None (base state)</option>';
+  var sorted = _ilNodes.slice().sort(function (a, b) {
+    return String(a.label || a.id).localeCompare(String(b.label || b.id));
+  });
+  sorted.forEach(function (n) {
+    var lbl = _ilEsc(n.label || String(n.id));
+    var isGw = !!KSP_parseAtype(n.label || n.id || '');
+    var opt = document.createElement('option');
+    opt.value = String(n.id);
+    opt.textContent = lbl + (isGw ? ' [GW]' : '');
+    sel.appendChild(opt);
+  });
+  sel.value = cur || '';
+}
+
+/* ── Build base matrix ───────────────────────────────────────────── */
+function ilBuildMatrix() {
+  if (!_ilNodes || !_ilNodes.length) {
+    document.getElementById('ilMatrixSummary').textContent = '⚠ Load a topology first.';
+    return;
+  }
+  var countries = KSP_atypeCountries(_ilNodes);
+  if (countries.length < 2) {
+    document.getElementById('ilMatrixSummary').textContent =
+      '⚠ No A-type countries found in this topology.';
+    return;
+  }
+  _ilMatrixCountries = countries;
+
+  var btn = document.getElementById('ilBtnBuildMatrix');
+  btn.disabled = true;
+  btn.textContent = '⏳ Computing…';
+  document.getElementById('ilMatrixSummary').textContent = 'Building adjacency list and running Dijkstra…';
+
+  setTimeout(function () {
+    var adj = KSP_buildDirAdjList(_ilNodes, _ilEdges, {});
+    var matrix = KSP_reachabilityMatrix(countries, _ilNodes, adj, null);
+    _ilMatrixBase    = { countries: countries, matrix: matrix, adj: adj };
+    _ilMatrixCurrent = matrix;
+
+    btn.disabled = false;
+    btn.textContent = '▶ Build Matrix';
+    document.getElementById('ilBtnExportMatrix').style.display = '';
+
+    _ilPopulateMatrixFailNodes();
+    _ilRenderMatrix(matrix, null);
+  }, 0);
+}
+
+/* ── Failure simulation ──────────────────────────────────────────── */
+function ilMatrixSimulate(failNodeId) {
+  if (!_ilMatrixBase) return;
+  var countries = _ilMatrixBase.countries;
+  var adj       = _ilMatrixBase.adj;
+  var excl      = failNodeId ? new Set([String(failNodeId)]) : null;
+
+  setTimeout(function () {
+    var matrix = KSP_reachabilityMatrix(countries, _ilNodes, adj, excl);
+    _ilMatrixCurrent = matrix;
+    _ilRenderMatrix(matrix, _ilMatrixBase.matrix);
+  }, 0);
+}
+
+/* ── Render the N×N table ────────────────────────────────────────── */
+function _ilRmClass(cost) {
+  if (!isFinite(cost) || cost === Infinity) return 'rm-none';
+  if (cost === 0)      return 'rm-self';
+  if (cost < 500)      return 'rm-low';
+  if (cost < 1500)     return 'rm-med';
+  if (cost < 3000)     return 'rm-high';
+  return 'rm-crit';
+}
+
+function _ilRenderMatrix(matrix, baseMatrix) {
+  var countries = _ilMatrixCountries;
+  var wrap = document.getElementById('ilMatrixWrap');
+  var lostCount = 0, degradedCount = 0;
+
+  var html = '<table class="il-rm-table"><thead><tr><th></th>';
+  countries.forEach(function (c) { html += '<th>' + _ilEsc(c) + '</th>'; });
+  html += '</tr></thead><tbody>';
+
+  countries.forEach(function (src) {
+    html += '<tr><td class="il-rm-row-hdr">' + _ilEsc(src) + '</td>';
+    countries.forEach(function (dst) {
+      if (src === dst) { html += '<td class="rm-self">—</td>'; return; }
+      var cost     = matrix[src] ? matrix[src][dst] : Infinity;
+      var baseCost = baseMatrix  ? (baseMatrix[src] ? baseMatrix[src][dst] : Infinity) : null;
+      var cls = _ilRmClass(cost);
+      var extraCls = '';
+      if (baseCost !== null && cost !== baseCost) {
+        if (!isFinite(cost) && isFinite(baseCost)) { extraCls = ' rm-lost'; lostCount++; }
+        else if (isFinite(cost) && cost > baseCost) { extraCls = ' rm-degraded'; degradedCount++; }
+      }
+      var label = isFinite(cost) ? cost : '∞';
+      html += '<td class="' + cls + extraCls + '" title="' + src + '→' + dst + ': ' + label + '">' + label + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+
+  var failSel = document.getElementById('ilMatrixFailNode');
+  var failName = failSel && failSel.value ? (failSel.options[failSel.selectedIndex] || {}).text : '';
+  var summary = countries.length + '×' + countries.length + ' matrix · ' + countries.length + ' A-type countries';
+  if (baseMatrix && (lostCount || degradedCount)) {
+    summary += ' · Failure: ' + failName +
+      ' · 🔴 Lost: ' + lostCount + ' · 🟠 Degraded: ' + degradedCount;
+  }
+  document.getElementById('ilMatrixSummary').textContent = summary;
+}
+
+/* ── Export CSV ──────────────────────────────────────────────────── */
+function ilExportMatrixCsv() {
+  if (!_ilMatrixCurrent || !_ilMatrixCountries.length) return;
+  var countries = _ilMatrixCountries;
+  var matrix    = _ilMatrixCurrent;
+  var lines     = [',' + countries.join(',')];
+  countries.forEach(function (src) {
+    var row = [src];
+    countries.forEach(function (dst) {
+      var c = (src === dst) ? '' : (matrix[src] ? matrix[src][dst] : Infinity);
+      row.push(isFinite(c) ? c : 'inf');
+    });
+    lines.push(row.join(','));
+  });
+  var gt = (document.getElementById('ilGraphTime') || {}).value || 'matrix';
+  var fname = 'reachability-' + gt + '.csv';
+  var blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
+}
