@@ -58,12 +58,32 @@
         border-bottom: 1px solid #2d3f54;
     }
 
-    #wi-canvas {
+    /* ── Topology ────────────────────────────────────────────────────── */
+    #wiTopoContainer {
         flex: 1;
         background: #020617;
+        border-radius: 8px;
+        border: 1px solid #2d3f54;
     }
 
-    .scenario-card {
+    .il-spinner {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border: 2px solid #3d5066;
+        border-top-color: #4a9eff;
+        border-radius: 50%;
+        animation: il-spin 0.6s linear infinite;
+        margin-right: 4px;
+    }
+
+    @keyframes il-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .stat-box {
         background: #334155;
         border-radius: 6px;
         padding: 10px;
@@ -100,13 +120,14 @@
 </style>
 
 <div class="wi-container">
-    <div class="wi-sidebar">
+    <div class="wi-sidebar" id="wiLeft">
         <h5 class="mb-3">⚡ What-If Analysis</h5>
 
-        <div class="form-group mb-3">
-            <label class="small text-muted">Baseline Topology</label>
-            <select id="wi-topo-select"
-                class="form-control form-control-sm bg-dark text-white border-secondary"></select>
+        <div class="mb-3 p-3 bg-dark rounded border border-secondary">
+            <h6 class="small font-weight-bold mb-2">📅 Graph Snapshot</h6>
+            <select id="wiGraphTime" class="form-control form-control-sm bg-dark text-white border-secondary mb-2"
+                onchange="wiOnGraphTimeChange(this.value)"></select>
+            <div id="wiStatus" class="small text-muted">Loading…</div>
         </div>
 
         <div class="mb-3">
@@ -153,8 +174,7 @@
         </div>
         <div class="wi-viewport">
             <div id="wiFilterBar"></div>
-            <div id="wi-canvas"></div>
-            <div id="wi-overlay" style="position:absolute; bottom:20px; right:20px; z-index:100;"></div>
+            <div id="wiTopoContainer"></div>
         </div>
     </div>
 </div>

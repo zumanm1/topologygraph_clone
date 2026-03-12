@@ -14,46 +14,59 @@ let wiFilterBar = null;
 
 async function wiInit() {
     console.log("WI: Initializing...");
+    wiGraphTime = wiParam('graph_time') || wiLS('ospf_graph_time') || '';
 
-    // 1. Check for global graph_time in URL or localStorage
-    const urlParams = new URLSearchParams(window.location.search);
-    const storedGraphTime = urlParams.get('graph_time') || localStorage.getItem('ospf_graph_time') || '';
+    wiLoadGraphTimes().then(() => {
+        if (wiGraphTime) wiLoadTopology(wiGraphTime);
+    });
+}
 
-    // 2. Load available graph times
+function wiParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+}
+
+function wiLS(name) {
+    try { return localStorage.getItem(name); } catch (e) { return null; }
+}
+
+async function wiLoadGraphTimes() {
     try {
         const resp = await fetch('/api/graph-times');
         const data = await resp.json();
-        const select = $('#wi-topo-select');
+        const sel = document.getElementById('wiGraphTime');
+        const list = data.graph_time_list || data.timestamps || (Array.isArray(data) ? data : []);
 
-        const list = (data.graph_time_list || data.timestamps || []);
-        list.reverse().forEach((gt) => {
-            select.append(`<option value="${gt}">${gt}</option>`);
-        });
-
-        // Use stored time if available, else latest from list
-        let target = storedGraphTime;
-        if (!target && list.length > 0) target = list[0];
-
-        if (target) {
-            select.val(target);
-            wiLoadTopology(target);
+        sel.innerHTML = '';
+        if (list.length === 0) {
+            sel.innerHTML = '<option value="">No graphs found</option>';
+            return;
         }
 
-        select.change(() => {
-            const val = select.val();
-            localStorage.setItem('ospf_graph_time', val);
-            wiLoadTopology(val);
+        list.reverse().forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t;
+            if (t === wiGraphTime) opt.selected = true;
+            sel.appendChild(opt);
         });
+
+        if (!wiGraphTime && list.length) wiGraphTime = list[0];
     } catch (e) {
         console.error("WI: Failed to load graph times", e);
+        $('#wiStatus').text("Failed to load snapshots.");
     }
+}
+
+function wiOnGraphTimeChange(t) {
+    wiGraphTime = t;
+    localStorage.setItem('ospf_graph_time', t);
+    wiLoadTopology(t);
 }
 
 async function wiLoadTopology(graphTime) {
     wiGraphTime = graphTime;
     wiScenarios = [];
     $('#scenario-list').html('<div class="text-muted small">No modifications applied.</div>');
-    $('#wi-status').html(`<span class="spinner-border spinner-border-sm mr-2"></span> Loading ${graphTime}...`);
+    $('#wiStatus').html('<span class="il-spinner"></span> Loading topology…');
 
     try {
         console.log("WI: Loading via KSP_loadTopology:", graphTime);
@@ -69,15 +82,15 @@ async function wiLoadTopology(graphTime) {
 
         wiBuildTopoView();
         wiUpdateImpact(0, 0, 0);
-        $('#wi-status').text(`Loaded ${wiNodes.length} nodes, ${wiEdges.length} edges. Current State: Baseline`);
+        $('#wiStatus').text(`Loaded ${wiNodes.length} nodes, ${wiEdges.length} edges. Select a failure and click Compute.`);
     } catch (e) {
         console.error("WI: Load failed", e);
-        $('#wi-status').html(`<span class="text-danger">❌ Load failed: ${e.message}</span>`);
+        $('#wiStatus').html(`<span class="text-danger">❌ Load failed: ${e.message}</span>`);
     }
 }
 
 function wiBuildTopoView() {
-    const container = document.getElementById('wi-canvas');
+    const container = document.getElementById('wiTopoContainer');
     if (!container) return;
 
     // Create vis.js DataSets
