@@ -867,10 +867,8 @@ function KSP_normaliseGraphData(data) {
  * @returns {Promise<{nodes:Array, edges:Array, graphId:string, graphTime:string}>}
  */
 function KSP_loadTopology(graphTime) {
-  console.log('KSP_loadTopology: starting for', graphTime);
   var fd = new FormData();
   fd.append('dynamic_graph_time', graphTime);
-  console.log('KSP_loadTopology: fetching /upload-ospf-lsdb-from-js...');
   return fetch('/upload-ospf-lsdb-from-js', { method: 'POST', body: fd })
     .then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status + ' loading topology for ' + graphTime);
