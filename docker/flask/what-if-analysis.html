@@ -27,6 +27,7 @@
 
     .wi-main {
         flex: 1;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         background: #0f172a;
@@ -37,6 +38,7 @@
 
     .wi-toolbar {
         height: 50px;
+        flex-shrink: 0;
         background: #1e293b;
         display: flex;
         align-items: center;
@@ -47,12 +49,14 @@
 
     .wi-viewport {
         flex: 1;
+        min-height: 0;
         position: relative;
         display: flex;
         flex-direction: column;
     }
 
     #wiFilterBar {
+        flex-shrink: 0;
         padding: 5px 10px;
         background: #1e2a38;
         border-bottom: 1px solid #2d3f54;
@@ -61,6 +65,7 @@
     /* ── Topology ────────────────────────────────────────────────────── */
     #wiTopoContainer {
         flex: 1;
+        min-height: 0;
         background: #020617;
         border-radius: 8px;
         border: 1px solid #2d3f54;
@@ -81,14 +86,6 @@
         to {
             transform: rotate(360deg);
         }
-    }
-
-    .stat-box {
-        background: #334155;
-        border-radius: 6px;
-        padding: 10px;
-        margin-bottom: 10px;
-        border-left: 4px solid #3b82f6;
     }
 
     .impact-summary {
@@ -116,6 +113,14 @@
         font-size: 9px;
         color: #94a3b8;
         text-transform: uppercase;
+    }
+
+    .scenario-card {
+        background: #334155;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-left: 3px solid #3b82f6;
     }
 </style>
 
@@ -187,5 +192,4 @@
         wiInit();
     });
 </script>
-</div>
 {% endblock %}

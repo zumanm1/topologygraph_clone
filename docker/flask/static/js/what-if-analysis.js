@@ -5,137 +5,125 @@
 
 let wiNodes = [];
 let wiEdges = [];
+let wiAdj = null;
 let wiScenarios = [];
 let wiGraphTime = null;
+let wiNetwork = null;
 let wiVNodes = null;
 let wiVEdges = null;
-let wiNetwork = null;
-let wiFilterBar = null;
 
 async function wiInit() {
     console.log("WI: Initializing...");
-    wiGraphTime = wiParam('graph_time') || wiLS('ospf_graph_time') || '';
 
-    wiLoadGraphTimes().then(() => {
-        if (wiGraphTime) wiLoadTopology(wiGraphTime);
-    });
-}
-
-function wiParam(name) {
-    return new URLSearchParams(window.location.search).get(name);
-}
-
-function wiLS(name) {
-    try { return localStorage.getItem(name); } catch (e) { return null; }
-}
-
-async function wiLoadGraphTimes() {
+    // 1. Load available graph times
     try {
         const resp = await fetch('/api/graph-times');
         const data = await resp.json();
-        const sel = document.getElementById('wiGraphTime');
+        const select = $('#wiGraphTime');
         const list = data.graph_time_list || data.timestamps || (Array.isArray(data) ? data : []);
-
-        sel.innerHTML = '';
-        if (list.length === 0) {
-            sel.innerHTML = '<option value="">No graphs found</option>';
-            return;
-        }
-
-        list.reverse().forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t; opt.textContent = t;
-            if (t === wiGraphTime) opt.selected = true;
-            sel.appendChild(opt);
+        
+        list.reverse().forEach((gt, idx) => {
+            select.append(`<option value="${gt}" ${idx === 0 ? 'selected' : ''}>${gt}</option>`);
         });
 
-        if (!wiGraphTime && list.length) wiGraphTime = list[0];
+        select.change(() => wiOnGraphTimeChange(select.val()));
+
+        if (list.length > 0) {
+            wiOnGraphTimeChange(list[0]);
+        }
     } catch (e) {
         console.error("WI: Failed to load graph times", e);
-        $('#wiStatus').text("Failed to load snapshots.");
     }
 }
 
-function wiOnGraphTimeChange(t) {
-    wiGraphTime = t;
-    localStorage.setItem('ospf_graph_time', t);
-    wiLoadTopology(t);
+function wiOnGraphTimeChange(graphTime) {
+    if (!graphTime) return;
+    wiLoadTopology(graphTime);
 }
 
 async function wiLoadTopology(graphTime) {
     wiGraphTime = graphTime;
     wiScenarios = [];
     $('#scenario-list').html('<div class="text-muted small">No modifications applied.</div>');
-    $('#wiStatus').html('<span class="il-spinner"></span> Loading topology…');
+    $('#wi-status').html('<span class="spinner-border spinner-border-sm text-primary"></span> Loading topology...');
 
     try {
-        console.log("WI: Loading via KSP_loadTopology:", graphTime);
-        const data = await KSP_loadTopology(graphTime);
+        const result = await KSP_loadTopology(graphTime);
+        wiNodes = result.nodes;
+        wiEdges = result.edges;
+        wiAdj = KSP_buildDirAdjList(wiNodes, wiEdges, {});
 
-        wiNodes = data.nodes;
-        wiEdges = data.edges;
-        console.log(`WI: Loaded ${wiNodes.length} nodes, ${wiEdges.length} edges`);
-
-        if (!wiNodes || wiNodes.length === 0) {
-            throw new Error("No nodes found in topology.");
-        }
-
-        wiBuildTopoView();
-        wiUpdateImpact(0, 0, 0);
-        const msg = `Loaded ${wiNodes.length} nodes, ${wiEdges.length} edges. Select a failure and click Compute.`;
-        $('#wiStatus').text(msg);
-        $('#wiStatusDetail').text('Current State: Baseline');
+        wiRenderTopology();
+        wiUpdateImpact(0, 0, 0); // Reset impact
+        $('#wi-status').text(`Current State: Baseline (${wiNodes.length} nodes)`);
     } catch (e) {
         console.error("WI: Load failed", e);
-        $('#wiStatus').html(`<span class="text-danger">❌ Load failed: ${e.message}</span>`);
-        $('#wiStatusDetail').text('Error loading topology');
+        $('#wi-status').text('⚠ Load error: ' + e.message);
     }
 }
 
-function wiBuildTopoView() {
+function wiRenderTopology() {
+    console.log("WI: Rendering topology in Vis.js...");
     const container = document.getElementById('wiTopoContainer');
-    if (!container) return;
+    
+    if (wiNetwork) {
+        wiNetwork.destroy();
+        wiNetwork = null;
+    }
 
-    // Create vis.js DataSets
-    wiVNodes = new vis.DataSet(wiNodes.map(n => {
-        const p = KSP_parseAtype(n.label || n.id);
-        return {
-            id: n.id,
-            label: n.label || n.id,
-            color: p ? { background: '#1e40af', border: '#3b82f6' } : { background: '#374151', border: '#6b7280' },
-            font: { color: '#e0e8f0', size: 10 }
+    const visNodes = wiNodes.map(function (n) {
+        const isAtype = !!KSP_parseAtype(n.label || n.id || '');
+        return { 
+            id: n.id, 
+            label: n.label || String(n.id),
+            color: isAtype ? { background: '#1e40af', border: '#3b82f6' } : { background: '#374151', border: '#6b7280' },
+            font: { color: '#e0e8f0', size: 10 }, 
+            size: isAtype ? 12 : 8 
         };
-    }));
+    });
 
-    wiVEdges = new vis.DataSet(wiEdges.map(e => ({
-        id: e.id,
-        from: e.from,
-        to: e.to,
-        color: { color: '#374151' },
-        width: 1,
-        arrows: { to: { enabled: true, scaleFactor: 0.4 } }
-    })));
+    const visEdges = wiEdges.map(function (e) {
+        return { 
+            id: e.id, 
+            from: e.from, 
+            to: e.to, 
+            label: e.label || '',
+            color: { color: '#374151' }, 
+            width: 1,
+            font: { color: '#6b7280', size: 8, strokeWidth: 0 },
+            arrows: { to: { enabled: true, scaleFactor: 0.4 } } 
+        };
+    });
+
+    wiVNodes = new vis.DataSet(visNodes);
+    wiVEdges = new vis.DataSet(visEdges);
+
+    // Get container dimensions BEFORE creating network
+    const rect = container.getBoundingClientRect();
+    console.log("WI: Container dimensions:", rect.width, 'x', rect.height);
 
     const options = {
-        physics: { enabled: true, solver: 'forceAtlas2Based', stabilization: { iterations: 100 } },
-        interaction: { hover: true }
+        nodes: { shape: 'dot' },
+        physics: { 
+            enabled: true, 
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: { gravitationalConstant: -30, springLength: 100, springConstant: 0.02 },
+            stabilization: { iterations: 150 }
+        },
+        interaction: { hover: true }, 
+        layout: { improvedLayout: false },
+        width: String(Math.floor(rect.width)) + 'px',
+        height: String(Math.floor(rect.height)) + 'px',
+        autoResize: true
     };
 
     wiNetwork = new vis.Network(container, { nodes: wiVNodes, edges: wiVEdges }, options);
-    wiNetwork.on('stabilizationIterationsDone', () => wiNetwork.setOptions({ physics: { enabled: false } }));
-
-    // Initialize Filter Bar
-    if (typeof TopoFilterBar === 'function') {
-        if (wiFilterBar) wiFilterBar.destroy();
-        wiFilterBar = new TopoFilterBar({
-            containerId: 'wiFilterBar',
-            vNodes: wiVNodes,
-            vEdges: wiVEdges,
-            rawNodes: wiNodes,
-            rawEdges: wiEdges,
-            network: wiNetwork
-        });
-    }
+    
+    wiNetwork.on('stabilizationIterationsDone', function () { 
+        console.log("WI: Network stabilized. Fitting viewport.");
+        wiNetwork.setOptions({ physics: { enabled: false } }); 
+        wiNetwork.fit();
+    });
 }
 
 function wiAddScenario() {
@@ -159,6 +147,9 @@ function wiRenderScenarios() {
 
     let html = '';
     wiScenarios.forEach(s => {
+        // Sort nodes by label for better UX
+        const sortedNodes = [...wiNodes].sort((a, b) => String(a.label || a.id).localeCompare(String(b.label || b.id)));
+        
         html += `
             <div class="scenario-card" id="sc-${s.id}">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -167,7 +158,7 @@ function wiRenderScenarios() {
                 </div>
                 <select class="form-control form-control-sm bg-dark text-white border-secondary" onchange="wiUpdateScenario(${s.id}, this.value)">
                     <option value="">Select Target...</option>
-                    ${wiNodes.map(n => `<option value="${n.id}">${n.label || n.id}</option>`).join('')}
+                    ${sortedNodes.map(n => `<option value="${n.id}" ${s.target === String(n.id) ? 'selected' : ''}>${n.label || n.id}</option>`).join('')}
                 </select>
             </div>
         `;
@@ -191,38 +182,34 @@ function wiRemoveScenario(id) {
 
 function wiComputeImpact() {
     console.log("WI: Computing impact for", wiScenarios.length, "scenarios");
-
-    // 1. Reset all nodes to baseline color
+    
+    // Reset nodes to base style first
     if (wiVNodes) {
-        wiVNodes.forEach(n => {
-            const p = KSP_parseAtype(n.label);
-            wiVNodes.update({
-                id: n.id,
-                color: p ? { background: '#1e40af', border: '#3b82f6' } : { background: '#374151', border: '#6b7280' },
-                font: { color: '#e0e8f0', strokeWidth: 0 }
-            });
+        const nodeUpd = wiNodes.map(function (n) {
+            const isAtype = !!KSP_parseAtype(n.label || n.id || '');
+            return { 
+                id: n.id, 
+                color: isAtype ? { background: '#1e40af', border: '#3b82f6' } : { background: '#374151', border: '#6b7280' } 
+            };
         });
-
-        // 2. Highlight failed nodes
-        wiScenarios.forEach(s => {
-            if (s.target && s.type === 'node-failure') {
-                wiVNodes.update({
-                    id: s.target,
-                    color: { background: '#7f1d1d', border: '#f87171' },
-                    font: { color: '#f87171', strokeWidth: 2, strokeColor: '#000' }
-                });
-            }
-        });
+        wiVNodes.update(nodeUpd);
     }
 
-    // Mock update for impact cards (placeholder for real Dijkstra logic)
-    if (wiScenarios.some(s => s.target)) {
-        wiUpdateImpact(72, 12, 6);
-        $('#wiStatus').html('<span class="text-warning font-weight-bold">⚠️ SIMULATION ACTIVE</span>');
-        $('#wiStatusDetail').html('<span class="text-warning font-weight-bold">⚠️ SIMULATION ACTIVE</span>');
+    const activeTargets = wiScenarios.filter(s => s.target).map(s => s.target);
+    
+    if (activeTargets.length > 0) {
+        // Highlight failed nodes in red
+        if (wiVNodes) {
+            activeTargets.forEach(targetId => {
+                wiVNodes.update({ id: targetId, color: { background: '#991b1b', border: '#ef4444' } });
+            });
+        }
+        
+        wiUpdateImpact(72, 12, 6); // Mocked values until routing logic is bound
+        $('#wi-status').html('<span class="text-warning">SIMULATION ACTIVE (' + activeTargets.length + ' failures)</span>');
     } else {
         wiUpdateImpact(0, 0, 0);
-        $('#wiStatusDetail').text('Current State: Baseline');
+        $('#wi-status').text(`Current State: Baseline (${wiNodes.length} nodes)`);
     }
 }
 
