@@ -34,6 +34,18 @@ pushing colours to the Topolograph UI.
 per-view-mode vis.js node position persistence backed by `layout-db`
 (PostgreSQL, keyed by `owner_login + graph_id + graph_time + view_mode`).
 
+The `flask` container also serves the **Analysis Suite** — six pages
+accessible from Navbar → Analysis after login:
+
+| Page | URL | Description |
+|------|-----|-------------|
+| 🗺 Cost Matrix | `/cost-matrix` | Country-to-country reachability matrix. Click a cell for FWD/REV hop tables with router labels, country chips, link cost, cumulative cost, and country-chain summary. Router View / Country View toggle, per-cell CSV export. |
+| ⚡ What-If Analysis | `/what-if` | Model a single link cost change; animated topology overlays old and new routes. |
+| 🛤 K-Path Explorer | `/path-explorer` | Yen's K-shortest paths between any two gateways with full hop breakdown. |
+| 📋 Change Planner | `/change-planner` | Multi-row change plan. Analyse Impact shows before/after costs per country pair. Clicking a row expands a 4-panel detail (Before FWD, Before REV, After FWD, After REV) — each panel is a full hop table with router, country chip, link cost, and cumulative cost, plus a country-chain summary strip. |
+| 💥 Impact Lab | `/impact-lab` | Sweep a link over a cost range and chart affected-pair count vs. cost. |
+| 🔀 Topology Diff | `/topo-diff` | Side-by-side diff of two snapshots highlighting added, removed, and cost-changed links. |
+
 ---
 
 ## Quick Start
@@ -220,12 +232,14 @@ to reach the Topolograph API. This is set automatically by docker-compose.yml.
 |------|--------|
 | Pipeline 19-file output | ✅ 19/19 files created |
 | Playwright deep E2E (127 checks) | ✅ 127 PASS / 0 FAIL / 0 WARN |
+| Cost Matrix detail drawer (21 checks) | ✅ 21 PASS / 0 FAIL — `tests/28-cost-matrix-detail-drawer.cjs` |
+| Change Planner path-detail (23 checks) | ✅ 23 PASS / 0 FAIL — `tests/29-change-planner-path-detail.cjs` |
 | Country-derivation regression (11 checks) | ✅ 11 PASS / 0 FAIL |
 | Layout-persistence regression (19 checks) | ✅ 19 PASS / 0 FAIL (AUTO-LOAD / NAV-RELOAD / BTN-LOAD) |
 | Security validation — Step 11 (17 checks) | ✅ 17 PASS / 0 FAIL / 0 WARN |
 | Layout isolation — Step 11 (14 checks) | ✅ 14 PASS / 0 FAIL |
 | All 7 core containers healthy | ✅ Verified with `docker compose ps` |
-| Flask patched (Sprint 3 + layout-persistence) | ✅ topolograph.js + layout-persistence.js + base.html baked in |
+| Flask patched (Analysis Suite + layout-persistence) | ✅ cost-matrix.js + change-planner.js + ospf-ksp.js + topolograph.js baked in |
 
 ### Run all validation suites
 

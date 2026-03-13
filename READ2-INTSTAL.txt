@@ -296,8 +296,42 @@ E3. Explore the graph in the browser
   2. Login : ospf@topolograph.com / ospf
   3. Select graph_time from dropdown, click "Load dynamic graph"
   4. Use toolbar: AS-IS → ENRICHED → GATEWAY → COLLAPSING
-  5. Navbar → Analysis → Cost Matrix
-  6. Navbar → Analysis → What-If Analysis
+
+  Analysis Suite (Navbar → Analysis — all 6 pages):
+
+  5. Navbar → Analysis → Cost Matrix  (/cost-matrix)
+       Country-to-country reachability matrix.
+       Click any cell to open the FWD/REV hop-table detail drawer
+       (router labels, country chips, per-hop link cost, cumulative
+       cost, country-chain summary). Router/Country View toggle,
+       per-cell CSV export.
+
+  6. Navbar → Analysis → What-If Analysis  (/what-if)
+       Model a single link cost change. Animated topology overlays
+       old and new routes simultaneously.
+
+  7. Navbar → Analysis → K-Path Explorer  (/path-explorer)
+       Yen's K shortest paths between any two gateways with full
+       hop sequences and per-hop cost breakdown.
+
+  8. Navbar → Analysis → Change Planner  (/change-planner)
+       Add one or more link cost changes, then click Analyse Impact.
+       Click any affected-pair row to expand the 4-panel detail view:
+         Before FWD / Before REV / After FWD / After REV
+       Each panel shows router labels, country chips, link cost,
+       cumulative cost, and a country-chain summary strip.
+
+  9. Navbar → Analysis → Impact Lab  (/impact-lab)
+       Sweep a single link over a cost range and chart how many
+       country pairs are affected at each cost level.
+
+  10. Navbar → Analysis → Topology Diff  (/topo-diff)
+       Select two graph snapshots to compare side-by-side.
+       Added, removed, and cost-changed links are highlighted.
+
+  NOTE: All analysis pages require A-type hostnames to detect countries.
+  Nodes without A-type labels (country-city-metro-role) appear as UNK.
+  Upload a hostname-mapping CSV before running analysis on a new graph.
 
 ==============================================================================
  PART F — RUN DEEP E2E MANUALLY (OPTIONAL)
@@ -552,10 +586,32 @@ H9. Access MongoDB directly (for debugging)
             docker compose build flask
             docker compose up -d flask webserver
 
-  PROBLEM: "Cost Matrix / What-If buttons missing from toolbar"
-    FIX   : rebuild and restart the Docker stack so the patched Flask image is used:
+  PROBLEM: "Analysis page blank / spinner does not resolve"
+    (affects Cost Matrix, Change Planner, K-Path Explorer, Impact Lab,
+     Topology Diff, What-If Analysis)
+    FIX   : The page requires A-type hostname labels to detect countries.
+            If the loaded graph has no A-type nodes (e.g. a demo topology),
+            the matrix/panels will show "No A-type countries found" or be empty.
+            Upload a hostname-mapping CSV first, then reload the analysis page.
+            If the page is blank for a mapped graph:
             docker compose build flask
             docker compose up -d flask webserver
+
+  PROBLEM: "Cost Matrix cells all show 0 or matrix is empty"
+    FIX   : Select the 84-node (or any multi-country) snapshot from the dropdown.
+            The 13-node demo topology has no A-type labels and produces 0 countries.
+
+  PROBLEM: "Change Planner: Analyse Impact shows 0 affected pairs"
+    FIX   : The chosen edge may not lie on any inter-country path.
+            Use the Pick Edge by Node Pair dropdowns to select a cross-country link,
+            or manually enter a known cross-country edge ID (e.g. 9.9.9.1_to_13.13.13.1
+            for the CAN-to-FRA link in the 84-node snapshot).
+
+  PROBLEM: "Change Planner: detail panel does not expand on row click"
+    FIX   : Ensure ospf-ksp.js and change-planner.js are current in the container:
+            docker cp docker/flask/static/js/change-planner.js \
+              ospf-database-test-flask-1:/home/flask/flask/static/js/change-planner.js
+            docker restart ospf-database-test-flask-1
 
   PROBLEM: "Playwright: browser not found"
     FIX   : cd tests && npx playwright install chromium && cd ..

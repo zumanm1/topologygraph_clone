@@ -8,10 +8,33 @@ A containerized OSPF network topology visualization and analysis platform with c
 - **Dynamic Hostname Mapping** - Upload hostname-to-IP mappings via web UI
 - **Country-Level Visualization** - Automatic country classification and color-coding
 - **Network Topology Views** - AS-IS, Gateway-only, Enriched, and Collapsed modes
-- **Shortest Path Analysis** - SPF-based cost matrix and path calculations
-- **What-If Scenarios** - Model link cost changes and analyze impact
 - **Layout Persistence** - Save and restore node positions per user/graph/view
 - **Interactive UI** - Drag-and-drop, zoom, pan, filter, and collapse controls
+- **Analysis Suite** - Six dedicated analysis pages under the Analysis navbar menu (see below)
+
+## Analysis Suite
+
+All six pages are accessible via **Navbar → Analysis** after login:
+
+| Page | URL | What it does |
+|------|-----|--------------|
+| 🗺 **Cost Matrix** | `/cost-matrix` | Country-to-country reachability matrix with per-cell detail drawer. Click any cell to see full FWD and REV hop tables: router labels, country chips, per-hop link cost, cumulative cost, and country-chain summary. Supports Router View / Country View toggle and per-cell CSV export. |
+| ⚡ **What-If Analysis** | `/what-if` | Model a single link cost change and instantly see which paths shift. Animated topology highlights old and new routes simultaneously. |
+| 🛤 **K-Path Explorer** | `/path-explorer` | Enumerate up to K shortest paths between any two gateways using Yen's algorithm. Displays full hop sequences with cost breakdown. |
+| 📋 **Change Planner** | `/change-planner` | Multi-row change plan (one row per link). Click **Analyse Impact** to compute before/after costs for every affected country pair. Click any row in the impact table to expand a **4-panel detail view**: Before FWD, Before REV, After FWD, After REV — each showing the full hop table (router, country chip, link cost, cumulative cost) and a country-chain summary strip. |
+| 💥 **Impact Lab** | `/impact-lab` | Sweep a single link across a cost range and plot how many country pairs are affected at each cost level. |
+| 🔀 **Topology Diff** | `/topo-diff` | Side-by-side diff of two graph snapshots. Highlights added, removed, and cost-changed links. |
+
+### Hostname format required for country detection
+
+All six analysis pages derive country, city, and router-role metadata from **A-type hostnames** in the form:
+
+```
+{country}-{city}-{metro}-{role}{num}
+Examples: can-tor-kem-r1   fra-par-mar-r2   usa-nyc-man-r1
+```
+
+Nodes without A-type hostnames appear as `UNK` in the analysis pages. Upload a hostname-mapping CSV to apply labels before running analysis.
 
 ## Architecture
 
@@ -136,11 +159,13 @@ OSPF Database → Parse → Enrich → Gateway Filter → Country Collapse → V
 - Cost matrix between all country pairs
 - Minimum cost path selection (not sum)
 
-**What-If Scenarios**
-- Model link cost changes
-- Compare baseline vs. proposed topology
-- Identify affected country pairs
-- Save/load scenarios
+**Analysis Suite** (Navbar → Analysis)
+- Cost Matrix with FWD/REV hop-table detail drawer
+- What-If Analysis with animated topology diff
+- K-Path Explorer (Yen's K-shortest paths)
+- Change Planner with 4-panel before/after impact detail
+- Impact Lab (cost-sweep across a range)
+- Topology Diff (snapshot comparison)
 
 **Layout Persistence**
 - Per-user, per-graph, per-view-mode
@@ -176,7 +201,9 @@ docker compose exec -T e2e-runner bash /app/docker/scripts/docker-e2e.sh
 ```
 
 **Validation coverage:**
-- ✅ 127 Playwright E2E checks
+- ✅ 127 Playwright E2E checks (core topology + analysis pages)
+- ✅ 23 Change Planner path-detail checks (tests/29-change-planner-path-detail.cjs)
+- ✅ 21 Cost Matrix detail-drawer checks (tests/28-cost-matrix-detail-drawer.cjs)
 - ✅ 19 Layout persistence checks
 - ✅ 17 Security validation checks
 - ✅ 11 Country derivation checks
@@ -260,9 +287,11 @@ bash docker/scripts/docker-pipeline.sh
 ## Documentation
 
 - `docker/README.md` - Docker infrastructure details
+- `READ2-INTSTAL.txt` - Full installation guide (fresh machine to running app)
+- `DOCS/LOCAL_TOPOLOGRAPH_ACCESS.md` - Login URL and credential reference
+- `DOCS/VALIDATION_AND_ARCHITECTURE.md` - Architecture deep-dive and validation commands
+- `DOCS/api-token-guide.md` - Bearer token usage for API calls
 - `AFRICAN-HOSTNAME-CLEANUP-COMPLETE.md` - Cleanup documentation
-- `hostname-format-metro-level.md` - Hostname format specification
-- `STATIC-MAPPING-REMOVAL.md` - Static mapping removal details
 
 ## License
 
