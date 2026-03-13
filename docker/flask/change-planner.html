@@ -91,6 +91,57 @@
     border-radius:4px; padding:4px 6px; font-size:12px; width:100%; }
   #cpPickEdgeInfo { font-size:11px; color:#9ca3af; margin-top:4px; min-height:14px; }
 
+  /* ── Path detail expansion (4-panel: Before FWD/REV + After FWD/REV) ── */
+  .cp-detail-wrap { padding:10px 12px; background:#0d1520; border-top:1px solid #1f2937; }
+  .cp-detail-panels { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+  .cp-detail-panel { background:#111827; border-radius:6px; padding:8px; min-width:0; }
+  .cp-detail-panel-head {
+    font-size:11px; font-weight:700; margin-bottom:6px; display:flex;
+    align-items:center; gap:6px; flex-wrap:wrap;
+  }
+  .cp-ph-before { color:#f97316; }
+  .cp-ph-after  { color:#22c55e; }
+  .cp-detail-badge {
+    display:inline-flex; align-items:center; gap:3px;
+    background:#1e2a38; border-radius:10px; padding:1px 8px;
+    font-size:10px; font-weight:700;
+  }
+  .cp-db-fwd { color:#60a5fa; border:1px solid #1e40af; }
+  .cp-db-rev { color:#c084fc; border:1px solid #6b21a8; }
+  .cp-cost-chip {
+    background:#1e3a5f; color:#93c5fd; border-radius:10px;
+    padding:1px 8px; font-size:10px; font-weight:700;
+  }
+  .cp-hop-count { color:#6b7280; font-size:10px; }
+
+  /* hop table */
+  .cp-hop-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .cp-hop-table th {
+    color:#4b5563; font-weight:600; padding:2px 4px;
+    border-bottom:1px solid #1f2937; text-align:left; font-size:10px;
+  }
+  .cp-hop-table td { padding:2px 4px; color:#c8d8e8; border-bottom:1px solid #111827; }
+  .cp-hop-table tr:last-child td { border-bottom:none; }
+  .cp-hop-num { color:#4b5563; font-size:10px; }
+  .cp-router-lbl { font-family:monospace; font-size:10px; color:#e2e8f0; }
+  .cp-ctry-chip {
+    display:inline-block; border-radius:3px; padding:0px 5px;
+    font-size:9px; font-weight:700; color:#fff;
+  }
+  .cp-link-cost { color:#f59e0b; font-size:10px; text-align:right; }
+  .cp-cum-cost  { color:#34d399; font-size:10px; text-align:right; font-weight:700; }
+  .cp-no-route  { color:#6b7280; font-size:11px; font-style:italic; padding:6px 4px; }
+
+  /* country-chain summary */
+  .cp-ctry-chain { display:flex; flex-wrap:wrap; gap:3px; margin-top:6px; align-items:center; }
+  .cp-chain-arrow { color:#4b5563; font-size:10px; }
+
+  /* topo buttons row */
+  .cp-topo-btns { display:flex; gap:5px; flex-wrap:wrap; align-items:center; margin-bottom:6px; }
+  .cp-topo-btn {
+    font-size:10px; border-radius:3px; padding:2px 8px; cursor:pointer; border:1px solid;
+  }
+
   /* ── Topology edge-click toast ───────────────────────────────────── */
   #cpTopoRoot { flex:1; position:relative; display:flex; flex-direction:column; gap:4px; min-width:300px; min-height:0; overflow:hidden; }
   #cpTopoClickToast {

@@ -293,93 +293,218 @@ function _cpRenderImpact() {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   PRD-22 — K-Path Before/After Detail View (click row in impact table)
+   PRD-22 — Full Before/After Path Detail (4-panel: FWD+REV × Before+After)
    ════════════════════════════════════════════════════════════════════ */
 
 var _cpDetailRow = null;  // currently expanded detail <tr>
 
+/* Country colour palette — same as cost-matrix */
+var _CP_CTRY_PALETTE = [
+  '#1e40af','#065f46','#7c2d12','#4c1d95','#134e4a',
+  '#1e3a5f','#3b0764','#14532d','#7f1d1d','#0c4a6e'
+];
+var _cpCtryColorMap = {};
+var _cpCtryColorIdx = 0;
+
+function _cpCtryColor(c) {
+  if (!_cpCtryColorMap[c]) {
+    _cpCtryColorMap[c] = _CP_CTRY_PALETTE[_cpCtryColorIdx % _CP_CTRY_PALETTE.length];
+    _cpCtryColorIdx++;
+  }
+  return _cpCtryColorMap[c];
+}
+
+/* Build edge-cost lookup: "fromId|toId" → cost */
+function _cpBuildEdgeCostMap() {
+  var m = {};
+  _cpEdges.forEach(function (e) {
+    var cost = Number(e.weight || e.cost || e.value || 1);
+    m[String(e.from) + '|' + String(e.to)] = cost;
+    if (!e.from || !e.to) return;
+  });
+  return m;
+}
+
+/* Extract per-hop detail from a path's node sequence */
+function _cpHopsFromPath(path) {
+  if (!path || !path.nodes || !path.nodes.length) return [];
+  var edgeCostMap = _cpBuildEdgeCostMap();
+  var cumCost = 0;
+  return path.nodes.map(function (nid, idx) {
+    var n = _cpNodes.find(function (x) { return String(x.id) === String(nid); });
+    var label = n ? (n.label || String(nid)) : String(nid);
+    var parsed = KSP_parseAtype(label);
+    var country = (parsed && parsed.country) ? parsed.country.toUpperCase() : 'UNK';
+    var linkCost = 0;
+    if (idx > 0) {
+      var prevId = path.nodes[idx - 1];
+      linkCost = edgeCostMap[String(prevId) + '|' + String(nid)] ||
+                 edgeCostMap[String(nid) + '|' + String(prevId)] || 0;
+      cumCost += linkCost;
+    }
+    return { nodeId: nid, label: label, country: country, linkCost: linkCost, cumCost: cumCost };
+  });
+}
+
+/* Render a hop table (router-level) */
+function _cpRenderHopTable(hops, totalCost) {
+  if (!hops || !hops.length) {
+    return '<div class="cp-no-route">No route available</div>';
+  }
+  var rows = hops.map(function (h, idx) {
+    var isFirst = idx === 0;
+    var linkCell = isFirst
+      ? '<td class="cp-link-cost">—</td>'
+      : '<td class="cp-link-cost">+' + h.linkCost + '</td>';
+    var bg = _cpCtryColor(h.country);
+    var chip = '<span class="cp-ctry-chip" style="background:' + bg + ';">' + _cpEsc(h.country) + '</span>';
+    return '<tr>' +
+      '<td><span class="cp-hop-num">' + (idx + 1) + '</span></td>' +
+      '<td><span class="cp-router-lbl">' + _cpEsc(h.label) + '</span></td>' +
+      '<td>' + chip + '</td>' +
+      linkCell +
+      '<td class="cp-cum-cost">' + h.cumCost + '</td>' +
+      '</tr>';
+  }).join('');
+
+  return '<table class="cp-hop-table">' +
+    '<thead><tr><th>#</th><th>Router</th><th>Country</th><th>Link Cost</th><th>Cum. Cost</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>';
+}
+
+/* Render country-chain summary */
+function _cpRenderCtryChain(hops) {
+  if (!hops || !hops.length) return '';
+  var segments = [];
+  hops.forEach(function (h) {
+    if (segments.length && segments[segments.length - 1].country === h.country) {
+      segments[segments.length - 1].nodes.push(h.label);
+    } else {
+      segments.push({ country: h.country, nodes: [h.label] });
+    }
+  });
+  var chips = segments.map(function (s, i) {
+    var bg = _cpCtryColor(s.country);
+    var title = s.nodes.join(', ');
+    return '<span class="cp-ctry-chip" style="background:' + bg + ';cursor:default;" title="' + _cpEsc(title) + '">' +
+      _cpEsc(s.country) + '</span>';
+  });
+  var parts = [];
+  chips.forEach(function (c, i) {
+    parts.push(c);
+    if (i < chips.length - 1) parts.push('<span class="cp-chain-arrow">→</span>');
+  });
+  return '<div class="cp-ctry-chain">' + parts.join('') + '</div>';
+}
+
+/* Render one panel (heading + hop table + country chain) */
+function _cpRenderPanel(title, cssClass, badgeClass, badgeText, hops, totalCost, fromC, toC) {
+  var hopCount = hops.length ? (hops.length - 1) : 0;
+  var costStr = (totalCost === Infinity || totalCost === undefined) ? '∞' : totalCost;
+  var head = '<div class="cp-detail-panel-head ' + cssClass + '">' +
+    '<span class="cp-detail-badge ' + badgeClass + '">' + badgeText + '</span>' +
+    ' <strong>' + _cpEsc(fromC) + '</strong>' +
+    ' <span style="color:#4b5563;">→</span>' +
+    ' <strong>' + _cpEsc(toC) + '</strong>' +
+    ' <span class="cp-cost-chip">Cost: ' + costStr + '</span>' +
+    ' <span class="cp-hop-count">' + (hops.length ? hopCount + ' hops' : '') + '</span>' +
+    '</div>';
+  var body = (hops.length === 0)
+    ? '<div class="cp-no-route">No route available</div>'
+    : _cpRenderHopTable(hops, totalCost) + _cpRenderCtryChain(hops);
+  return '<div class="cp-detail-panel">' + head + body + '</div>';
+}
+
+/* Get best path from adj, srcGws→dstGws */
+function _cpBestPath(adj, srcGws, dstGws) {
+  if (!adj || !srcGws.length || !dstGws.length) return null;
+  var best = null;
+  srcGws.forEach(function (s) {
+    dstGws.forEach(function (d) {
+      if (s === d) return;
+      var paths = KSP_yen(s, d, 1, adj);
+      if (paths.length && (!best || paths[0].totalCost < best.totalCost)) best = paths[0];
+    });
+  });
+  return best;
+}
+
 function cpExpandPairDetail(pair, clickedTr, tbody) {
-  // Remove any existing detail row
+  // Collapse if same row clicked again
   if (_cpDetailRow && _cpDetailRow.parentNode) {
     _cpDetailRow.parentNode.removeChild(_cpDetailRow);
     _cpDetailRow = null;
-    // If same row was clicked again, just collapse
     if (clickedTr.dataset.expanded === 'true') {
       clickedTr.dataset.expanded = 'false';
       return;
     }
   }
-  // Mark all rows as not expanded
   tbody.querySelectorAll('tr[data-expanded]').forEach(function (r) { r.dataset.expanded = 'false'; });
   clickedTr.dataset.expanded = 'true';
 
   var src = pair.src;
   var dst = pair.dst;
-  var K3 = 3;
 
-  // Get gateways for this pair
-  var gw = KSP_atypeGateways(_cpNodes);
+  var gw     = KSP_atypeGateways(_cpNodes);
   var srcGws = gw[src] || [];
   var dstGws = gw[dst] || [];
 
-  function gatherPaths(adj, srcGwList, dstGwList) {
-    var all = [], seen = new Set();
-    srcGwList.forEach(function (s) {
-      dstGwList.forEach(function (d) {
-        if (s === d) return;
-        KSP_yen(s, d, K3, adj).forEach(function (p) {
-          var k = p.nodes.join(',');
-          if (!seen.has(k)) { seen.add(k); all.push(p); }
-        });
-      });
-    });
-    all.sort(function (a, b) { return a.totalCost - b.totalCost; });
-    return all.slice(0, K3);
-  }
+  // Compute all 4 paths: Before FWD, Before REV, After FWD, After REV
+  var bFwdPath = _cpBestPath(_cpAdjBefore, srcGws, dstGws);
+  var bRevPath = _cpBestPath(_cpAdjBefore, dstGws, srcGws);
+  var aFwdPath = _cpBestPath(_cpAdjAfter,  srcGws, dstGws);
+  var aRevPath = _cpBestPath(_cpAdjAfter,  dstGws, srcGws);
 
-  var pathsBefore = (_cpAdjBefore && srcGws.length && dstGws.length) ? gatherPaths(_cpAdjBefore, srcGws, dstGws) : [];
-  var pathsAfter  = (_cpAdjAfter  && srcGws.length && dstGws.length) ? gatherPaths(_cpAdjAfter,  srcGws, dstGws) : [];
+  var bFwdHops = _cpHopsFromPath(bFwdPath);
+  var bRevHops = _cpHopsFromPath(bRevPath);
+  var aFwdHops = _cpHopsFromPath(aFwdPath);
+  var aRevHops = _cpHopsFromPath(aRevPath);
 
-  function renderPathMini(paths, color) {
-    if (!paths.length) return '<span style="color:#6b7280;font-size:11px;">No route</span>';
-    return paths.map(function (p, i) {
-      var hops = p.nodes.map(function (nid) {
-        var n = _cpNodes.find(function (x) { return String(x.id) === String(nid); });
-        return n ? (n.label || String(nid)) : String(nid);
-      }).join('<span style="color:#4a9eff;">→</span>');
-      return '<div style="font-size:10px;color:#c8d8e8;margin:2px 0;">' +
-        '<span style="color:' + color + ';font-size:9px;font-weight:700;">#' + (i + 1) + ' </span>' +
-        '<span style="color:' + color + ';">cost:' + p.totalCost + '</span> ' + hops + '</div>';
-    }).join('');
-  }
+  var bFwdCost = bFwdPath ? bFwdPath.totalCost : Infinity;
+  var bRevCost = bRevPath ? bRevPath.totalCost : Infinity;
+  var aFwdCost = aFwdPath ? aFwdPath.totalCost : Infinity;
+  var aRevCost = aRevPath ? aRevPath.totalCost : Infinity;
 
-  var detailHtml =
-    '<td colspan="4" style="background:#111827;padding:8px 12px;border-top:1px solid #1f2937;">' +
-    '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">' +
-    '<span style="font-size:11px;color:#9ca3af;">Show on topology:</span>' +
-    '<button onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'before\')" style="font-size:10px;background:#7c2d12;color:#fb923c;border:1px solid #f97316;border-radius:3px;padding:2px 8px;cursor:pointer;">🔴 Before</button>' +
-    '<button onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'after\')"  style="font-size:10px;background:#14532d;color:#4ade80;border:1px solid #22c55e;border-radius:3px;padding:2px 8px;cursor:pointer;">🟢 After</button>' +
-    '<button onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'both\')"  style="font-size:10px;background:#1e3a5f;color:#60a5fa;border:1px solid #3b82f6;border-radius:3px;padding:2px 8px;cursor:pointer;">🔵 Both</button>' +
+  // Topo buttons
+  var topoRow = '<div class="cp-topo-btns">' +
+    '<span style="font-size:10px;color:#9ca3af;">Show on topology:</span>' +
+    '<button class="cp-topo-btn" style="background:#7c2d12;color:#fb923c;border-color:#f97316;" ' +
+      'onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'before\')">🔴 Before</button>' +
+    '<button class="cp-topo-btn" style="background:#14532d;color:#4ade80;border-color:#22c55e;" ' +
+      'onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'after\')">🟢 After</button>' +
+    '<button class="cp-topo-btn" style="background:#1e3a5f;color:#60a5fa;border-color:#3b82f6;" ' +
+      'onclick="cpShowPathsOnTopo(\'' + _cpEsc(src) + '\',\'' + _cpEsc(dst) + '\',\'both\')">🔵 Both</button>' +
+    '</div>';
+
+  // 4 panels in 2×2 grid
+  var panelsBefore =
+    _cpRenderPanel('Before FWD', 'cp-ph-before', 'cp-db-fwd', 'FWD', bFwdHops, bFwdCost, src, dst) +
+    _cpRenderPanel('Before REV', 'cp-ph-before', 'cp-db-rev', 'REV', bRevHops, bRevCost, dst, src);
+
+  var panelsAfter =
+    _cpRenderPanel('After FWD', 'cp-ph-after', 'cp-db-fwd', 'FWD', aFwdHops, aFwdCost, src, dst) +
+    _cpRenderPanel('After REV', 'cp-ph-after', 'cp-db-rev', 'REV', aRevHops, aRevCost, dst, src);
+
+  var bLabel = '<div style="font-size:10px;font-weight:700;color:#f97316;margin-bottom:4px;">⬅ BEFORE (cost: ' +
+    (bFwdCost === Infinity ? '∞' : bFwdCost) + ')</div>';
+  var aLabel = '<div style="font-size:10px;font-weight:700;color:#22c55e;margin-bottom:4px;">➡ AFTER (cost: ' +
+    (aFwdCost === Infinity ? '∞' : aFwdCost) + ')</div>';
+
+  var detailHtml = '<td colspan="4"><div class="cp-detail-wrap">' +
+    topoRow +
+    '<div class="cp-detail-panels">' +
+      '<div>' + bLabel + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + panelsBefore + '</div></div>' +
+      '<div>' + aLabel + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' + panelsAfter + '</div></div>' +
     '</div>' +
-    '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
-    '<div style="flex:1;min-width:200px;">' +
-    '<div style="font-size:10px;color:#f97316;font-weight:700;margin-bottom:3px;">⬅ Before (cost: ' + (pair.before === Infinity ? '∞' : pair.before) + ')</div>' +
-    renderPathMini(pathsBefore, '#f97316') +
-    '</div>' +
-    '<div style="flex:1;min-width:200px;">' +
-    '<div style="font-size:10px;color:#22c55e;font-weight:700;margin-bottom:3px;">➡ After (cost: ' + (pair.after === Infinity ? '∞' : pair.after) + ')</div>' +
-    renderPathMini(pathsAfter, '#22c55e') +
-    '</div>' +
-    '</div>' +
-    '</td>';
+    '</div></td>';
 
   var detailTr = document.createElement('tr');
-  detailTr.style.background = '#111827';
+  detailTr.className = 'cp-detail-tr';
   detailTr.innerHTML = detailHtml;
   _cpDetailRow = detailTr;
   clickedTr.insertAdjacentElement('afterend', detailTr);
 
-  // Default: show "both" on topology
+  // Default: show both on topology
   cpShowPathsOnTopo(src, dst, 'both');
 }
 
